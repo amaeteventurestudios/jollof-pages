@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Jollof Pages</title>
+  <meta name="description" content="Jollof Pages dashboard — your command center for continuity-aware graphic novel creation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="dashboard">
+
+<div class="dashboard-page">
+
+  <!-- ══════════════════════════════════════════
+       TOP BAR
+  ══════════════════════════════════════════ -->
+  <header class="dash-topbar" role="banner" aria-label="Dashboard top bar">
+    <div class="dash-topbar-inner">
+      <div class="dash-topbar-left">
+        <!-- Mobile sidebar toggle -->
+        <button
+          id="sidebarToggle"
+          class="sidebar-toggle"
+          aria-label="Open sidebar navigation"
+          aria-expanded="false"
+          aria-controls="dashSidebar"
+        >☰</button>
+
+        <a href="index.html" class="logo" aria-label="Jollof Pages home">
+          <span class="logo-icon" aria-hidden="true">📖</span>
+          <span class="logo-text">Jollof <span>Pages</span></span>
+        </a>
+
+        <div class="dash-breadcrumb" aria-label="Breadcrumb" aria-hidden="true">
+          <span class="sep">/</span>
+          <span>Dashboard</span>
+        </div>
+      </div>
+
+      <div class="dash-topbar-right">
+        <button class="theme-toggle" aria-label="Switch theme">
+          <span class="toggle-icon">☀️</span>
+          <span class="toggle-label">Light</span>
+        </button>
+        <div class="dash-user-pill" aria-label="Logged in as jollof">
+          <div class="dash-user-avatar" aria-hidden="true">J</div>
+          <span>jollof</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════
+       LAYOUT WRAPPER
+  ══════════════════════════════════════════ -->
+  <div class="dash-layout">
+
+    <!-- Sidebar overlay (mobile) -->
+    <div
+      id="sidebarOverlay"
+      class="sidebar-overlay"
+      aria-hidden="true"
+      role="presentation"
+    ></div>
+
+    <!-- ══════════════════════════════════════════
+         SIDEBAR
+    ══════════════════════════════════════════ -->
+    <aside
+      id="dashSidebar"
+      class="dash-sidebar"
+      role="navigation"
+      aria-label="Main navigation"
+    >
+
+      <!-- Series Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Series</div>
+        <div class="sidebar-nav-item active" role="button" tabindex="0" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">🏠</span>
+          <span>Overview</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">⚙️</span>
+          <span>Series Setup</span>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider" aria-hidden="true" />
+
+      <!-- Story Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Story</div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">👤</span>
+          <span>Characters</span>
+          <span class="nav-badge" aria-label="0 items">0</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">🌍</span>
+          <span>World</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">🎬</span>
+          <span>Scenes</span>
+          <span class="nav-badge" aria-label="0 items">0</span>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider" aria-hidden="true" />
+
+      <!-- Production Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Production</div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">📄</span>
+          <span>Pages</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">⬜</span>
+          <span>Panels</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">🖼️</span>
+          <span>Visual References</span>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider" aria-hidden="true" />
+
+      <!-- Continuity Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Quality</div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">🔗</span>
+          <span>Continuity</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">📂</span>
+          <span>Revisions</span>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider" aria-hidden="true" />
+
+      <!-- Footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">⚙️</span>
+          <span>Settings</span>
+        </div>
+        <div class="sidebar-nav-item" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">📖</span>
+          <span>Docs &amp; Help</span>
+        </div>
+        <a href="index.html" class="sidebar-nav-item" tabindex="0" style="text-decoration:none;">
+          <span class="nav-icon" aria-hidden="true">←</span>
+          <span>Back to Home</span>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ══════════════════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════════════════ -->
+    <main class="dash-main" id="main-content" aria-label="Dashboard main content">
+
+      <!-- Welcome Panel -->
+      <section class="welcome-panel" aria-labelledby="welcome-heading">
+        <div class="welcome-content">
+          <div class="welcome-text">
+            <div class="welcome-eyebrow">Foundation Stage</div>
+            <h2 id="welcome-heading">Welcome to Jollof Pages</h2>
+            <p>
+              Continuity-aware workflow for graphic novel creation.
+              Your command center for characters, scenes, pages, and panels.
+            </p>
+          </div>
+          <div class="welcome-actions">
+            <button
+              class="btn btn-primary"
+              onclick="showToastGlobal('🚧 Series creation is coming in the next build phase.', 'info')"
+              aria-label="Create new series"
+            >
+              + New Series
+            </button>
+            <button
+              class="btn btn-secondary"
+              onclick="showToastGlobal('🚧 Quick start guide is coming soon.', 'info')"
+              aria-label="Open quick start guide"
+            >
+              Quick Start Guide
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Status Bar -->
+      <div class="status-bar" role="region" aria-label="Project statistics">
+        <div class="status-card">
+          <div class="status-label">Series</div>
+          <div class="status-value">0</div>
+          <div class="status-sub">No series yet</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Characters</div>
+          <div class="status-value">0</div>
+          <div class="status-sub">Add your first character</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Scenes</div>
+          <div class="status-value">0</div>
+          <div class="status-sub">Start building scenes</div>
+        </div>
+        <div class="status-card accent-card-status">
+          <div class="status-label">Continuity Score</div>
+          <div class="status-value">—</div>
+          <div class="status-sub">No data yet</div>
+        </div>
+      </div>
+
+      <!-- ── Module Grid ── -->
+      <div class="dash-section-heading" aria-label="Modules section">
+        <h3>
+          <span class="section-icon" aria-hidden="true">⬡</span>
+          Workflow Modules
+        </h3>
+        <span class="dash-section-link" aria-label="View all modules">
+          All modules ›
+        </span>
+      </div>
+
+            <div class="modules-grid" role="list" aria-label="Dashboard modules">
+
+        <!-- Series Setup -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Series Setup module"
+        >
+          <div class="module-card-icon icon-bg-orange" aria-hidden="true">📚</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Series Setup</div>
+            <div class="module-card-desc">
+              Define your series title, genre, arc structure, and publishing format before building.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- Characters -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Characters module"
+        >
+          <div class="module-card-icon icon-bg-purple" aria-hidden="true">👤</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Characters</div>
+            <div class="module-card-desc">
+              Build character profiles with traits, physical state, story history, and continuity tracking.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- World -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="World module"
+        >
+          <div class="module-card-icon icon-bg-teal" aria-hidden="true">🌍</div>
+          <div class="module-card-body">
+            <div class="module-card-title">World</div>
+            <div class="module-card-desc">
+              Create locations, define world rules, and track lore for consistent world-building across chapters.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- Scenes -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Scenes module"
+        >
+          <div class="module-card-icon icon-bg-blue" aria-hidden="true">🎬</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Scenes</div>
+            <div class="module-card-desc">
+              Write scene drafts, attach characters and locations, and manage scene sequence across your story.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- Pages -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Pages module"
+        >
+          <div class="module-card-icon icon-bg-green" aria-hidden="true">📄</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Pages</div>
+            <div class="module-card-desc">
+              Break scenes into pages. Define pacing, page intent, and structure your story's flow.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- Panels -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Panels module"
+        >
+          <div class="module-card-icon icon-bg-amber" aria-hidden="true">⬜</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Panels</div>
+            <div class="module-card-desc">
+              Break pages into individual panels. Write panel intent, dialogue, and visual direction.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- Continuity -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Continuity module"
+        >
+          <div class="module-card-icon icon-bg-red" aria-hidden="true">🔗</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Continuity</div>
+            <div class="module-card-desc">
+              Detect continuity breaks. Track character state, location consistency, and story logic errors.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+        <!-- Visual References -->
+        <article
+          class="module-card"
+          role="listitem"
+          tabindex="0"
+          aria-label="Visual References module"
+        >
+          <div class="module-card-icon icon-bg-pink" aria-hidden="true">🖼️</div>
+          <div class="module-card-body">
+            <div class="module-card-title">Visual References</div>
+            <div class="module-card-desc">
+              Attach visual reference images to characters, scenes, and panels. Keep art and script aligned.
+            </div>
+          </div>
+          <div class="module-card-footer">
+            <span class="module-status coming-soon">Coming Soon</span>
+            <span class="module-arrow" aria-hidden="true">›</span>
+          </div>
+        </article>
+
+      </div>
+      <!-- /modules-grid -->
+
+      <!-- ── Bottom grid: Activity + Quick Start ── -->
+      <div class="dash-bottom-grid">
+
+        <!-- Recent Activity -->
+        <section aria-labelledby="activity-heading">
+          <div class="dash-section-heading">
+            <h3 id="activity-heading">
+              <span class="section-icon" aria-hidden="true">⏱</span>
+              Recent Activity
+            </h3>
+          </div>
+          <div class="activity-panel">
+            <div class="activity-list" role="list" aria-label="Recent activity list">
+              <div class="activity-item" role="listitem">
+                <div class="activity-dot done" aria-hidden="true"></div>
+                <div class="activity-content">
+                  <div class="activity-action">Project environment initialized</div>
+                  <div class="activity-meta">Foundation stage · Just now</div>
+                </div>
+              </div>
+              <div class="activity-item" role="listitem">
+                <div class="activity-dot" aria-hidden="true"></div>
+                <div class="activity-content">
+                  <div class="activity-action">Logged in as <strong>jollof</strong></div>
+                  <div class="activity-meta">Authentication · Just now</div>
+                </div>
+              </div>
+              <div class="activity-item" role="listitem">
+                <div class="activity-dot muted" aria-hidden="true"></div>
+                <div class="activity-content">
+                  <div class="activity-action">Dashboard shell loaded</div>
+                  <div class="activity-meta">System · Just now</div>
+                </div>
+              </div>
+            </div>
+            <div class="coming-soon-banner" aria-label="Activity feed coming soon">
+              <span class="banner-icon" aria-hidden="true">🚧</span>
+              <span>Full activity feed coming in a future build phase.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick Start -->
+        <section aria-labelledby="quickstart-heading">
+          <div class="dash-section-heading">
+            <h3 id="quickstart-heading">
+              <span class="section-icon" aria-hidden="true">⚡</span>
+              Quick Start
+            </h3>
+          </div>
+          <div class="quickstart-panel">
+            <div class="quickstart-list" role="list" aria-label="Quick start actions">
+
+              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Create a new series">
+                <span class="qs-icon" aria-hidden="true">📚</span>
+                <span>Create a new series</span>
+                <span class="qs-arrow" aria-hidden="true">›</span>
+              </div>
+
+              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Add your first character">
+                <span class="qs-icon" aria-hidden="true">👤</span>
+                <span>Add your first character</span>
+                <span class="qs-arrow" aria-hidden="true">›</span>
+              </div>
+
+              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Define a location">
+                <span class="qs-icon" aria-hidden="true">📍</span>
+                <span>Define a location</span>
+                <span class="qs-arrow" aria-hidden="true">›</span>
+              </div>
+
+              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Write your first scene">
+                <span class="qs-icon" aria-hidden="true">🎬</span>
+                <span>Write your first scene</span>
+                <span class="qs-arrow" aria-hidden="true">›</span>
+              </div>
+
+              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Attach a visual reference">
+                <span class="qs-icon" aria-hidden="true">🖼️</span>
+                <span>Attach a visual reference</span>
+                <span class="qs-arrow" aria-hidden="true">›</span>
+              </div>
+
+              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Run continuity check">
+                <span class="qs-icon" aria-hidden="true">🔗</span>
+                <span>Run continuity check</span>
+                <span class="qs-arrow" aria-hidden="true">›</span>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
+      <!-- /dash-bottom-grid -->
+
+      <!-- Build Roadmap Banner -->
+      <section
+        class="coming-soon-banner"
+        style="margin-bottom: 32px; padding: 20px 24px; border-radius: 12px; flex-direction: column; align-items: flex-start; gap: 12px;"
+        aria-labelledby="roadmap-heading"
+      >
+        <div style="display:flex; align-items:center; gap: 10px;">
+          <span class="banner-icon" style="font-size:1.2rem;" aria-hidden="true">🗺️</span>
+          <strong id="roadmap-heading" style="font-size: 0.9rem; color: var(--text-secondary);">Build Roadmap — What's Coming Next</strong>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; width: 100%;">
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> CRUD for core entities
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> Scene workflow (end-to-end)
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> Continuity checking engine
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> AI-assisted drafting
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> Timeline &amp; canon wiki
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> Visual continuity system
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> Agent console
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+            <span style="color: var(--accent);" aria-hidden="true">›</span> Full connected system
+          </div>
+        </div>
+      </section>
+
+    </main>
+    <!-- /dash-main -->
+
+  </div>
+  <!-- /dash-layout -->
+
+</div>
+<!-- /dashboard-page -->
+
+<script src="script.js"></script>
+<script>
+  /* Expose showToast globally for inline onclick attributes */
+  function showToastGlobal(message, type) {
+    var existing = document.getElementById('jpToast');
+    if (existing) existing.remove();
+
+    var toast = document.createElement('div');
+    toast.id = 'jpToast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+
+    var borderColor = type === 'success' ? 'rgba(39,201,63,0.30)' : 'rgba(232,98,42,0.30)';
+    var textColor = type === 'success' ? '#27c93f' : 'var(--accent, #E8622A)';
+
+    toast.style.cssText = [
+      'position:fixed',
+      'bottom:28px',
+      'right:28px',
+      'z-index:9999',
+      'background:var(--bg-card,#201e28)',
+      'border:1px solid ' + borderColor,
+      'border-radius:10px',
+      'padding:14px 20px',
+      'font-size:0.88rem',
+      'font-weight:500',
+      'color:' + textColor,
+      'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
+      'max-width:340px',
+      'font-family:var(--font-sans,Inter,sans-serif)',
+      'backdrop-filter:blur(12px)',
+      'animation:fadeUp 0.3s ease forwards'
+    ].join(';');
+
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(8px)';
+      toast.style.transition = 'all 0.3s ease';
+      setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    }, 3000);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jollof Pages — Build your graphic novel without losing the story</title>
+  <meta name="description" content="Jollof Pages is a continuity and workflow platform for serialized graphic novel creation. Keep characters, scenes, pages, panels, and revisions connected in one place." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="landing">
+
+  <!-- ══════════════════════════════════════════
+       TOP NAVIGATION
+  ══════════════════════════════════════════ -->
+  <header class="topbar" role="banner">
+    <div class="container">
+      <a href="index.html" class="logo" aria-label="Jollof Pages home">
+        <span class="logo-icon">📖</span>
+        <span class="logo-text">Jollof <span>Pages</span></span>
+      </a>
+      <nav class="topbar-nav" aria-label="Main navigation">
+        <button class="theme-toggle" aria-label="Switch theme">
+          <span class="toggle-icon">☀️</span>
+          <span class="toggle-label">Light</span>
+        </button>
+        <a href="login.html" class="btn btn-secondary" style="padding:10px 22px; font-size:0.9rem;">Sign In</a>
+        <a href="login.html" class="btn btn-primary" style="padding:10px 22px; font-size:0.9rem;">Get Started</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ══════════════════════════════════════════
+         HERO SECTION
+    ══════════════════════════════════════════ -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="hero-bg-gradient"></div>
+        <div class="hero-bg-noise"></div>
+      </div>
+
+      <div class="hero-content">
+        <div class="hero-eyebrow fade-up delay-1" aria-hidden="true">
+          <span>🎨</span>
+          <span>Continuity &amp; Workflow Platform</span>
+        </div>
+
+        <h1 id="hero-heading" class="fade-up delay-2">
+          Build your graphic novel<br />
+          <em>without losing the story.</em>
+        </h1>
+
+        <p class="hero-sub fade-up delay-3">
+          Jollof Pages helps you keep your characters, scenes, pages, panels,
+          and revisions connected in one place.
+        </p>
+
+        <div class="hero-actions fade-up delay-4">
+          <a href="login.html" class="btn btn-primary btn-lg">Get Started</a>
+          <a href="#intro"     class="btn btn-secondary btn-lg">Learn More</a>
+        </div>
+      </div>
+
+      <!-- Dashboard preview card -->
+      <div class="dashboard-preview fade-up delay-5" aria-label="Dashboard preview" role="img">
+        <div class="preview-frame">
+          <div class="preview-titlebar" aria-hidden="true">
+            <span class="preview-dot red"></span>
+            <span class="preview-dot amber"></span>
+            <span class="preview-dot green"></span>
+            <span class="preview-titlebar-label">Jollof Pages — Scene Script</span>
+          </div>
+          <div class="preview-body">
+            <aside class="preview-sidebar" aria-hidden="true">
+              <div class="preview-sidebar-logo">
+                <span>📖</span>
+                <span>Jollof Pages</span>
+              </div>
+              <div class="preview-nav-item active">
+                <span class="nav-icon">🎬</span> Scene Script
+              </div>
+              <div class="preview-nav-item">
+                <span class="nav-icon">👤</span> Characters
+              </div>
+              <div class="preview-nav-item">
+                <span class="nav-icon">🌍</span> World
+              </div>
+              <div class="preview-nav-item">
+                <span class="nav-icon">📄</span> Pages
+              </div>
+              <div class="preview-nav-item">
+                <span class="nav-icon">⬜</span> Panels
+              </div>
+              <div class="preview-nav-item">
+                <span class="nav-icon">🔗</span> Continuity
+              </div>
+              <div class="preview-nav-item">
+                <span class="nav-icon">🖼️</span> Visual Refs
+              </div>
+            </aside>
+            <div class="preview-main" aria-hidden="true">
+              <div class="preview-topbar-mock">
+                <span>Scene: Chapter 01</span>
+                <div class="preview-topbar-pills">
+                  <div class="preview-pill sm"></div>
+                  <div class="preview-pill md"></div>
+                  <div class="preview-pill accent-pill"></div>
+                </div>
+              </div>
+              <div class="preview-grid">
+                <div class="preview-card-mock accent-card">
+                  <div class="preview-card-header">
+                    <div class="preview-card-title-mock"></div>
+                    <div class="preview-card-badge"></div>
+                  </div>
+                  <div class="preview-line long"></div>
+                  <div class="preview-line medium"></div>
+                  <div class="preview-line short"></div>
+                  <div class="preview-line accent-line"></div>
+                </div>
+                <div class="preview-card-mock">
+                  <div class="preview-card-header">
+                    <div class="preview-card-title-mock"></div>
+                    <div class="preview-card-badge"></div>
+                  </div>
+                  <div class="preview-line medium"></div>
+                  <div class="preview-line long"></div>
+                  <div class="preview-line short"></div>
+                </div>
+                <div class="preview-card-mock">
+                  <div class="preview-card-header">
+                    <div class="preview-card-title-mock"></div>
+                  </div>
+                  <div class="preview-line short"></div>
+                  <div class="preview-line medium"></div>
+                  <div class="preview-line long"></div>
+                </div>
+                <div class="preview-card-mock accent-card">
+                  <div class="preview-card-header">
+                    <div class="preview-card-title-mock"></div>
+                    <div class="preview-card-badge"></div>
+                  </div>
+                  <div class="preview-line long"></div>
+                  <div class="preview-line accent-line"></div>
+                  <div class="preview-line medium"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════════════════════════════
+         INTRO SECTION
+    ══════════════════════════════════════════ -->
+    <section id="intro" class="section" aria-labelledby="intro-heading">
+      <div class="container">
+        <div class="intro-content">
+          <span class="section-eyebrow">The Problem</span>
+          <h2 id="intro-heading">Keep your story connected<br />from start to finish</h2>
+          <div class="intro-body">
+            <p>Writing a graphic novel can get messy fast.</p>
+            <p>Character notes may be in one place. Scripts may be somewhere else.
+               Page ideas may be in another place.</p>
+            <p>Then continuity starts breaking.</p>
+            <p>
+              Jollof Pages brings everything together so
+              <span class="highlight">you can build your story</span>
+              with more control.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════════════════════════════
+         PROBLEM SECTION
+    ══════════════════════════════════════════ -->
+    <section class="section" aria-labelledby="problem-heading">
+      <div class="container">
+        <div class="problem-layout">
+          <div class="problem-text">
+            <span class="section-eyebrow">Why Jollof Pages Exists</span>
+            <h2 id="problem-heading">Your story lives in too many places</h2>
+            <p>
+              Most creators use different tools for different parts of the job.
+              That makes it easy to lose track of what is happening.
+              Jollof Pages keeps everything connected.
+            </p>
+            <ul class="problem-list" aria-label="Scattered workflow problems">
+              <li>Story notes in one place</li>
+              <li>Scripts somewhere else</li>
+              <li>Character sheets somewhere else</li>
+              <li>Page layouts somewhere else</li>
+            </ul>
+          </div>
+          <div class="problem-visual" aria-hidden="true">
+            <div class="chaos-card">
+              <div class="chaos-card-icon">📝</div>
+              <div class="chaos-card-text">
+                <strong>Story Notes</strong>
+                <span>Scattered across documents</span>
+              </div>
+              <span class="chaos-card-status status-scattered">Scattered</span>
+            </div>
+            <div class="chaos-card">
+              <div class="chaos-card-icon">📋</div>
+              <div class="chaos-card-text">
+                <strong>Scene Scripts</strong>
+                <span>Another folder, another tool</span>
+              </div>
+              <span class="chaos-card-status status-scattered">Disconnected</span>
+            </div>
+            <div class="chaos-card">
+              <div class="chaos-card-icon">👤</div>
+              <div class="chaos-card-text">
+                <strong>Character Sheets</strong>
+                <span>Somewhere in a spreadsheet</span>
+              </div>
+              <span class="chaos-card-status status-scattered">Scattered</span>
+            </div>
+            <div class="chaos-card" style="border-color: rgba(232,98,42,0.30);">
+              <div class="chaos-card-icon" style="background: var(--accent-muted);">📖</div>
+              <div class="chaos-card-text">
+                <strong>Jollof Pages</strong>
+                <span>Everything, connected</span>
+              </div>
+              <span class="chaos-card-status status-connected">Connected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════════════════════════════
+         FEATURES SECTION
+    ══════════════════════════════════════════ -->
+    <section class="section" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Capabilities</span>
+          <h2 id="features-heading">What Jollof Pages helps you do</h2>
+          <p>Every tool you need to take a story from idea to final page — in one connected environment.</p>
+        </div>
+
+        <div class="features-grid" role="list">
+          <article class="feature-card" role="listitem">
+            <div class="feature-icon" aria-hidden="true">👤</div>
+            <h3>Build your characters</h3>
+            <p>Create rich character profiles with states, history, and continuity tracking. Know where every character stands at every point in your story.</p>
+          </article>
+          <article class="feature-card" role="listitem">
+            <div class="feature-icon" aria-hidden="true">🌍</div>
+            <h3>Shape your world</h3>
+            <p>Define locations, lore, and world rules. Keep your world consistent across chapters, arcs, and volumes.</p>
+          </article>
+          <article class="feature-card" role="listitem">
+            <div class="feature-icon" aria-hidden="true">🎬</div>
+            <h3>Plan scenes, pages &amp; panels</h3>
+            <p>Structure your story from scene level down to individual panels. Map intent and pacing before you draw.</p>
+          </article>
+          <article class="feature-card" role="listitem">
+            <div class="feature-icon" aria-hidden="true">🔗</div>
+            <h3>Track continuity</h3>
+            <p>Catch continuity breaks before they make it to the page. Know when something doesn't line up.</p>
+          </article>
+          <article class="feature-card" role="listitem">
+            <div class="feature-icon" aria-hidden="true">📂</div>
+            <h3>Manage revisions</h3>
+            <p>Keep a clean history of changes. Understand what changed, when, and why — without losing old versions.</p>
+          </article>
+          <article class="feature-card" role="listitem">
+            <div class="feature-icon" aria-hidden="true">🖼️</div>
+            <h3>Organize visual storytelling</h3>
+            <p>Attach visual references to scenes, characters, and panels. Keep art and script aligned throughout production.</p>
+          </article>
+        </div>
+
+        <div class="feature-checklist" style="margin-top: 64px;" aria-label="Feature summary">
+          <div class="check-item">
+            <div class="check-icon" aria-hidden="true">✓</div>
+            <span>Build your characters</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" aria-hidden="true">✓</div>
+            <span>Plan scenes, pages, and panels</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" aria-hidden="true">✓</div>
+            <span>Shape your world</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" aria-hidden="true">✓</div>
+            <span>Track continuity</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" aria-hidden="true">✓</div>
+            <span>Create layouts, panel by panel</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" aria-hidden="true">✓</div>
+            <span>Organize visual storytelling</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════════════════════════════
+         CLOSING CTA SECTION
+    ══════════════════════════════════════════ -->
+    <section class="cta-section" aria-labelledby="cta-heading">
+      <div class="cta-inner">
+        <span class="section-eyebrow">Ready to begin?</span>
+        <h2 id="cta-heading">From outline to final page,<br />stay in control</h2>
+        <p>
+          Jollof Pages gives graphic novel creators one connected workflow
+          for story structure and execution.
+        </p>
+        <a href="login.html" class="btn btn-primary btn-lg">Enter Jollof Pages →</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════ -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="logo">
+          <span class="logo-icon">📖</span>
+          <span class="logo-text">Jollof <span>Pages</span></span>
+        </div>
+        <p class="footer-copy">
+          © 2025 Jollof Pages. Continuity-aware workflow for graphic novel creation.
+        </p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="theme-toggle" aria-label="Switch theme">
+            <span class="toggle-icon">☀️</span>
+            <span class="toggle-label">Light</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

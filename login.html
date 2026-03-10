@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Jollof Pages</title>
+  <meta name="description" content="Sign in to Jollof Pages — your continuity-aware workflow for graphic novel creation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* ── Extra login-page specifics ── */
+    .login-topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      justify-content: space-between;
+    }
+    .login-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+    .login-back:hover { color: var(--text-secondary); }
+    .login-back .back-arrow { font-size: 1rem; }
+  </style>
+</head>
+<body data-page="login">
+
+  <!-- Minimal top bar -->
+  <nav class="login-topbar" aria-label="Login page navigation">
+    <a href="index.html" class="login-back" aria-label="Back to home">
+      <span class="back-arrow">←</span>
+      <span>Back to Jollof Pages</span>
+    </a>
+    <button class="theme-toggle" aria-label="Switch theme">
+      <span class="toggle-icon">☀️</span>
+      <span class="toggle-label">Light</span>
+    </button>
+  </nav>
+
+  <!-- Background -->
+  <div class="login-bg" aria-hidden="true">
+    <div class="login-bg-radial"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       LOGIN FORM
+  ══════════════════════════════════════════ -->
+  <main class="login-page" aria-labelledby="login-heading">
+
+    <div class="login-box" role="main">
+
+      <!-- Logo -->
+      <div class="login-logo" aria-label="Jollof Pages">
+        <span class="logo-icon" aria-hidden="true">📖</span>
+        <span class="logo-text">Jollof <span>Pages</span></span>
+      </div>
+
+      <!-- Heading -->
+      <div class="login-heading">
+        <h2 id="login-heading">Welcome back</h2>
+        <p>Sign in to continue building your story</p>
+      </div>
+
+      <!-- Form -->
+      <form id="loginForm" novalidate aria-label="Login form">
+
+        <!-- Username -->
+        <div class="form-group">
+          <label class="form-label" for="loginUsername">Username or Email</label>
+          <input
+            id="loginUsername"
+            class="form-input"
+            type="text"
+            placeholder="Enter your username"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-required="true"
+          />
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Password</label>
+          <div class="input-wrapper">
+            <input
+              id="loginPassword"
+              class="form-input"
+              type="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              aria-required="true"
+            />
+            <button
+              type="button"
+              id="togglePassword"
+              class="toggle-password"
+              aria-label="Show password"
+              title="Toggle password visibility"
+            >👁</button>
+          </div>
+        </div>
+
+        <!-- Error message -->
+        <div id="loginError" class="login-error" role="alert" aria-live="polite"></div>
+
+        <!-- Submit -->
+        <div class="form-submit">
+          <button
+            id="loginSubmit"
+            type="submit"
+            class="btn btn-primary btn-full btn-lg"
+            aria-label="Sign in to Jollof Pages"
+          >
+            Sign In
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Demo Credentials -->
+      <div class="demo-credentials" aria-label="Demo credentials">
+        <div class="demo-credentials-title">Demo Credentials</div>
+        <div class="demo-row">
+          <span>Username</span>
+          <span class="demo-value">jollof</span>
+        </div>
+        <div class="demo-row">
+          <span>Password</span>
+          <span class="demo-value">pages</span>
+        </div>
+        <button
+          id="demoFill"
+          type="button"
+          class="btn btn-outline-accent btn-full"
+          style="margin-top: 14px; padding: 10px 20px; font-size: 0.85rem;"
+          aria-label="Auto-fill demo credentials"
+        >
+          ⚡ Use Demo Credentials
+        </button>
+      </div>
+
+      <!-- Footer link -->
+      <p class="login-footer-link">
+        New to Jollof Pages?
+        <a href="login.html" aria-label="Get started with Jollof Pages">Get started →</a>
+      </p>
+
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
