@@ -2087,6 +2087,111 @@ p  { color: var(--text-secondary); }
   .topbar .container { padding: 0 16px; }
 }
 
+/* ============================================================
+   MOBILE TOPBAR  — landing, login, dashboard
+   ============================================================ */
+
+/* ── 600px: tighten all three navbars ── */
+@media (max-width: 600px) {
+
+  /* ─ Landing topbar ─ */
+  .topbar {
+    height: 56px;
+  }
+  .topbar .container {
+    height: 56px;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .topbar-nav {
+    gap: 6px;
+  }
+
+  /* Hide the theme toggle text label — icon is enough */
+  .theme-toggle .toggle-label {
+    display: none;
+  }
+  /* Slightly shrink the toggle pill */
+  .theme-toggle {
+    padding: 6px 9px;
+  }
+
+  /* "Sign In" — shrink to a compact ghost link */
+  .topbar-nav .btn-secondary {
+    padding: 7px 12px !important;
+    font-size: 0.82rem !important;
+  }
+  /* Hide the long "Sign In" text, show short "In" label */
+  .topbar-nav .btn-secondary .btn-label-long  { display: none; }
+  .topbar-nav .btn-secondary .btn-label-short { display: inline; }
+
+  /* "Get Started" — keep visible but compact */
+  .topbar-nav .btn-primary {
+    padding: 7px 14px !important;
+    font-size: 0.82rem !important;
+  }
+  /* Hide "Get Started", show "Start" */
+  .topbar-nav .btn-primary .btn-label-long  { display: none; }
+  .topbar-nav .btn-primary .btn-label-short { display: inline; }
+
+  /* ─ Login topbar ─ */
+  .login-topbar {
+    height: 52px;
+    padding: 0 16px;
+  }
+  /* Shorten "Back to Jollof Pages" to just the arrow + "Home" */
+  .login-back .back-label-long  { display: none; }
+  .login-back .back-label-short { display: inline; }
+  /* Shrink login theme toggle the same way */
+  .login-topbar .theme-toggle {
+    padding: 6px 9px;
+  }
+
+  /* ─ Dashboard topbar ─ */
+  .dash-topbar {
+    height: 52px;
+    padding: 0 12px;
+  }
+  .dash-topbar-inner {
+    height: 52px;
+  }
+  /* Hide breadcrumb on very small screens */
+  .dash-breadcrumb {
+    display: none;
+  }
+  /* Shorten "jollof" user pill text on tiny screens */
+  .dash-user-pill span:not(.dash-user-avatar) {
+    display: none;
+  }
+  .dash-main {
+    padding: 12px;
+  }
+}
+
+/* ── 400px: absolute minimum — hide "Sign In" entirely ── */
+@media (max-width: 400px) {
+  .topbar-nav .btn-secondary {
+    display: none;
+  }
+}
+
+/* ── Ensure short-labels are hidden on desktop ── */
+.btn-label-short    { display: none; }
+.back-label-short   { display: none; }
+
+/* ── Scroll compensation for shorter mobile topbar ── */
+@media (max-width: 600px) {
+  .hero > .container {
+    padding-top: 80px;
+  }
+  .dash-layout {
+    padding-top: 52px;
+  }
+  .login-page {
+    padding-top: 72px;
+  }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
