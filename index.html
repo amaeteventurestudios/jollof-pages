@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jollof Pages — Build your graphic novel without losing the story</title>
   <meta name="description" content="Jollof Pages is a continuity and workflow platform for serialized graphic novel creation. Keep characters, scenes, pages, panels, and revisions connected in one place." />
+
+  <!-- Open Graph / Social Media Preview -->
+  <meta property="og:type"         content="website" />
+  <meta property="og:url"          content="https://jollofpages.com/" />
+  <meta property="og:title"        content="Jollof Pages — Build your graphic novel without losing the story" />
+  <meta property="og:description"  content="Jollof Pages is a continuity and workflow platform for serialized graphic novel creation. Keep characters, scenes, pages, panels, and revisions connected in one place." />
+  <meta property="og:image"        content="images/og-preview.jpg" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt"    content="Jollof Pages — Build your graphic novel without losing the story" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Jollof Pages — Build your graphic novel without losing the story" />
+  <meta name="twitter:description" content="Continuity and workflow platform for serialized graphic novel creation." />
+  <meta name="twitter:image"       content="images/og-preview.jpg" />
+  <meta name="twitter:image:alt"   content="Jollof Pages — Build your graphic novel without losing the story" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,8 +30,10 @@
 </head>
 <body data-page="landing">
 
+<div class="page-box">
+
   <!-- ══════════════════════════════════════════
-       TOP NAVIGATION
+       TOP NAVIGATION — full-bleed bar, .container centers content
   ══════════════════════════════════════════ -->
   <header class="topbar" role="banner">
     <div class="container">
@@ -27,7 +47,7 @@
           <span class="toggle-label">Light</span>
         </button>
         <a href="login.html" class="btn btn-secondary" style="padding:10px 22px; font-size:0.9rem;">Sign In</a>
-        <a href="login.html" class="btn btn-primary" style="padding:10px 22px; font-size:0.9rem;">Get Started</a>
+        <a href="login.html" class="btn btn-primary"   style="padding:10px 22px; font-size:0.9rem;">Get Started</a>
       </nav>
     </div>
   </header>
@@ -35,130 +55,137 @@
   <main>
 
     <!-- ══════════════════════════════════════════
-         HERO SECTION
+         HERO — full-bleed background, .container centers all content
     ══════════════════════════════════════════ -->
     <section class="hero" aria-labelledby="hero-heading">
+
+      <!-- Background layer — stays full width -->
       <div class="hero-bg" aria-hidden="true">
         <div class="hero-bg-gradient"></div>
         <div class="hero-bg-noise"></div>
       </div>
 
-      <div class="hero-content">
-        <div class="hero-eyebrow fade-up delay-1" aria-hidden="true">
-          <span>🎨</span>
-          <span>Continuity &amp; Workflow Platform</span>
-        </div>
+      <!-- Content layer — constrained by .container -->
+      <div class="container">
 
-        <h1 id="hero-heading" class="fade-up delay-2">
-          Build your graphic novel<br />
-          <em>without losing the story.</em>
-        </h1>
-
-        <p class="hero-sub fade-up delay-3">
-          Jollof Pages helps you keep your characters, scenes, pages, panels,
-          and revisions connected in one place.
-        </p>
-
-        <div class="hero-actions fade-up delay-4">
-          <a href="login.html" class="btn btn-primary btn-lg">Get Started</a>
-          <a href="#intro"     class="btn btn-secondary btn-lg">Learn More</a>
-        </div>
-      </div>
-
-      <!-- Dashboard preview card -->
-      <div class="dashboard-preview fade-up delay-5" aria-label="Dashboard preview" role="img">
-        <div class="preview-frame">
-          <div class="preview-titlebar" aria-hidden="true">
-            <span class="preview-dot red"></span>
-            <span class="preview-dot amber"></span>
-            <span class="preview-dot green"></span>
-            <span class="preview-titlebar-label">Jollof Pages — Scene Script</span>
+        <div class="hero-content">
+          <div class="hero-eyebrow fade-up delay-1" aria-hidden="true">
+            <span>🎨</span>
+            <span>Continuity &amp; Workflow Platform</span>
           </div>
-          <div class="preview-body">
-            <aside class="preview-sidebar" aria-hidden="true">
-              <div class="preview-sidebar-logo">
-                <span>📖</span>
-                <span>Jollof Pages</span>
-              </div>
-              <div class="preview-nav-item active">
-                <span class="nav-icon">🎬</span> Scene Script
-              </div>
-              <div class="preview-nav-item">
-                <span class="nav-icon">👤</span> Characters
-              </div>
-              <div class="preview-nav-item">
-                <span class="nav-icon">🌍</span> World
-              </div>
-              <div class="preview-nav-item">
-                <span class="nav-icon">📄</span> Pages
-              </div>
-              <div class="preview-nav-item">
-                <span class="nav-icon">⬜</span> Panels
-              </div>
-              <div class="preview-nav-item">
-                <span class="nav-icon">🔗</span> Continuity
-              </div>
-              <div class="preview-nav-item">
-                <span class="nav-icon">🖼️</span> Visual Refs
-              </div>
-            </aside>
-            <div class="preview-main" aria-hidden="true">
-              <div class="preview-topbar-mock">
-                <span>Scene: Chapter 01</span>
-                <div class="preview-topbar-pills">
-                  <div class="preview-pill sm"></div>
-                  <div class="preview-pill md"></div>
-                  <div class="preview-pill accent-pill"></div>
+
+          <h1 id="hero-heading" class="fade-up delay-2">
+            Build your graphic novel<br />
+            <em>without losing the story.</em>
+          </h1>
+
+          <p class="hero-sub fade-up delay-3">
+            Jollof Pages helps you keep your characters, scenes, pages, panels,
+            and revisions connected in one place.
+          </p>
+
+          <div class="hero-actions fade-up delay-4">
+            <a href="login.html" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="#intro"     class="btn btn-secondary btn-lg">Learn More</a>
+          </div>
+        </div>
+
+        <!-- Dashboard preview card -->
+        <div class="dashboard-preview fade-up delay-5" aria-label="Dashboard preview" role="img">
+          <div class="preview-frame">
+            <div class="preview-titlebar" aria-hidden="true">
+              <span class="preview-dot red"></span>
+              <span class="preview-dot amber"></span>
+              <span class="preview-dot green"></span>
+              <span class="preview-titlebar-label">Jollof Pages — Scene Script</span>
+            </div>
+            <div class="preview-body">
+              <aside class="preview-sidebar" aria-hidden="true">
+                <div class="preview-sidebar-logo">
+                  <span>📖</span>
+                  <span>Jollof Pages</span>
                 </div>
-              </div>
-              <div class="preview-grid">
-                <div class="preview-card-mock accent-card">
-                  <div class="preview-card-header">
-                    <div class="preview-card-title-mock"></div>
-                    <div class="preview-card-badge"></div>
-                  </div>
-                  <div class="preview-line long"></div>
-                  <div class="preview-line medium"></div>
-                  <div class="preview-line short"></div>
-                  <div class="preview-line accent-line"></div>
+                <div class="preview-nav-item active">
+                  <span class="nav-icon">🎬</span> Scene Script
                 </div>
-                <div class="preview-card-mock">
-                  <div class="preview-card-header">
-                    <div class="preview-card-title-mock"></div>
-                    <div class="preview-card-badge"></div>
-                  </div>
-                  <div class="preview-line medium"></div>
-                  <div class="preview-line long"></div>
-                  <div class="preview-line short"></div>
+                <div class="preview-nav-item">
+                  <span class="nav-icon">👤</span> Characters
                 </div>
-                <div class="preview-card-mock">
-                  <div class="preview-card-header">
-                    <div class="preview-card-title-mock"></div>
-                  </div>
-                  <div class="preview-line short"></div>
-                  <div class="preview-line medium"></div>
-                  <div class="preview-line long"></div>
+                <div class="preview-nav-item">
+                  <span class="nav-icon">🌍</span> World
                 </div>
-                <div class="preview-card-mock accent-card">
-                  <div class="preview-card-header">
-                    <div class="preview-card-title-mock"></div>
-                    <div class="preview-card-badge"></div>
+                <div class="preview-nav-item">
+                  <span class="nav-icon">📄</span> Pages
+                </div>
+                <div class="preview-nav-item">
+                  <span class="nav-icon">⬜</span> Panels
+                </div>
+                <div class="preview-nav-item">
+                  <span class="nav-icon">🔗</span> Continuity
+                </div>
+                <div class="preview-nav-item">
+                  <span class="nav-icon">🖼️</span> Visual Refs
+                </div>
+              </aside>
+              <div class="preview-main" aria-hidden="true">
+                <div class="preview-topbar-mock">
+                  <span>Scene: Chapter 01</span>
+                  <div class="preview-topbar-pills">
+                    <div class="preview-pill sm"></div>
+                    <div class="preview-pill md"></div>
+                    <div class="preview-pill accent-pill"></div>
                   </div>
-                  <div class="preview-line long"></div>
-                  <div class="preview-line accent-line"></div>
-                  <div class="preview-line medium"></div>
+                </div>
+                <div class="preview-grid">
+                  <div class="preview-card-mock accent-card">
+                    <div class="preview-card-header">
+                      <div class="preview-card-title-mock"></div>
+                      <div class="preview-card-badge"></div>
+                    </div>
+                    <div class="preview-line long"></div>
+                    <div class="preview-line medium"></div>
+                    <div class="preview-line short"></div>
+                    <div class="preview-line accent-line"></div>
+                  </div>
+                  <div class="preview-card-mock">
+                    <div class="preview-card-header">
+                      <div class="preview-card-title-mock"></div>
+                      <div class="preview-card-badge"></div>
+                    </div>
+                    <div class="preview-line medium"></div>
+                    <div class="preview-line long"></div>
+                    <div class="preview-line short"></div>
+                  </div>
+                  <div class="preview-card-mock">
+                    <div class="preview-card-header">
+                      <div class="preview-card-title-mock"></div>
+                    </div>
+                    <div class="preview-line short"></div>
+                    <div class="preview-line medium"></div>
+                    <div class="preview-line long"></div>
+                  </div>
+                  <div class="preview-card-mock accent-card">
+                    <div class="preview-card-header">
+                      <div class="preview-card-title-mock"></div>
+                      <div class="preview-card-badge"></div>
+                    </div>
+                    <div class="preview-line long"></div>
+                    <div class="preview-line accent-line"></div>
+                    <div class="preview-line medium"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+      </div><!-- /.container -->
     </section>
 
     <hr class="section-divider" />
 
     <!-- ══════════════════════════════════════════
-         INTRO SECTION
+         INTRO — .container centers content
     ══════════════════════════════════════════ -->
     <section id="intro" class="section" aria-labelledby="intro-heading">
       <div class="container">
@@ -183,7 +210,7 @@
     <hr class="section-divider" />
 
     <!-- ══════════════════════════════════════════
-         PROBLEM SECTION
+         PROBLEM — .container centers content
     ══════════════════════════════════════════ -->
     <section class="section" aria-labelledby="problem-heading">
       <div class="container">
@@ -244,7 +271,7 @@
     <hr class="section-divider" />
 
     <!-- ══════════════════════════════════════════
-         FEATURES SECTION
+         FEATURES — .container centers content
     ══════════════════════════════════════════ -->
     <section class="section" aria-labelledby="features-heading">
       <div class="container">
@@ -319,10 +346,10 @@
     <hr class="section-divider" />
 
     <!-- ══════════════════════════════════════════
-         CLOSING CTA SECTION
+         CLOSING CTA — full-bleed glow, .container centers content
     ══════════════════════════════════════════ -->
     <section class="cta-section" aria-labelledby="cta-heading">
-      <div class="cta-inner">
+      <div class="container">
         <span class="section-eyebrow">Ready to begin?</span>
         <h2 id="cta-heading">From outline to final page,<br />stay in control</h2>
         <p>
@@ -336,7 +363,7 @@
   </main>
 
   <!-- ══════════════════════════════════════════
-       FOOTER
+       FOOTER — full-bleed border, .container centers content
   ══════════════════════════════════════════ -->
   <footer class="site-footer" role="contentinfo">
     <div class="container">
@@ -346,18 +373,17 @@
           <span class="logo-text">Jollof <span>Pages</span></span>
         </div>
         <p class="footer-copy">
-          © 2025 Jollof Pages. Continuity-aware workflow for graphic novel creation.
+          © Jollof Pages. Continuity-aware workflow for graphic novel creation.
         </p>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button class="theme-toggle" aria-label="Switch theme">
-            <span class="toggle-icon">☀️</span>
-            <span class="toggle-label">Light</span>
-          </button>
-        </div>
+        <button class="theme-toggle" aria-label="Switch theme">
+          <span class="toggle-icon">☀️</span>
+          <span class="toggle-label">Light</span>
+        </button>
       </div>
     </div>
   </footer>
 
   <script src="script.js"></script>
+</div><!-- /.page-box -->
 </body>
 </html>

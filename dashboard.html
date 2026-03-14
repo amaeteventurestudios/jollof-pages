@@ -20,7 +20,6 @@
   <header class="dash-topbar" role="banner" aria-label="Dashboard top bar">
     <div class="dash-topbar-inner">
       <div class="dash-topbar-left">
-        <!-- Mobile sidebar toggle -->
         <button
           id="sidebarToggle"
           class="sidebar-toggle"
@@ -53,30 +52,16 @@
     </div>
   </header>
 
-  <!-- ══════════════════════════════════════════
-       LAYOUT WRAPPER
-  ══════════════════════════════════════════ -->
   <div class="dash-layout">
 
     <!-- Sidebar overlay (mobile) -->
-    <div
-      id="sidebarOverlay"
-      class="sidebar-overlay"
-      aria-hidden="true"
-      role="presentation"
-    ></div>
+    <div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true" role="presentation"></div>
 
     <!-- ══════════════════════════════════════════
          SIDEBAR
     ══════════════════════════════════════════ -->
-    <aside
-      id="dashSidebar"
-      class="dash-sidebar"
-      role="navigation"
-      aria-label="Main navigation"
-    >
+    <aside id="dashSidebar" class="dash-sidebar" role="navigation" aria-label="Main navigation">
 
-      <!-- Series Section -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Series</div>
         <div class="sidebar-nav-item active" role="button" tabindex="0" aria-current="page">
@@ -91,7 +76,6 @@
 
       <hr class="sidebar-divider" aria-hidden="true" />
 
-      <!-- Story Section -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Story</div>
         <div class="sidebar-nav-item" role="button" tabindex="0">
@@ -112,7 +96,6 @@
 
       <hr class="sidebar-divider" aria-hidden="true" />
 
-      <!-- Production Section -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Production</div>
         <div class="sidebar-nav-item" role="button" tabindex="0">
@@ -131,7 +114,6 @@
 
       <hr class="sidebar-divider" aria-hidden="true" />
 
-      <!-- Continuity Section -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Quality</div>
         <div class="sidebar-nav-item" role="button" tabindex="0">
@@ -146,7 +128,6 @@
 
       <hr class="sidebar-divider" aria-hidden="true" />
 
-      <!-- Footer -->
       <div class="sidebar-footer">
         <div class="sidebar-nav-item" role="button" tabindex="0">
           <span class="nav-icon" aria-hidden="true">⚙️</span>
@@ -169,11 +150,11 @@
     ══════════════════════════════════════════ -->
     <main class="dash-main" id="main-content" aria-label="Dashboard main content">
 
-      <!-- Welcome Panel -->
+      <!-- ── Welcome Panel ── -->
       <section class="welcome-panel" aria-labelledby="welcome-heading">
         <div class="welcome-content">
           <div class="welcome-text">
-            <div class="welcome-eyebrow">Foundation Stage</div>
+            <!-- "Foundation Stage" label removed -->
             <h2 id="welcome-heading">Welcome to Jollof Pages</h2>
             <p>
               Continuity-aware workflow for graphic novel creation.
@@ -185,22 +166,129 @@
               class="btn btn-primary"
               onclick="showToastGlobal('🚧 Series creation is coming in the next build phase.', 'info')"
               aria-label="Create new series"
-            >
-              + New Series
-            </button>
+            >+ New Series</button>
             <button
               class="btn btn-secondary"
               onclick="showToastGlobal('🚧 Quick start guide is coming soon.', 'info')"
               aria-label="Open quick start guide"
-            >
-              Quick Start Guide
-            </button>
+            >Quick Start Guide</button>
           </div>
         </div>
       </section>
 
-      <!-- Status Bar -->
-      <div class="status-bar" role="region" aria-label="Project statistics">
+      <!-- ── Continuity Score — Vital Sign Panel ── -->
+      <section class="continuity-score-panel" aria-labelledby="cs-heading" style="margin-bottom:20px;">
+
+        <!-- Score number — dominant left element -->
+        <div class="cs-score-block">
+          <div class="cs-label" id="cs-heading">Continuity Score</div>
+          <div class="cs-score-display" aria-label="Score: not yet calculated">
+            <span class="cs-score">0</span><span class="cs-denom">/100</span>
+          </div>
+          <span class="cs-trend cs-trend-neutral" aria-label="No trend data yet">
+            <span class="cs-trend-icon">—</span>
+            <span class="cs-trend-text">No previous check</span>
+          </span>
+        </div>
+
+        <!-- Divider -->
+        <div class="cs-divider" aria-hidden="true"></div>
+
+        <!-- Right side: meta + severity counts + CTA -->
+        <div class="cs-body">
+          <div class="cs-meta">No continuity check has been run yet. Add scenes and run a check to generate your score.</div>
+          <div class="cs-severity-grid">
+            <div class="cs-severity-item cs-critical">
+              <span class="cs-sev-count">0</span>
+              <span class="cs-sev-label">Critical</span>
+            </div>
+            <div class="cs-severity-item cs-warning">
+              <span class="cs-sev-count">0</span>
+              <span class="cs-sev-label">Warnings</span>
+            </div>
+            <div class="cs-severity-item cs-info">
+              <span class="cs-sev-count">0</span>
+              <span class="cs-sev-label">Info</span>
+            </div>
+            <div class="cs-severity-item cs-cta">
+              <button
+                class="btn btn-outline-accent"
+                onclick="showToastGlobal('🚧 Continuity flags viewer coming in a future build.', 'info')"
+                aria-label="View all continuity flags"
+              >View All Flags</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── Review Queue ── -->
+      <section class="dash-panel review-queue-panel" aria-labelledby="rq-heading">
+        <div class="dash-section-heading">
+          <h3 id="rq-heading">
+            <span class="section-icon" aria-hidden="true">📋</span>
+            Review Queue
+          </h3>
+        </div>
+        <div class="rq-list" role="list" aria-label="Review queue items">
+          <div class="rq-item" role="listitem">
+            <div class="rq-item-left">
+              <div class="rq-icon" aria-hidden="true">🎬</div>
+              <div class="rq-item-text">
+                <span class="rq-item-name">Pending Scenes</span>
+                <span class="rq-item-desc">Scenes written but not yet approved</span>
+              </div>
+            </div>
+            <div class="rq-item-right">
+              <span class="rq-count rq-count-zero">0</span>
+              <a href="#" class="rq-action" onclick="showToastGlobal('🚧 Scene review coming in a future build.', 'info'); return false;">Review →</a>
+            </div>
+          </div>
+          <div class="rq-item" role="listitem">
+            <div class="rq-item-left">
+              <div class="rq-icon" aria-hidden="true">⬜</div>
+              <div class="rq-item-text">
+                <span class="rq-item-name">Pending Panels</span>
+                <span class="rq-item-desc">Panels awaiting direction sign-off</span>
+              </div>
+            </div>
+            <div class="rq-item-right">
+              <span class="rq-count rq-count-zero">0</span>
+              <a href="#" class="rq-action" onclick="showToastGlobal('🚧 Panel review coming in a future build.', 'info'); return false;">Review →</a>
+            </div>
+          </div>
+          <div class="rq-item" role="listitem">
+            <div class="rq-item-left">
+              <div class="rq-icon" aria-hidden="true">🔗</div>
+              <div class="rq-item-text">
+                <span class="rq-item-name">Open Continuity Flags</span>
+                <span class="rq-item-desc">Unresolved continuity issues</span>
+              </div>
+            </div>
+            <div class="rq-item-right">
+              <span class="rq-count rq-count-zero">0</span>
+              <a href="#" class="rq-action" onclick="showToastGlobal('🚧 Continuity flags coming in a future build.', 'info'); return false;">Review →</a>
+            </div>
+          </div>
+          <div class="rq-item" role="listitem">
+            <div class="rq-item-left">
+              <div class="rq-icon" aria-hidden="true">📖</div>
+              <div class="rq-item-text">
+                <span class="rq-item-name">Canon Suggestions Awaiting Confirmation</span>
+                <span class="rq-item-desc">AI-suggested canon entries pending review</span>
+              </div>
+            </div>
+            <div class="rq-item-right">
+              <span class="rq-count rq-count-zero">0</span>
+              <a href="#" class="rq-action" onclick="showToastGlobal('🚧 Canon manager coming in a future build.', 'info'); return false;">Review →</a>
+            </div>
+          </div>
+        </div>
+        <div class="rq-empty" aria-live="polite">No items awaiting review.</div>
+      </section>
+
+      <!-- ── Status Bar ── -->
+      <div class="status-bar" style="margin-bottom:20px;" role="region" aria-label="Project statistics">
         <div class="status-card">
           <div class="status-label">Series</div>
           <div class="status-value">0</div>
@@ -216,193 +304,238 @@
           <div class="status-value">0</div>
           <div class="status-sub">Start building scenes</div>
         </div>
-        <div class="status-card accent-card-status">
-          <div class="status-label">Continuity Score</div>
-          <div class="status-value">—</div>
-          <div class="status-sub">No data yet</div>
+        <div class="status-card">
+          <div class="status-label">Pages</div>
+          <div class="status-value">0</div>
+          <div class="status-sub">No pages yet</div>
         </div>
       </div>
 
-      <!-- ── Module Grid ── -->
-      <div class="dash-section-heading" aria-label="Modules section">
+      <!-- ── Workflow Modules ── -->
+      <div class="dash-section-heading" style="margin-top:8px;">
         <h3>
           <span class="section-icon" aria-hidden="true">⬡</span>
           Workflow Modules
         </h3>
-        <span class="dash-section-link" aria-label="View all modules">
-          All modules ›
-        </span>
+        <span class="dash-section-link">All modules ›</span>
       </div>
 
-            <div class="modules-grid" role="list" aria-label="Dashboard modules">
+      <div class="modules-grid" role="list" aria-label="Workflow modules">
 
-        <!-- Series Setup -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Series Setup module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Series Setup module">
           <div class="module-card-icon icon-bg-orange" aria-hidden="true">📚</div>
           <div class="module-card-body">
             <div class="module-card-title">Series Setup</div>
-            <div class="module-card-desc">
-              Define your series title, genre, arc structure, and publishing format before building.
-            </div>
+            <div class="module-card-desc">Define your series title, genre, arc structure, and publishing format before building.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- Characters -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Characters module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Characters module">
           <div class="module-card-icon icon-bg-purple" aria-hidden="true">👤</div>
           <div class="module-card-body">
             <div class="module-card-title">Characters</div>
-            <div class="module-card-desc">
-              Build character profiles with traits, physical state, story history, and continuity tracking.
-            </div>
+            <div class="module-card-desc">Build character profiles with traits, physical state, story history, and continuity tracking.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- World -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="World module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="World module">
           <div class="module-card-icon icon-bg-teal" aria-hidden="true">🌍</div>
           <div class="module-card-body">
             <div class="module-card-title">World</div>
-            <div class="module-card-desc">
-              Create locations, define world rules, and track lore for consistent world-building across chapters.
-            </div>
+            <div class="module-card-desc">Create locations, define world rules, and track lore for consistent world-building across chapters.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- Scenes -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Scenes module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Scenes module">
           <div class="module-card-icon icon-bg-blue" aria-hidden="true">🎬</div>
           <div class="module-card-body">
             <div class="module-card-title">Scenes</div>
-            <div class="module-card-desc">
-              Write scene drafts, attach characters and locations, and manage scene sequence across your story.
-            </div>
+            <div class="module-card-desc">Write scene drafts, attach characters and locations, and manage scene sequence across your story.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- Pages -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Pages module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Pages module">
           <div class="module-card-icon icon-bg-green" aria-hidden="true">📄</div>
           <div class="module-card-body">
             <div class="module-card-title">Pages</div>
-            <div class="module-card-desc">
-              Break scenes into pages. Define pacing, page intent, and structure your story's flow.
-            </div>
+            <div class="module-card-desc">Break scenes into pages. Define pacing, page intent, and structure your story's flow.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- Panels -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Panels module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Panels module">
           <div class="module-card-icon icon-bg-amber" aria-hidden="true">⬜</div>
           <div class="module-card-body">
             <div class="module-card-title">Panels</div>
-            <div class="module-card-desc">
-              Break pages into individual panels. Write panel intent, dialogue, and visual direction.
-            </div>
+            <div class="module-card-desc">Break pages into individual panels. Write panel intent, dialogue, and visual direction.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- Continuity -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Continuity module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Continuity module">
           <div class="module-card-icon icon-bg-red" aria-hidden="true">🔗</div>
           <div class="module-card-body">
             <div class="module-card-title">Continuity</div>
-            <div class="module-card-desc">
-              Detect continuity breaks. Track character state, location consistency, and story logic errors.
-            </div>
+            <div class="module-card-desc">Detect continuity breaks. Track character state, location consistency, and story logic errors.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
-        <!-- Visual References -->
-        <article
-          class="module-card"
-          role="listitem"
-          tabindex="0"
-          aria-label="Visual References module"
-        >
+        <article class="module-card" role="listitem" tabindex="0" aria-label="Visual References module">
           <div class="module-card-icon icon-bg-pink" aria-hidden="true">🖼️</div>
           <div class="module-card-body">
             <div class="module-card-title">Visual References</div>
-            <div class="module-card-desc">
-              Attach visual reference images to characters, scenes, and panels. Keep art and script aligned.
-            </div>
+            <div class="module-card-desc">Attach visual reference images to characters, scenes, and panels. Keep art and script aligned.</div>
           </div>
           <div class="module-card-footer">
-            <span class="module-status coming-soon">Coming Soon</span>
             <span class="module-arrow" aria-hidden="true">›</span>
           </div>
         </article>
 
       </div>
-      <!-- /modules-grid -->
+      <!-- Single line replacing all "Coming Soon" badges -->
+      <p class="modules-hint">Modules activate as your series grows.</p>
+
+      <!-- ── Agent Status + Canon Snapshot (two-column) ── -->
+      <div class="dash-two-col-grid">
+
+        <!-- Agent Status Panel -->
+        <section class="dash-panel" aria-labelledby="agents-heading">
+          <div class="dash-section-heading">
+            <h3 id="agents-heading">
+              <span class="section-icon" aria-hidden="true">🤖</span>
+              Agent Status
+            </h3>
+          </div>
+          <div class="agent-list" role="list" aria-label="Agent status list">
+
+            <div class="agent-item" role="listitem">
+              <span class="agent-dot agent-dot-gray" aria-label="Never run"></span>
+              <div class="agent-info">
+                <span class="agent-name">Canon Extractor</span>
+                <span class="agent-status-text">Never run — awaiting first scene</span>
+              </div>
+              <span class="agent-time">—</span>
+            </div>
+
+            <div class="agent-item" role="listitem">
+              <span class="agent-dot agent-dot-gray" aria-label="Never run"></span>
+              <div class="agent-info">
+                <span class="agent-name">Scene Writer</span>
+                <span class="agent-status-text">Never run — no series configured</span>
+              </div>
+              <span class="agent-time">—</span>
+            </div>
+
+            <div class="agent-item" role="listitem">
+              <span class="agent-dot agent-dot-gray" aria-label="Never run"></span>
+              <div class="agent-info">
+                <span class="agent-name">Continuity Validator</span>
+                <span class="agent-status-text">Never run — no scenes to validate</span>
+              </div>
+              <span class="agent-time">—</span>
+            </div>
+
+            <div class="agent-item" role="listitem">
+              <span class="agent-dot agent-dot-gray" aria-label="Never run"></span>
+              <div class="agent-info">
+                <span class="agent-name">Page &amp; Panel Generator</span>
+                <span class="agent-status-text">Never run — awaiting approved scenes</span>
+              </div>
+              <span class="agent-time">—</span>
+            </div>
+
+            <div class="agent-item" role="listitem">
+              <span class="agent-dot agent-dot-gray" aria-label="Never run"></span>
+              <div class="agent-info">
+                <span class="agent-name">Revision Impact Analyzer</span>
+                <span class="agent-status-text">Never run — no revisions logged</span>
+              </div>
+              <span class="agent-time">—</span>
+            </div>
+
+            <div class="agent-item" role="listitem">
+              <span class="agent-dot agent-dot-gray" aria-label="Never run"></span>
+              <div class="agent-info">
+                <span class="agent-name">Production Packager</span>
+                <span class="agent-status-text">Never run — no story package built</span>
+              </div>
+              <span class="agent-time">—</span>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Canon Snapshot Panel -->
+        <section class="dash-panel" aria-labelledby="canon-heading">
+          <div class="dash-section-heading">
+            <h3 id="canon-heading">
+              <span class="section-icon" aria-hidden="true">📜</span>
+              Canon Snapshot
+            </h3>
+            <a href="#" class="dash-section-link" onclick="showToastGlobal('🚧 Canon Manager coming in a future build.', 'info'); return false;">Open Canon Manager ›</a>
+          </div>
+          <div class="canon-grid" role="list" aria-label="Canon entry counts">
+
+            <div class="canon-stat-item" role="listitem">
+              <a href="#" class="canon-stat-link" onclick="showToastGlobal('🚧 Canon Manager — Confirmed filter coming soon.', 'info'); return false;">
+                <span class="canon-stat-count canon-confirmed">0</span>
+                <span class="canon-stat-label">Confirmed</span>
+                <span class="canon-stat-desc">Canon entries locked in</span>
+              </a>
+            </div>
+
+            <div class="canon-stat-item" role="listitem">
+              <a href="#" class="canon-stat-link" onclick="showToastGlobal('🚧 Canon Manager — Suggested filter coming soon.', 'info'); return false;">
+                <span class="canon-stat-count canon-suggested">0</span>
+                <span class="canon-stat-label">Suggested</span>
+                <span class="canon-stat-desc">Awaiting your review</span>
+              </a>
+            </div>
+
+            <div class="canon-stat-item" role="listitem">
+              <a href="#" class="canon-stat-link" onclick="showToastGlobal('🚧 Canon Manager — Disputed filter coming soon.', 'info'); return false;">
+                <span class="canon-stat-count canon-disputed">0</span>
+                <span class="canon-stat-label">Disputed</span>
+                <span class="canon-stat-desc">Flagged for resolution</span>
+              </a>
+            </div>
+
+            <div class="canon-stat-item" role="listitem">
+              <a href="#" class="canon-stat-link" onclick="showToastGlobal('🚧 Canon Manager — Deprecated filter coming soon.', 'info'); return false;">
+                <span class="canon-stat-count canon-deprecated">0</span>
+                <span class="canon-stat-label">Deprecated</span>
+                <span class="canon-stat-desc">No longer in active canon</span>
+              </a>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+      <!-- /dash-two-col-grid -->
 
       <!-- ── Bottom grid: Activity + Quick Start ── -->
       <div class="dash-bottom-grid">
 
-        <!-- Recent Activity -->
         <section aria-labelledby="activity-heading">
           <div class="dash-section-heading">
             <h3 id="activity-heading">
@@ -416,7 +549,7 @@
                 <div class="activity-dot done" aria-hidden="true"></div>
                 <div class="activity-content">
                   <div class="activity-action">Project environment initialized</div>
-                  <div class="activity-meta">Foundation stage · Just now</div>
+                  <div class="activity-meta">System · Just now</div>
                 </div>
               </div>
               <div class="activity-item" role="listitem">
@@ -429,19 +562,18 @@
               <div class="activity-item" role="listitem">
                 <div class="activity-dot muted" aria-hidden="true"></div>
                 <div class="activity-content">
-                  <div class="activity-action">Dashboard shell loaded</div>
+                  <div class="activity-action">Dashboard loaded</div>
                   <div class="activity-meta">System · Just now</div>
                 </div>
               </div>
             </div>
-            <div class="coming-soon-banner" aria-label="Activity feed coming soon">
+            <div class="coming-soon-banner">
               <span class="banner-icon" aria-hidden="true">🚧</span>
               <span>Full activity feed coming in a future build phase.</span>
             </div>
           </div>
         </section>
 
-        <!-- Quick Start -->
         <section aria-labelledby="quickstart-heading">
           <div class="dash-section-heading">
             <h3 id="quickstart-heading">
@@ -450,44 +582,37 @@
             </h3>
           </div>
           <div class="quickstart-panel">
-            <div class="quickstart-list" role="list" aria-label="Quick start actions">
-
-              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Create a new series">
+            <div class="quickstart-list" role="list">
+              <div class="quickstart-item" role="listitem" tabindex="0">
                 <span class="qs-icon" aria-hidden="true">📚</span>
                 <span>Create a new series</span>
                 <span class="qs-arrow" aria-hidden="true">›</span>
               </div>
-
-              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Add your first character">
+              <div class="quickstart-item" role="listitem" tabindex="0">
                 <span class="qs-icon" aria-hidden="true">👤</span>
                 <span>Add your first character</span>
                 <span class="qs-arrow" aria-hidden="true">›</span>
               </div>
-
-              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Define a location">
+              <div class="quickstart-item" role="listitem" tabindex="0">
                 <span class="qs-icon" aria-hidden="true">📍</span>
                 <span>Define a location</span>
                 <span class="qs-arrow" aria-hidden="true">›</span>
               </div>
-
-              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Write your first scene">
+              <div class="quickstart-item" role="listitem" tabindex="0">
                 <span class="qs-icon" aria-hidden="true">🎬</span>
                 <span>Write your first scene</span>
                 <span class="qs-arrow" aria-hidden="true">›</span>
               </div>
-
-              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Attach a visual reference">
+              <div class="quickstart-item" role="listitem" tabindex="0">
                 <span class="qs-icon" aria-hidden="true">🖼️</span>
                 <span>Attach a visual reference</span>
                 <span class="qs-arrow" aria-hidden="true">›</span>
               </div>
-
-              <div class="quickstart-item" role="listitem" tabindex="0" aria-label="Run continuity check">
+              <div class="quickstart-item" role="listitem" tabindex="0">
                 <span class="qs-icon" aria-hidden="true">🔗</span>
                 <span>Run continuity check</span>
                 <span class="qs-arrow" aria-hidden="true">›</span>
               </div>
-
             </div>
           </div>
         </section>
@@ -495,46 +620,7 @@
       </div>
       <!-- /dash-bottom-grid -->
 
-      <!-- Build Roadmap Banner -->
-      <section
-        class="coming-soon-banner"
-        style="margin-bottom: 32px; padding: 20px 24px; border-radius: 12px; flex-direction: column; align-items: flex-start; gap: 12px;"
-        aria-labelledby="roadmap-heading"
-      >
-        <div style="display:flex; align-items:center; gap: 10px;">
-          <span class="banner-icon" style="font-size:1.2rem;" aria-hidden="true">🗺️</span>
-          <strong id="roadmap-heading" style="font-size: 0.9rem; color: var(--text-secondary);">Build Roadmap — What's Coming Next</strong>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; width: 100%;">
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> CRUD for core entities
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> Scene workflow (end-to-end)
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> Continuity checking engine
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> AI-assisted drafting
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> Timeline &amp; canon wiki
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> Visual continuity system
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> Agent console
-          </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
-            <span style="color: var(--accent);" aria-hidden="true">›</span> Full connected system
-          </div>
-        </div>
-      </section>
-
     </main>
-    <!-- /dash-main -->
 
   </div>
   <!-- /dash-layout -->
@@ -544,41 +630,27 @@
 
 <script src="script.js"></script>
 <script>
-  /* Expose showToast globally for inline onclick attributes */
   function showToastGlobal(message, type) {
     var existing = document.getElementById('jpToast');
     if (existing) existing.remove();
-
     var toast = document.createElement('div');
     toast.id = 'jpToast';
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
-
     var borderColor = type === 'success' ? 'rgba(39,201,63,0.30)' : 'rgba(232,98,42,0.30)';
-    var textColor = type === 'success' ? '#27c93f' : 'var(--accent, #E8622A)';
-
+    var textColor   = type === 'success' ? '#27c93f' : 'var(--accent,#E8622A)';
     toast.style.cssText = [
-      'position:fixed',
-      'bottom:28px',
-      'right:28px',
-      'z-index:9999',
+      'position:fixed','bottom:28px','right:28px','z-index:9999',
       'background:var(--bg-card,#201e28)',
       'border:1px solid ' + borderColor,
-      'border-radius:10px',
-      'padding:14px 20px',
-      'font-size:0.88rem',
-      'font-weight:500',
-      'color:' + textColor,
-      'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-      'max-width:340px',
+      'border-radius:10px','padding:14px 20px','font-size:0.88rem',
+      'font-weight:500','color:' + textColor,
+      'box-shadow:0 8px 32px rgba(0,0,0,0.3)','max-width:340px',
       'font-family:var(--font-sans,Inter,sans-serif)',
-      'backdrop-filter:blur(12px)',
-      'animation:fadeUp 0.3s ease forwards'
+      'backdrop-filter:blur(12px)','animation:fadeUp 0.3s ease forwards'
     ].join(';');
-
     toast.textContent = message;
     document.body.appendChild(toast);
-
     setTimeout(function() {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(8px)';

@@ -14,7 +14,11 @@
     /* ── Extra login-page specifics ── */
     .login-topbar {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: var(--box-width);
       z-index: 100;
       height: 60px;
       display: flex;
@@ -36,6 +40,8 @@
   </style>
 </head>
 <body data-page="login">
+
+<div class="page-box">
 
   <!-- Minimal top bar -->
   <nav class="login-topbar" aria-label="Login page navigation">
@@ -163,5 +169,6 @@
   </main>
 
   <script src="script.js"></script>
+</div><!-- /.page-box -->
 </body>
 </html>
