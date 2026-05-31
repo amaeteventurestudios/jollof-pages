@@ -47,7 +47,7 @@ export default function SceneWorkspacePage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-4 sm:px-6 sm:py-5 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 xl:px-10 w-full">
 
         {/* Breadcrumb */}
         <div className="flex items-center justify-center gap-2 text-xs text-jollof-label mb-3 overflow-x-auto scrollbar-none whitespace-nowrap">
@@ -58,7 +58,7 @@ export default function SceneWorkspacePage() {
           <span className="text-jollof-subtext shrink-0">Scene 03</span>
         </div>
 
-        <div className="text-center mb-4">
+        <div className="text-center sm:text-left mb-4">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Scene Workspace</div>
           <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Scene Workspace</h1>
           <p className="text-sm text-jollof-subtext">Draft, review, and approve one scene with canon and continuity in view.</p>
@@ -66,7 +66,7 @@ export default function SceneWorkspacePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Main writing area */}
-          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
+          <div className="lg:col-span-2 space-y-4">
             {/* Scene header */}
             <div className="jollof-card p-4 text-center xl:text-left">
               <div className="flex flex-wrap items-center justify-center xl:justify-start gap-2 mb-2">
@@ -149,7 +149,7 @@ export default function SceneWorkspacePage() {
           </div>
 
           {/* Right panels */}
-          <div className={`space-y-4 w-full max-w-xl mx-auto lg:max-w-none ${showSidePanels ? "block" : "hidden"} lg:block`}>
+          <div className={`space-y-4 ${showSidePanels ? "block" : "hidden"} lg:block`}>
             {/* Continuity check */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center justify-between">

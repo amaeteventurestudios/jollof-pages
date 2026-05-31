@@ -23,7 +23,7 @@ export default function BookDashboardPage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10 w-full">
 
         {/* Breadcrumb */}
         <div className="flex items-center justify-center gap-2 text-xs text-jollof-label mb-4">
@@ -60,7 +60,7 @@ export default function BookDashboardPage() {
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-5 justify-items-center">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
           {[
             { label: "Story Progress", value: `${book.storyProgress}%`, color: "text-jollof-orange", sub: "47% approved" },
             { label: "Pages Planned", value: book.pagesPlanned, color: "text-jollof-text", sub: "10% coverage" },
@@ -68,7 +68,7 @@ export default function BookDashboardPage() {
             { label: "Review Items", value: book.reviewStatus, color: "text-amber-400", sub: "Open" },
             { label: "Production", value: book.productionStatus, color: "text-green-400", sub: `Due: ${book.dueDate}` },
           ].map((m) => (
-            <div key={m.label} className="jollof-card p-3 max-w-sm">
+            <div key={m.label} className="jollof-card p-3">
               <div className="text-[10px] text-jollof-label uppercase tracking-wider mb-1">{m.label}</div>
               <div className={`text-lg sm:text-xl font-bold ${m.color}`}>{m.value}</div>
               <div className="text-[10px] text-jollof-label">{m.sub}</div>

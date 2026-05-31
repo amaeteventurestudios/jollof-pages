@@ -250,7 +250,7 @@ export default function CanonVaultPage() {
         </div>
 
         {/* Bottom info — desktop only */}
-        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0 justify-items-center">
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0">
           {[
             { icon: Shield, title: "Single Source of Truth", desc: "Collect and verify every canon fact across characters, world, and story." },
             { icon: CheckCircle, title: "Canon Review & Suggestions", desc: "Surface extracted facts from approved scenes and route through review." },

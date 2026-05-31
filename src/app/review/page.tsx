@@ -74,7 +74,7 @@ export default function ReviewQueuePage() {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-jollof-border shrink-0">
-          <div className="text-center">
+          <div className="text-center sm:text-left">
             <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Review Queue</div>
             <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Review Queue</h1>
             <p className="text-sm text-jollof-subtext">Keep approvals, blockers, canon suggestions, and revision work organized in one place.</p>
@@ -204,7 +204,7 @@ export default function ReviewQueuePage() {
         </div>
 
         {/* Bottom info */}
-        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0 justify-items-center">
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0">
           {[
             { icon: AlertTriangle, title: "Surface What Matters", desc: "Critical issues rise to the top so nothing slips through." },
             { icon: Zap, title: "Take Action, Fast", desc: "Review details, references, and resolution tools in one focused view." },

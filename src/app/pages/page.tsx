@@ -39,9 +39,9 @@ export default function PagePlannerPage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-5 sm:px-6 sm:py-6 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10 w-full">
 
-        <div className="text-center mb-5">
+        <div className="text-center sm:text-left mb-5">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Page Planner</div>
           <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Page Planner</h1>
           <p className="text-sm text-jollof-subtext">Assign scenes to page ranges and shape the issue visual rhythm.</p>
@@ -50,7 +50,7 @@ export default function PagePlannerPage() {
         {/* Book selector + actions */}
         <div className="jollof-card p-4 mb-5">
           <div className="flex flex-col xl:flex-row xl:items-center gap-3 items-center text-center xl:text-left">
-            <div className="w-full max-w-xl xl:max-w-none xl:flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-xs text-jollof-label mb-1">Book</label>
               <select className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-2.5 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40">
                 <option>Book 1: The Collapse Conjecture</option>
@@ -78,7 +78,7 @@ export default function PagePlannerPage() {
             <h3 className="text-sm font-semibold text-jollof-text">Page Map</h3>
             <span className="text-xs text-jollof-label">Total: {totalPages} pages</span>
           </div>
-          <div className="grid grid-cols-10 sm:grid-cols-16 gap-1 max-w-4xl mx-auto">
+          <div className="grid grid-cols-10 sm:grid-cols-16 gap-1">
             {MOCK_PAGES.map((page) => (
               <div
                 key={page.id}
@@ -106,7 +106,7 @@ export default function PagePlannerPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Scene assignment table */}
-          <div className="lg:col-span-1 w-full max-w-xl mx-auto lg:max-w-none">
+          <div className="lg:col-span-1">
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border">
                 <h3 className="text-sm font-semibold text-jollof-text">Scene Assignment</h3>
@@ -138,7 +138,7 @@ export default function PagePlannerPage() {
           </div>
 
           {/* Right: math controls + pacing health */}
-          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
+          <div className="lg:col-span-2 space-y-4">
             {/* Page math controls */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border">
@@ -235,13 +235,13 @@ export default function PagePlannerPage() {
         </div>
 
         {/* Bottom info */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5">
           {[
             { icon: Zap, title: "Balance Pacing Across Pages", desc: "Visualize page density and rebalance scenes to keep readers engaged." },
             { icon: FileText, title: "Precise Page Math", desc: "Set page ranges, control panel density, and prevent overflow before it happens." },
             { icon: AlertTriangle, title: "Turn Story into Page Structure", desc: "Convert approved scenes directly to pages and build your issue with clarity." },
           ].map((c) => (
-            <div key={c.title} className="jollof-panel p-4 max-w-sm">
+            <div key={c.title} className="jollof-panel p-4">
               <div className="flex items-center gap-2 mb-2">
                 <c.icon size={14} className="text-jollof-orange" />
                 <span className="text-xs font-semibold text-jollof-text">{c.title}</span>

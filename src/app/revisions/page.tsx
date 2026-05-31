@@ -28,9 +28,9 @@ export default function RevisionsPage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-5 sm:px-6 sm:py-6 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10 w-full">
 
-        <div className="text-center mb-5">
+        <div className="text-center sm:text-left mb-5">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Revision Impact View</div>
           <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Revision Impact View</h1>
           <p className="text-sm text-jollof-subtext">See what breaks when a canon, scene, character, or panel changes.</p>
@@ -49,7 +49,7 @@ export default function RevisionsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Changed object panel */}
-          <div className="space-y-4 w-full max-w-xl mx-auto lg:max-w-none">
+          <div className="space-y-4">
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border">
                 <h3 className="text-sm font-semibold text-jollof-text">Changed Object</h3>
@@ -91,7 +91,7 @@ export default function RevisionsPage() {
           </div>
 
           {/* Impact columns */}
-          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
+          <div className="lg:col-span-2 space-y-4">
             {/* Impacted scenes */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function RevisionsPage() {
             </div>
 
             {/* Pages + Panels grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="jollof-card">
                 <div className="p-4 border-b border-jollof-border flex items-center gap-2">
                   <FileText size={14} className="text-purple-400" />

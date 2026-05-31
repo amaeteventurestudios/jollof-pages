@@ -32,7 +32,7 @@ export default function SeriesPage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10 w-full">
 
         {/* Page header */}
         <div className="mb-5 text-center">
@@ -63,7 +63,7 @@ export default function SeriesPage() {
         </div>
 
         {/* Metrics row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5 justify-items-center">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
           <MetricCard label="Books" value={MOCK_SERIES.booksCount} sub="3 active" icon={BookOpen} />
           <MetricCard label="Canon Health" value={`${MOCK_SERIES.canonHealth}%`} sub="2 warnings" icon={Shield} color="text-green-400" />
           <MetricCard label="Review Queue" value={MOCK_SERIES.reviewQueue} sub="Items pending" icon={ClipboardList} color="text-amber-400" />
@@ -193,13 +193,13 @@ export default function SeriesPage() {
         </div>
 
         {/* Bottom info */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5">
           {[
             { icon: TrendingUp, title: "Total Series Visibility", desc: "Track every book, chapter, and asset in one command center." },
             { icon: Activity, title: "Production Health at a Glance", desc: "Monitor integrity, open flags, and progress so nothing slips through." },
             { icon: BookOpen, title: "Editorial Oversight", desc: "Stay ahead of reviews, continuity issues, and blockers across the entire series." },
           ].map((c) => (
-            <div key={c.title} className="jollof-panel p-4 max-w-sm">
+            <div key={c.title} className="jollof-panel p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full bg-jollof-orange/10 border border-jollof-orange/20 flex items-center justify-center shrink-0">
                   <c.icon size={14} className="text-jollof-orange" />

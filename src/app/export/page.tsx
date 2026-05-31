@@ -47,9 +47,9 @@ export default function ExportPage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-5 sm:px-6 sm:py-6 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10 w-full">
 
-        <div className="text-center mb-5">
+        <div className="text-center sm:text-left mb-5">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Production Export</div>
           <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Production Export</h1>
           <p className="text-sm text-jollof-subtext">Package approved book materials for art production handoff.</p>
@@ -72,7 +72,7 @@ export default function ExportPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Main content */}
-          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
+          <div className="lg:col-span-2 space-y-4">
             {/* Step 0: Select Content */}
             {step === 0 && (
               <div className="jollof-card">
@@ -244,7 +244,7 @@ export default function ExportPage() {
           </div>
 
           {/* Package preview tree */}
-          <div className="space-y-4 w-full max-w-xl mx-auto lg:max-w-none">
+          <div className="space-y-4">
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-jollof-text">Package Preview</h3>

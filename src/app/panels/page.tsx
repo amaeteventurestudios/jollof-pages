@@ -142,7 +142,7 @@ export default function PanelStudioPage() {
                   {locked && <StatusBadge status="locked" label="Page Locked" />}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="jollof-card p-4 space-y-4">
                     <div>
                       <label className="block text-[10px] text-jollof-label uppercase tracking-wider mb-1 flex items-center gap-1"><FileText size={10} /> Shot Type</label>

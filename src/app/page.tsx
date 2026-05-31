@@ -38,7 +38,7 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10 w-full">
 
         {/* Page header */}
         <div className="mb-6 text-center">
@@ -69,9 +69,9 @@ export default function HomePage() {
               View all <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {MOCK_RECENT_SERIES.map((series) => (
-              <Link key={series.id} href={series.id === "series-equanauts" ? "/series" : "#"} className="w-full max-w-sm">
+              <Link key={series.id} href={series.id === "series-equanauts" ? "/series" : "#"} className="w-full">
                 <div className={`jollof-card p-4 hover:border-jollof-orange/30 transition-all cursor-pointer group ${statusBorderColors[series.status] ?? ""}`}>
                   <div className="w-full h-24 sm:h-28 rounded-md bg-gradient-to-br from-amber-950 to-jollof-surface border border-jollof-border mb-3 flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -104,7 +104,7 @@ export default function HomePage() {
         {/* Quick actions */}
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-jollof-text mb-3 text-center">Quick Actions</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
             {[
               { label: "Go to Canon", href: "/canon", icon: Shield },
               { label: "Open Story Bible", href: "/story", icon: BookOpen },
@@ -122,13 +122,13 @@ export default function HomePage() {
         </div>
 
         {/* Info cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { icon: Zap, title: "Quick Access", desc: "Launch new series, import packages, or jump straight into your recent work." },
             { icon: TrendingUp, title: "Recent Work at a Glance", desc: "See your latest projects, progress, open flags, and where you left off." },
             { icon: ArrowRight, title: "Start Working Fast", desc: "One click opens your project and takes you exactly where you left off." },
           ].map((card) => (
-            <div key={card.title} className="jollof-panel p-4 max-w-sm">
+            <div key={card.title} className="jollof-panel p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full bg-jollof-orange/10 border border-jollof-orange/20 flex items-center justify-center shrink-0">
                   <card.icon size={14} className="text-jollof-orange" />
