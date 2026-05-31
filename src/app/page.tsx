@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Shield,
@@ -18,6 +19,7 @@ import {
   Target,
   RotateCcw,
 } from "lucide-react";
+import { LandingNavbar } from "@/components/landing/LandingNavbar";
 
 export const metadata: Metadata = {
   title: "Jollof Pages | Continuity Workflow for Graphic Novel Creation",
@@ -46,54 +48,6 @@ export const metadata: Metadata = {
   },
 };
 
-// ─── Navbar ──────────────────────────────────────────────────────────────────
-
-function Navbar() {
-  return (
-    <nav className="sticky top-0 z-50 w-full border-b border-jollof-border/60 bg-[#0a0800]/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-jollof-orange flex items-center justify-center shadow-md shadow-orange-500/30">
-            <span className="text-black font-black text-sm">JP</span>
-          </div>
-          <span className="text-base font-bold text-jollof-text hidden sm:block">Jollof Pages</span>
-        </Link>
-
-        {/* Nav links */}
-        <div className="hidden md:flex items-center gap-7">
-          {["Product", "Workflow", "Continuity", "Agents"].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="text-sm text-jollof-subtext hover:text-jollof-text transition-colors"
-            >
-              {item}
-            </a>
-          ))}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Link
-            href="/login"
-            className="text-sm text-jollof-subtext hover:text-jollof-text transition-colors hidden sm:block"
-          >
-            Admin Login
-          </Link>
-          <a
-            href="#early-access"
-            className="inline-flex items-center gap-1.5 bg-jollof-orange text-black font-bold text-sm px-4 py-2 rounded-lg hover:bg-orange-400 active:scale-[0.97] transition-all shadow-md shadow-orange-500/20"
-          >
-            Get Early Access
-            <ArrowRight size={14} />
-          </a>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
 function HeroSection() {
@@ -101,7 +55,7 @@ function HeroSection() {
     <section className="relative overflow-hidden pt-16 pb-24 sm:pt-20 sm:pb-32">
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-jollof-orange/6 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-jollof-orange/[0.06] rounded-full blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-amber-900/10 rounded-full blur-[100px]" />
       </div>
 
@@ -109,7 +63,7 @@ function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 items-center">
           {/* Left copy */}
           <div>
-            <div className="inline-flex items-center gap-2 border border-jollof-orange/30 bg-jollof-orange/8 text-jollof-orange text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 border border-jollof-orange/30 bg-jollof-orange/[0.08] text-jollof-orange text-xs font-medium px-3 py-1.5 rounded-full mb-6">
               <Zap size={11} />
               Continuity infrastructure for graphic novel creators
             </div>
@@ -128,7 +82,6 @@ function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <a
                 href="#early-access"
-                id="early-access"
                 className="inline-flex items-center justify-center gap-2 bg-jollof-orange text-black font-bold text-sm px-6 py-3.5 rounded-xl hover:bg-orange-400 active:scale-[0.97] transition-all shadow-lg shadow-orange-500/25 min-h-[52px]"
               >
                 Start Building
@@ -144,7 +97,7 @@ function HeroSection() {
             </div>
 
             {/* Trust row */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="flex -space-x-2">
                 {["A", "K", "T", "M"].map((l, i) => (
                   <div
@@ -155,7 +108,7 @@ function HeroSection() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} size={11} className="text-jollof-orange fill-jollof-orange" />
                 ))}
@@ -166,7 +119,6 @@ function HeroSection() {
 
           {/* Right — product dashboard */}
           <div className="relative">
-            {/* Hero dashboard visual */}
             <div className="relative rounded-2xl border border-jollof-border bg-[#0f0d08] overflow-hidden shadow-2xl shadow-black/60">
               {/* Top bar */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-jollof-border/50 bg-[#0f0d08]">
@@ -317,7 +269,7 @@ function HeroSection() {
             </div>
 
             {/* Floating glow */}
-            <div className="absolute -inset-4 bg-jollof-orange/4 rounded-3xl blur-2xl -z-10" aria-hidden="true" />
+            <div className="absolute -inset-4 bg-jollof-orange/[0.04] rounded-3xl blur-2xl -z-10" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -374,10 +326,10 @@ function ProblemSection() {
               <div className="text-xs font-bold text-jollof-orange uppercase tracking-widest mb-1">Jollof Pages keeps it connected</div>
               <p className="text-sm text-jollof-subtext mb-6">One system. Every thread. Always connected.</p>
 
-              <div className="flex flex-wrap items-center gap-2 mb-6">
+              <div className="flex flex-wrap items-start gap-y-4 mb-6">
                 {solution.map(({ icon: Icon, label, desc }, i) => (
                   <div key={label} className="flex items-center gap-1.5">
-                    {i > 0 && <div className="w-6 h-px bg-jollof-orange/40 mx-1" />}
+                    {i > 0 && <div className="w-5 h-px bg-jollof-orange/40 mx-1 mt-[-20px]" />}
                     <div className="flex flex-col items-center gap-1">
                       <div className="w-10 h-10 rounded-xl bg-jollof-orange/10 border border-jollof-orange/25 flex items-center justify-center">
                         <Icon size={16} className="text-jollof-orange" />
@@ -442,7 +394,7 @@ function FeaturesSection() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map(({ icon: Icon, title, desc }) => (
             <div key={title} className="bg-[#0f0d08] border border-jollof-border hover:border-jollof-orange/30 rounded-xl p-6 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-jollof-orange/10 border border-jollof-orange/20 flex items-center justify-center mb-4 group-hover:bg-jollof-orange/15 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-jollof-orange/10 border border-jollof-orange/20 flex items-center justify-center mb-4 group-hover:bg-jollof-orange/[0.15] transition-colors">
                 <Icon size={18} className="text-jollof-orange" />
               </div>
               <h3 className="text-sm font-bold text-jollof-text mb-2">{title}</h3>
@@ -458,13 +410,20 @@ function FeaturesSection() {
 // ─── Workflow Strip ───────────────────────────────────────────────────────────
 
 function WorkflowSection() {
-  const steps = [
+  const steps: Array<{
+    num: number;
+    label: string;
+    desc: string;
+    img: string | null;
+    imgAlt: string | null;
+    detail: React.ReactNode;
+  }> = [
     {
       num: 1,
       label: "Series Setup",
       desc: "Series details, team & roles, preferences.",
       img: "/images/jollof-pages/workflow-series-placeholder.webp",
-      imgAlt: "Series setup placeholder — cover art will replace this",
+      imgAlt: "Series setup — cover art placeholder",
       detail: (
         <div className="space-y-1 text-[9px] text-jollof-subtext">
           <div className="flex justify-between"><span>Characters</span><span className="text-jollof-text font-medium">12</span></div>
@@ -478,7 +437,7 @@ function WorkflowSection() {
       label: "Canon",
       desc: "Build your world and its rules.",
       img: "/images/jollof-pages/workflow-canon-placeholder.webp",
-      imgAlt: "Canon placeholder — character/world art will replace this",
+      imgAlt: "Canon — world art placeholder",
       detail: (
         <div className="space-y-1 text-[9px] text-jollof-subtext">
           <p>Canon entries locked and versioned.</p>
@@ -490,7 +449,7 @@ function WorkflowSection() {
       label: "Scenes",
       desc: "Outline and structure each scene.",
       img: "/images/jollof-pages/workflow-scenes-placeholder.webp",
-      imgAlt: "Scenes placeholder — scene art will replace this",
+      imgAlt: "Scenes — scene art placeholder",
       detail: (
         <div className="space-y-0.5 text-[9px] text-jollof-subtext">
           {["The Call", "Crossing Lines", "Market Tension"].map((s) => (
@@ -504,7 +463,7 @@ function WorkflowSection() {
       label: "Pages",
       desc: "Plan pages with beats, goals, and notes.",
       img: "/images/jollof-pages/workflow-pages-placeholder.webp",
-      imgAlt: "Pages placeholder — page thumbnails will replace this",
+      imgAlt: "Pages — page thumbnails placeholder",
       detail: (
         <div className="flex gap-1">
           {[12, 13, 14].map((n) => (
@@ -520,7 +479,7 @@ function WorkflowSection() {
       label: "Panels",
       desc: "Break pages into panels and shots.",
       img: "/images/jollof-pages/workflow-panels-placeholder.webp",
-      imgAlt: "Panels placeholder — panel art will replace this",
+      imgAlt: "Panels — panel art placeholder",
       detail: (
         <div className="grid grid-cols-2 gap-1">
           {[...Array(4)].map((_, i) => (
@@ -577,7 +536,7 @@ function WorkflowSection() {
         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-none">
           {steps.map(({ num, label, desc, img, imgAlt, detail }) => (
             <div key={num} className="flex-shrink-0 w-36 sm:w-44">
-              {/* Step number */}
+              {/* Step number + connector */}
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-6 h-6 rounded-full bg-jollof-orange flex items-center justify-center shrink-0">
                   <span className="text-[10px] font-black text-black">{num}</span>
@@ -592,21 +551,21 @@ function WorkflowSection() {
                 <p className="text-xs font-bold text-jollof-text mb-0.5">{label}</p>
                 <p className="text-[10px] text-jollof-label mb-3 leading-snug">{desc}</p>
 
-                {/* Image placeholder */}
                 {img ? (
                   <div className="w-full h-16 rounded-lg overflow-hidden mb-3 bg-[#1a1208] border border-jollof-border/50 relative">
-                    <img
+                    <Image
+                      fill
                       src={img}
                       alt={imgAlt ?? ""}
-                      className="w-full h-full object-cover opacity-60"
+                      className="object-cover opacity-60"
+                      sizes="(max-width: 640px) 144px, 176px"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span className="text-[8px] text-jollof-label text-center px-1">art placeholder</span>
                     </div>
                   </div>
                 ) : null}
 
-                {/* Detail content */}
                 <div>{detail}</div>
               </div>
             </div>
@@ -654,8 +613,8 @@ function AgentsSection() {
   const queue = [
     { type: "Scene Draft", item: "Scene 3 – Market Tension", by: "Scene Writer", status: "needs_review" },
     { type: "Canon Update", item: "Ama – New Outfit", by: "Canon Extractor", status: "needs_review" },
-    { type: "Continuity Flag", item: "Injury State Mismatch\nPg 14 – Panel 3", by: "Continuity Validator", status: "needs_review" },
-    { type: "Panel Set", item: "Page 12 – Panel 1-6", by: "Panel Generator", status: "approved" },
+    { type: "Continuity Flag", item: "Injury State Mismatch — Pg 14 · Panel 3", by: "Continuity Validator", status: "needs_review" },
+    { type: "Panel Set", item: "Page 12 – Panel 1–6", by: "Panel Generator", status: "approved" },
   ];
 
   return (
@@ -682,14 +641,16 @@ function AgentsSection() {
                     </div>
                   </div>
                   <p className="text-[10px] text-jollof-label leading-relaxed mb-3">{desc}</p>
-                  {/* Agent portrait placeholder */}
+                  {/* Portrait placeholder */}
                   <div className="w-full h-20 rounded-lg bg-[#1a1208] border border-jollof-border/50 overflow-hidden relative">
-                    <img
+                    <Image
+                      fill
                       src={img}
                       alt={imgAlt}
-                      className="w-full h-full object-cover opacity-50"
+                      className="object-cover opacity-50"
+                      sizes="(max-width: 1024px) 50vw, 200px"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span className="text-[8px] text-jollof-label">portrait placeholder</span>
                     </div>
                   </div>
@@ -700,20 +661,20 @@ function AgentsSection() {
 
           {/* Right — approval queue */}
           <div>
-            {/* Handwritten note */}
-            <div className="mb-5 flex items-center justify-end">
-              <div className="text-right">
-                <p className="text-jollof-orange font-bold italic text-sm" style={{ fontFamily: "Georgia, serif" }}>
-                  &#x2B10; Agents draft.
+            {/* "Agents draft. Humans approve." callout */}
+            <div className="mb-5 flex justify-end">
+              <div className="text-right border-r-2 border-jollof-orange pr-3 py-0.5">
+                <p className="text-jollof-orange font-bold italic text-sm leading-snug" style={{ fontFamily: "Georgia, serif" }}>
+                  Agents draft.
                 </p>
-                <p className="text-jollof-orange font-bold italic text-sm" style={{ fontFamily: "Georgia, serif" }}>
+                <p className="text-jollof-orange font-bold italic text-sm leading-snug" style={{ fontFamily: "Georgia, serif" }}>
                   Humans approve.
                 </p>
               </div>
             </div>
 
             <div className="bg-[#0f0d08] border border-jollof-border rounded-2xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-jollof-border flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-jollof-border flex items-center justify-between flex-wrap gap-2">
                 <span className="text-sm font-bold text-jollof-text">Approval Queue</span>
                 <div className="flex gap-1">
                   {["All (4)", "Needs Review (3)", "Approved (1)"].map((t, i) => (
@@ -730,7 +691,6 @@ function AgentsSection() {
               <div className="divide-y divide-jollof-border/50">
                 {queue.map(({ type, item, by, status }) => (
                   <div key={item} className="px-5 py-4 flex items-center gap-3">
-                    {/* Thumbnail placeholder */}
                     <div className="w-9 h-9 rounded-lg bg-[#1a1208] border border-jollof-border/50 shrink-0 flex items-center justify-center">
                       {status === "approved" ? (
                         <Check size={13} className="text-green-400" />
@@ -740,7 +700,7 @@ function AgentsSection() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] text-jollof-label">{type}</p>
-                      <p className="text-xs font-medium text-jollof-text truncate">{item.split("\n")[0]}</p>
+                      <p className="text-xs font-medium text-jollof-text truncate">{item}</p>
                       <p className="text-[9px] text-jollof-label">By {by}</p>
                     </div>
                     {status === "approved" ? (
@@ -803,11 +763,11 @@ function ContinuitySection() {
           <div className="flex flex-col lg:flex-row">
             {/* Sidebar */}
             <div className="lg:w-44 border-b lg:border-b-0 lg:border-r border-jollof-border/50 p-4">
-              <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible scrollbar-none">
+              <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible scrollbar-none" aria-label="Continuity sections">
                 {menuItems.map(({ label, active }) => (
                   <button
                     key={label}
-                    className={`text-xs px-3 py-2 rounded-lg whitespace-nowrap text-left transition-colors ${active ? "bg-jollof-orange/15 text-jollof-orange border border-jollof-orange/25 font-medium" : "text-jollof-subtext hover:text-jollof-text hover:bg-jollof-panel"}`}
+                    className={`text-xs px-3 py-2 rounded-lg whitespace-nowrap text-left transition-colors ${active ? "bg-jollof-orange/[0.15] text-jollof-orange border border-jollof-orange/25 font-medium" : "text-jollof-subtext hover:text-jollof-text hover:bg-jollof-panel"}`}
                   >
                     {label}
                   </button>
@@ -821,14 +781,15 @@ function ContinuitySection() {
                 {/* Character card — Zuri */}
                 <div className="bg-[#161209] border border-jollof-border rounded-xl p-4">
                   <div className="flex items-start gap-3 mb-4">
-                    {/* Portrait placeholder */}
                     <div className="w-14 h-16 rounded-lg bg-[#1a1208] border border-jollof-border/50 overflow-hidden relative shrink-0">
-                      <img
+                      <Image
+                        fill
                         src="/images/jollof-pages/continuity-zuri-placeholder.webp"
                         alt="Zuri character portrait placeholder"
-                        className="w-full h-full object-cover opacity-50"
+                        className="object-cover opacity-50"
+                        sizes="56px"
                       />
-                      <div className="absolute inset-0 flex items-end justify-center pb-0.5">
+                      <div className="absolute inset-x-0 bottom-0 flex justify-center pb-0.5 pointer-events-none">
                         <span className="text-[7px] text-jollof-label">portrait</span>
                       </div>
                     </div>
@@ -857,12 +818,14 @@ function ContinuitySection() {
                   <div className="flex gap-1.5 mb-2">
                     {[1, 2, 3, 4].map((n) => (
                       <div key={n} className="flex-1 aspect-square rounded-md bg-[#1a1208] border border-jollof-border/50 overflow-hidden relative">
-                        <img
+                        <Image
+                          fill
                           src={`/images/jollof-pages/continuity-clothing-${n}-placeholder.webp`}
-                          alt={`Clothing state ${n} placeholder`}
-                          className="w-full h-full object-cover opacity-50"
+                          alt={`Clothing state scene ${n} placeholder`}
+                          className="object-cover opacity-50"
+                          sizes="40px"
                         />
-                        <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-0.5">
+                        <div className="absolute inset-x-0 bottom-0 flex justify-center pb-0.5 pointer-events-none">
                           <span className="text-[6px] text-jollof-label">Sc {n}</span>
                         </div>
                       </div>
@@ -913,7 +876,7 @@ function ContinuitySection() {
 
 function CTASection() {
   return (
-    <section className="relative py-24 sm:py-32 border-t border-jollof-border/40 overflow-hidden">
+    <section id="early-access" className="relative py-24 sm:py-32 border-t border-jollof-border/40 overflow-hidden">
       {/* Cityscape background placeholder */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
@@ -924,7 +887,7 @@ function CTASection() {
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0800] via-[#0a0800]/60 to-[#0a0800]" aria-hidden="true" />
       {/* Orange glow */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-jollof-orange/8 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-jollof-orange/[0.08] rounded-full blur-[100px]" />
       </div>
 
       <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-8 text-center">
@@ -936,13 +899,13 @@ function CTASection() {
           Stop patching tools together. Start building stories that stay consistent from first idea to final panel.
         </p>
         <a
-          href="#early-access"
+          href="mailto:amaete@jollofpages.com"
           className="inline-flex items-center gap-2 bg-jollof-orange text-black font-bold text-base px-8 py-4 rounded-xl hover:bg-orange-400 active:scale-[0.97] transition-all shadow-xl shadow-orange-500/30 min-h-[56px]"
         >
           Join Early Access
           <ArrowRight size={18} />
         </a>
-        <div className="mt-6 flex items-center justify-center gap-3">
+        <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
           <div className="flex -space-x-2">
             {["A", "K", "T", "M", "O"].map((l, i) => (
               <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0a0800] bg-gradient-to-br from-amber-700 to-jollof-surface flex items-center justify-center text-[8px] font-bold text-jollof-text">
@@ -1018,23 +981,23 @@ function Footer() {
                 <Icon size={14} />
               </a>
             ))}
-            {/* Discord placeholder */}
+            {/* Discord */}
             <a
               href="#"
               aria-label="Discord"
               className="w-8 h-8 rounded-lg border border-jollof-border flex items-center justify-center text-jollof-label hover:text-jollof-text hover:border-jollof-orange/40 transition-all"
             >
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
                 <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.055a19.905 19.905 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
               </svg>
             </a>
-            {/* Instagram placeholder */}
+            {/* Instagram */}
             <a
               href="#"
               aria-label="Instagram"
               className="w-8 h-8 rounded-lg border border-jollof-border flex items-center justify-center text-jollof-label hover:text-jollof-text hover:border-jollof-orange/40 transition-all"
             >
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
               </svg>
             </a>
@@ -1050,7 +1013,7 @@ function Footer() {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0a0800]">
-      <Navbar />
+      <LandingNavbar />
       <HeroSection />
       <ProblemSection />
       <FeaturesSection />

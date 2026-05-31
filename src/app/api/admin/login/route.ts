@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
   }
 
-  // Create a signed session value: base64(username:timestamp) is enough for
-  // this use case — the middleware validates against env vars on every request.
-  const sessionValue = Buffer.from(`${adminUser}:${Date.now()}`).toString('base64');
+  // base64url avoids + / = characters that are unsafe in cookie values.
+  // Middleware validates username against the env var on every request.
+  const sessionValue = Buffer.from(`${adminUser}:${Date.now()}`).toString('base64url');
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set(SESSION_COOKIE, sessionValue, {

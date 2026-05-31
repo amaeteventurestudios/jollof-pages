@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   if (session) {
     try {
-      const decoded = Buffer.from(session, 'base64').toString('utf8');
+      const decoded = Buffer.from(session, 'base64url').toString('utf8');
       const colonIdx = decoded.indexOf(':');
       if (colonIdx !== -1) {
         const sessionUser = decoded.slice(0, colonIdx);

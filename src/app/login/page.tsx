@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useRef, useCallback } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowLeft, Lock, Mail, Copy, Check, RefreshCw, Shield, Users, GitBranch } from "lucide-react";
@@ -14,7 +14,13 @@ function generatePassword(length = 24): string {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") ?? "/admin";
+
+  // Guard against open-redirect: only allow same-origin relative paths
+  const rawRedirect = searchParams.get("redirect") ?? "/admin";
+  const redirectPath =
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/admin";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,8 +30,6 @@ function LoginForm() {
   const [showResetPanel, setShowResetPanel] = useState(false);
   const [generatedPw, setGeneratedPw] = useState("");
   const [copied, setCopied] = useState(false);
-
-  const usernameRef = useRef<HTMLInputElement>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +177,7 @@ function LoginForm() {
                       <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-jollof-label" aria-hidden="true" />
                       <input
                         id="username"
-                        ref={usernameRef}
+                        autoFocus
                         type="text"
                         name="username"
                         autoComplete="username"
