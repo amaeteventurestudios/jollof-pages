@@ -37,6 +37,7 @@
   ],
   "exclude": [
     "node_modules",
-    "reference:jollof-pages-test"
+    "reference:jollof-pages-test",
+    ".next/dev/**"
   ]
 }
