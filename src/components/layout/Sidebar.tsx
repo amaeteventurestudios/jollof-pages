@@ -11,6 +11,7 @@ import {
   Zap,
   ChevronDown,
   User,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,9 +33,10 @@ const NAV_ITEMS = [
 
 interface SidebarNavItemProps {
   item: (typeof NAV_ITEMS)[number];
+  onClose: () => void;
 }
 
-function NavItem({ item }: SidebarNavItemProps) {
+function NavItem({ item, onClose }: SidebarNavItemProps) {
   const pathname = usePathname();
 
   if ("children" in item && item.children) {
@@ -42,7 +44,7 @@ function NavItem({ item }: SidebarNavItemProps) {
     return (
       <div>
         <div className={cn(
-          "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium",
+          "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm font-medium",
           isAnyActive ? "text-jollof-orange" : "text-jollof-subtext"
         )}>
           <item.icon size={16} className="shrink-0" />
@@ -54,8 +56,9 @@ function NavItem({ item }: SidebarNavItemProps) {
             <Link
               key={child.href}
               href={child.href}
+              onClick={onClose}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded text-xs transition-colors",
+                "flex items-center gap-2 px-3 py-2 rounded text-xs transition-colors",
                 pathname === child.href
                   ? "text-jollof-orange bg-jollof-orange/10"
                   : "text-jollof-subtext hover:text-jollof-text hover:bg-jollof-panel"
@@ -70,14 +73,14 @@ function NavItem({ item }: SidebarNavItemProps) {
   }
 
   if (!("href" in item)) return null;
-
   const isActive = pathname === item.href;
 
   return (
     <Link
       href={item.href}
+      onClick={onClose}
       className={cn(
-        "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-all",
+        "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm font-medium transition-all min-h-[44px]",
         isActive
           ? "text-jollof-orange bg-jollof-orange/10 border border-jollof-orange/20"
           : "text-jollof-subtext hover:text-jollof-text hover:bg-jollof-panel"
@@ -94,13 +97,47 @@ function NavItem({ item }: SidebarNavItemProps) {
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   return (
-    <aside className="w-52 shrink-0 flex flex-col bg-[#0f0d08] border-r border-jollof-border min-h-screen">
+    <>
+      {/* Desktop sidebar — always visible lg+ */}
+      <aside className="hidden lg:flex w-52 shrink-0 flex-col bg-[#0f0d08] border-r border-jollof-border min-h-screen">
+        <SidebarContent onClose={onClose} />
+      </aside>
+
+      {/* Mobile drawer — slides in from left */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-[#0f0d08] border-r border-jollof-border transition-transform duration-300 ease-in-out lg:hidden",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Drawer close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-2 rounded-md text-jollof-label hover:text-jollof-text hover:bg-jollof-panel transition-colors"
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
+        <SidebarContent onClose={onClose} />
+      </aside>
+    </>
+  );
+}
+
+function SidebarContent({ onClose }: { onClose: () => void }) {
+  return (
+    <>
       {/* Logo */}
       <div className="px-4 py-5 border-b border-jollof-border">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-jollof-orange flex items-center justify-center">
+        <Link href="/" onClick={onClose} className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-jollof-orange flex items-center justify-center shrink-0">
             <Zap size={14} className="text-black" />
           </div>
           <div>
@@ -112,7 +149,11 @@ export function Sidebar() {
 
       {/* Series selector */}
       <div className="px-3 py-3 border-b border-jollof-border">
-        <Link href="/series" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-jollof-panel transition-colors group">
+        <Link
+          href="/series"
+          onClick={onClose}
+          className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-jollof-panel transition-colors group"
+        >
           <div className="w-6 h-6 rounded bg-amber-900/60 border border-amber-700/40 flex items-center justify-center shrink-0">
             <span className="text-[9px] font-bold text-amber-400">EQ</span>
           </div>
@@ -120,14 +161,14 @@ export function Sidebar() {
             <div className="text-xs font-medium text-jollof-text truncate">Equanauts</div>
             <div className="text-[10px] text-jollof-label">Book 1 · Active</div>
           </div>
-          <ChevronDown size={12} className="text-jollof-label" />
+          <ChevronDown size={12} className="text-jollof-label shrink-0" />
         </Link>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 flex flex-col gap-0.5 overflow-y-auto">
         {NAV_ITEMS.map((item, i) => (
-          <NavItem key={i} item={item} />
+          <NavItem key={i} item={item} onClose={onClose} />
         ))}
       </nav>
 
@@ -142,14 +183,17 @@ export function Sidebar() {
             <div className="text-[9px] text-jollof-label">Workspace</div>
           </div>
         </div>
-        <Link href="#" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-jollof-panel transition-colors">
+        <Link
+          href="#"
+          className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-jollof-panel transition-colors min-h-[44px]"
+        >
           <User size={13} className="text-jollof-label" />
           <span className="text-xs text-jollof-subtext">Amaete Umanah</span>
         </Link>
         <div className="px-2">
-          <span className="text-[9px] text-jollof-label/60 italic">Prototype data · Story OS pending</span>
+          <span className="text-[9px] text-jollof-label/60 italic">Prototype · Story OS pending</span>
         </div>
       </div>
-    </aside>
+    </>
   );
 }

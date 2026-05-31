@@ -10,7 +10,7 @@ import { useToast } from "@/lib/toast";
 import { MOCK_REVIEW_ITEMS } from "@/lib/mock/jollof-data";
 import {
   AlertTriangle, Shield, Layers, RotateCcw, CheckCircle,
-  Clock, User, ExternalLink, MessageSquare, Flag, Zap
+  Clock, User, ExternalLink, MessageSquare, Flag, Zap, ChevronLeft
 } from "lucide-react";
 
 const FILTER_TABS = [
@@ -31,6 +31,8 @@ export default function ReviewQueuePage() {
   const [fixNote, setFixNote] = useState("");
   const [addNoteOpen, setAddNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
+  // Mobile view: "list" | "detail"
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
 
   const filtered = MOCK_REVIEW_ITEMS.filter((item) => {
     if (activeFilter === "all") return true;
@@ -58,11 +60,7 @@ export default function ReviewQueuePage() {
   };
 
   const severityIcon = (sev: string) =>
-    sev === "critical" ? (
-      <AlertTriangle size={13} className="text-red-400" />
-    ) : (
-      <AlertTriangle size={13} className="text-amber-400" />
-    );
+    sev === "critical" ? <AlertTriangle size={13} className="text-red-400 shrink-0" /> : <AlertTriangle size={13} className="text-amber-400 shrink-0" />;
 
   const typeIcon: Record<string, React.ReactNode> = {
     continuity: <Shield size={12} className="text-blue-400" />,
@@ -75,22 +73,21 @@ export default function ReviewQueuePage() {
     <AppShell>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-jollof-border">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-jollof-border shrink-0">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Review Queue</div>
-          <h1 className="text-2xl font-black text-jollof-text mb-0.5">Review Queue</h1>
-          <p className="text-sm text-jollof-subtext">Keep approvals, blockers, canon suggestions, panel reviews, and revision work organized in one place.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Review Queue</h1>
+          <p className="text-sm text-jollof-subtext">Keep approvals, blockers, canon suggestions, and revision work organized in one place.</p>
         </div>
 
         {/* Filter tabs */}
-        <div className="px-6 pt-3 border-b border-jollof-border bg-[#0f0d08]/20">
-          <Tabs tabs={FILTER_TABS} active={activeFilter} onChange={setActiveFilter} />
+        <div className="px-4 sm:px-6 border-b border-jollof-border bg-[#0f0d08]/20 shrink-0">
+          <Tabs tabs={FILTER_TABS} active={activeFilter} onChange={(id) => { setActiveFilter(id); setMobileView("list"); }} />
         </div>
 
-        {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
           {/* Items list */}
-          <div className="w-80 shrink-0 border-r border-jollof-border overflow-y-auto">
-            <div className="p-3 border-b border-jollof-border flex items-center justify-between">
+          <div className={`${mobileView === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-80 shrink-0 border-r border-jollof-border overflow-y-auto`}>
+            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0">
               <span className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Review Items</span>
               <span className="text-xs text-jollof-label">{filtered.length}</span>
             </div>
@@ -100,31 +97,26 @@ export default function ReviewQueuePage() {
                 <p className="text-sm text-jollof-subtext">No items in this category.</p>
               </div>
             ) : (
-              <div className="divide-y divide-jollof-border">
+              <div className="divide-y divide-jollof-border overflow-y-auto">
                 {filtered.map((item) => (
                   <div
                     key={item.id}
-                    onClick={() => setSelectedItem(item)}
-                    className={`px-4 py-3 cursor-pointer hover:bg-jollof-panel/40 transition-colors ${selectedItem.id === item.id ? "bg-jollof-orange/5 border-l-2 border-l-jollof-orange" : ""}`}
+                    onClick={() => { setSelectedItem(item); setMobileView("detail"); }}
+                    className={`px-4 py-3 cursor-pointer hover:bg-jollof-panel/40 transition-colors min-h-[72px] ${selectedItem.id === item.id ? "bg-jollof-orange/5 border-l-2 border-l-jollof-orange" : ""}`}
                   >
                     <div className="flex items-start gap-2 mb-1">
                       {severityIcon(item.severity)}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-jollof-text leading-snug">{item.title}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           {typeIcon[item.type]}
                           <span className="text-[10px] text-jollof-label">{item.type}</span>
-                          <span className="text-[10px] text-jollof-label">·</span>
-                          <StatusBadge
-                            status={statuses[item.id] ?? item.severity}
-                            className="text-[9px]"
-                          />
+                          <StatusBadge status={statuses[item.id] ?? item.severity} className="text-[9px]" />
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-jollof-label pl-5">
-                      <Clock size={9} />
-                      <span>Due {item.dueDate}</span>
+                      <Clock size={9} /><span>Due {item.dueDate}</span>
                     </div>
                   </div>
                 ))}
@@ -134,51 +126,51 @@ export default function ReviewQueuePage() {
 
           {/* Detail panel */}
           {selectedItem && (
-            <div className="flex-1 overflow-y-auto p-5">
+            <div className={`${mobileView === "detail" ? "flex" : "hidden"} lg:flex flex-col flex-1 overflow-y-auto p-4 sm:p-5`}>
               <div className="max-w-2xl">
+                {/* Mobile back */}
+                <button className="lg:hidden flex items-center gap-1 text-xs text-jollof-orange mb-4" onClick={() => setMobileView("list")}>
+                  <ChevronLeft size={14} /> Back to queue
+                </button>
+
                 {/* Header */}
                 <div className="flex items-start gap-3 mb-4">
                   {severityIcon(selectedItem.severity)}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h2 className="text-lg font-bold text-jollof-text">{selectedItem.title}</h2>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h2 className="text-base sm:text-lg font-bold text-jollof-text">{selectedItem.title}</h2>
                       <StatusBadge status={statuses[selectedItem.id] ?? selectedItem.severity} />
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-jollof-label">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-jollof-label">
                       <span className="flex items-center gap-1"><User size={10} /> {selectedItem.assignedTo}</span>
                       <span className="flex items-center gap-1"><Clock size={10} /> Due {selectedItem.dueDate}</span>
-                      <span className="flex items-center gap-1">{typeIcon[selectedItem.type]} {selectedItem.type}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Issue description */}
                 <div className="jollof-card p-4 mb-4">
                   <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-2">Issue Description</h3>
                   <p className="text-sm text-jollof-text leading-relaxed">{selectedItem.description}</p>
                 </div>
 
-                {/* Scene reference */}
                 <div className="jollof-card p-4 mb-4">
                   <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-2">References</h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <Flag size={12} className="text-jollof-orange" />
                     <span className="text-sm text-jollof-subtext">{selectedItem.scene}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1">
                     {selectedItem.affectedEntities.map((e) => (
                       <span key={e} className="text-xs bg-jollof-surface border border-jollof-border px-2 py-0.5 rounded text-jollof-subtext">{e}</span>
                     ))}
                   </div>
                 </div>
 
-                {/* Issue detail */}
                 <div className="jollof-card p-4 mb-4">
                   <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-2">Issue</h3>
                   <p className="text-sm text-jollof-subtext leading-relaxed">{selectedItem.issue}</p>
                 </div>
 
-                {/* Suggested resolution */}
                 {selectedItem.actionSuggestion && (
                   <div className="bg-jollof-orange/5 border border-jollof-orange/20 rounded-lg p-4 mb-4">
                     <h3 className="text-xs font-semibold text-jollof-orange uppercase tracking-wider mb-1.5">Suggested Fix</h3>
@@ -187,15 +179,11 @@ export default function ReviewQueuePage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-wrap gap-2">
                   <Link href={selectedItem.type === "continuity" || selectedItem.type === "panels" ? "/scenes/scene-03" : "/canon"}>
-                    <Button variant="secondary" icon={ExternalLink} size="sm">
-                      Open in Story
-                    </Button>
+                    <Button variant="secondary" icon={ExternalLink} size="sm">Open in Story</Button>
                   </Link>
-                  <Button variant="outline" icon={Zap} size="sm" onClick={() => setSuggestFixOpen(true)}>
-                    Suggest Fix
-                  </Button>
+                  <Button variant="outline" icon={Zap} size="sm" onClick={() => setSuggestFixOpen(true)}>Suggest Fix</Button>
                   <Button
                     variant="danger"
                     icon={Flag}
@@ -203,11 +191,9 @@ export default function ReviewQueuePage() {
                     onClick={() => handleBlock(selectedItem.id)}
                     disabled={statuses[selectedItem.id] === "blocked"}
                   >
-                    {statuses[selectedItem.id] === "blocked" ? "Blocked ✓" : "Mark as Blocked"}
+                    {statuses[selectedItem.id] === "blocked" ? "Blocked ✓" : "Mark Blocked"}
                   </Button>
-                  <Button variant="ghost" icon={MessageSquare} size="sm" onClick={() => setAddNoteOpen(true)}>
-                    Add Note
-                  </Button>
+                  <Button variant="ghost" icon={MessageSquare} size="sm" onClick={() => setAddNoteOpen(true)}>Note</Button>
                 </div>
               </div>
             </div>
@@ -215,7 +201,7 @@ export default function ReviewQueuePage() {
         </div>
 
         {/* Bottom info */}
-        <div className="grid grid-cols-3 gap-4 p-4 border-t border-jollof-border">
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0">
           {[
             { icon: AlertTriangle, title: "Surface What Matters", desc: "Critical issues rise to the top so nothing slips through." },
             { icon: Zap, title: "Take Action, Fast", desc: "Review details, references, and resolution tools in one focused view." },
@@ -235,20 +221,14 @@ export default function ReviewQueuePage() {
       {/* Suggest Fix Modal */}
       <Modal open={suggestFixOpen} onClose={() => setSuggestFixOpen(false)} title="Suggest Fix" size="sm">
         <div className="space-y-4">
-          <p className="text-xs text-jollof-subtext">Describe your suggested resolution for this review item. This will be routed to the relevant team member.</p>
+          <p className="text-xs text-jollof-subtext">Describe your suggested resolution for this review item.</p>
           <div>
             <label className="block text-xs font-medium text-jollof-subtext mb-1.5">Fix Description</label>
-            <textarea
-              value={fixNote}
-              onChange={(e) => setFixNote(e.target.value)}
-              rows={4}
-              placeholder="Describe the fix..."
-              className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-2 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40 resize-none"
-            />
+            <textarea value={fixNote} onChange={(e) => setFixNote(e.target.value)} rows={4} placeholder="Describe the fix..." className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-2 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40 resize-none" />
           </div>
-          <div className="flex gap-2">
-            <Button variant="primary" className="flex-1" onClick={handleSuggestFix}>Submit Fix</Button>
-            <Button variant="secondary" onClick={() => setSuggestFixOpen(false)}>Cancel</Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="primary" className="flex-1 justify-center" onClick={handleSuggestFix}>Submit Fix</Button>
+            <Button variant="secondary" className="justify-center" onClick={() => setSuggestFixOpen(false)}>Cancel</Button>
           </div>
         </div>
       </Modal>
@@ -258,17 +238,11 @@ export default function ReviewQueuePage() {
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-jollof-subtext mb-1.5">Note</label>
-            <textarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              rows={3}
-              placeholder="Add a context note..."
-              className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-2 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40 resize-none"
-            />
+            <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} rows={3} placeholder="Add a context note..." className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-2 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40 resize-none" />
           </div>
-          <div className="flex gap-2">
-            <Button variant="primary" className="flex-1" onClick={handleAddNote}>Add Note</Button>
-            <Button variant="secondary" onClick={() => setAddNoteOpen(false)}>Cancel</Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="primary" className="flex-1 justify-center" onClick={handleAddNote}>Add Note</Button>
+            <Button variant="secondary" className="justify-center" onClick={() => setAddNoteOpen(false)}>Cancel</Button>
           </div>
         </div>
       </Modal>

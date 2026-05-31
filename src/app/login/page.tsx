@@ -3,9 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Zap } from "lucide-react";
 
-// Prototype login — no real auth. Future: replace with real auth provider.
-// See .env.example for planned env vars.
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -19,33 +16,34 @@ export default function LoginPage() {
     setError("");
     if (!email || !password) { setError("Please fill in all fields."); return; }
     setLoading(true);
-    // Prototype: accept any credentials and redirect
     await new Promise((r) => setTimeout(r, 600));
     setLoading(false);
     router.push("/");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0800] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0800] relative overflow-hidden px-4 py-10">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-jollof-orange/5 rounded-full blur-[80px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-amber-900/10 rounded-full blur-[100px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] sm:w-[600px] h-[200px] sm:h-[300px] bg-jollof-orange/5 rounded-full blur-[80px]" />
+        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative w-full max-w-sm mx-4">
+      <div className="relative w-full max-w-sm">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center mb-8 sm:mb-10">
           <div className="w-14 h-14 rounded-2xl bg-jollof-orange flex items-center justify-center mb-4 shadow-lg shadow-orange-500/20">
             <Zap size={24} className="text-black" />
           </div>
-          <h1 className="text-2xl font-bold text-jollof-text">Jollof Pages</h1>
-          <p className="text-sm text-jollof-subtext mt-1">Graphic Novel Production System</p>
+          <h1 className="text-2xl font-bold text-jollof-text text-center">Jollof Pages</h1>
+          <p className="text-sm text-jollof-subtext mt-1 text-center">Graphic Novel Production System</p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#161209] border border-jollof-border rounded-2xl p-8 shadow-2xl">
-          <h2 className="text-lg font-semibold text-jollof-text mb-6">Sign in to your workspace</h2>
+        <div className="bg-[#161209] border border-jollof-border rounded-2xl p-6 sm:p-8 shadow-2xl">
+          <h2 className="text-lg font-semibold text-jollof-text mb-6 text-center sm:text-left">
+            Sign in to your workspace
+          </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -55,7 +53,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@studio.com"
-                className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3.5 py-2.5 text-sm text-jollof-text placeholder:text-jollof-label focus:outline-none focus:border-jollof-orange/50 transition-colors"
+                className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3.5 py-3 text-sm text-jollof-text placeholder:text-jollof-label focus:outline-none focus:border-jollof-orange/50 transition-colors"
               />
             </div>
 
@@ -67,14 +65,15 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3.5 py-2.5 pr-10 text-sm text-jollof-text placeholder:text-jollof-label focus:outline-none focus:border-jollof-orange/50 transition-colors"
+                  className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3.5 py-3 pr-12 text-sm text-jollof-text placeholder:text-jollof-label focus:outline-none focus:border-jollof-orange/50 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-jollof-label hover:text-jollof-subtext"
+                  className="absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center text-jollof-label hover:text-jollof-subtext transition-colors"
+                  aria-label={showPw ? "Hide password" : "Show password"}
                 >
-                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -86,7 +85,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-jollof-orange text-black font-semibold py-2.5 rounded-lg hover:bg-orange-400 transition-colors disabled:opacity-50 mt-2"
+              className="w-full bg-jollof-orange text-black font-semibold py-3 rounded-lg hover:bg-orange-400 transition-colors disabled:opacity-50 text-sm mt-2 min-h-[48px]"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>

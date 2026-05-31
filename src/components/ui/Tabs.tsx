@@ -18,13 +18,13 @@ interface TabsProps {
 export function Tabs({ tabs, active, onChange, className, variant = "default" }: TabsProps) {
   if (variant === "pill") {
     return (
-      <div className={cn("flex items-center gap-1 p-1 bg-jollof-panel rounded-lg border border-jollof-border", className)}>
+      <div className={cn("flex items-center gap-1 p-1 bg-jollof-panel rounded-lg border border-jollof-border overflow-x-auto scrollbar-none", className)}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all whitespace-nowrap shrink-0 min-h-[36px]",
               active === tab.id
                 ? "bg-jollof-orange text-black"
                 : "text-jollof-subtext hover:text-jollof-text"
@@ -44,13 +44,13 @@ export function Tabs({ tabs, active, onChange, className, variant = "default" }:
   }
 
   return (
-    <div className={cn("flex items-center gap-0 border-b border-jollof-border", className)}>
+    <div className={cn("flex items-center gap-0 border-b border-jollof-border overflow-x-auto scrollbar-none", className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
           className={cn(
-            "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px",
+            "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px whitespace-nowrap shrink-0 min-h-[44px]",
             active === tab.id
               ? "border-jollof-orange text-jollof-orange"
               : "border-transparent text-jollof-subtext hover:text-jollof-text"
