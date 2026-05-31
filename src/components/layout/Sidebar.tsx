@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Home", icon: Home },
   { href: "/series", label: "Series", icon: Library },
   { href: "/canon", label: "Canon", icon: Shield },
   { href: "/story", label: "Story", icon: BookOpen },
