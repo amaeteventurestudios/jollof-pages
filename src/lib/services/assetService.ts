@@ -87,11 +87,11 @@ export async function uploadAsset(params: {
 
   if (error) throw error;
 
-  // Update storage quota
   await db.rpc('increment_storage_usage', {
     p_workspace_id: params.workspaceId,
     p_bytes: params.body.length,
-  }).maybeSingle();
+    p_assets: 1,
+  }).maybeSingle().catch(() => null);
 
   await createAuditLog({
     workspaceId: params.workspaceId,
@@ -180,10 +180,8 @@ export async function linkAssetToObject(params: {
     usage_role: params.usageRole ?? 'reference',
   }, { onConflict: 'asset_id,object_type,object_id' });
 
-  await db
-    .from('assets')
-    .update({ usage_count: db.rpc('usage_count + 1') as unknown as number })
-    .eq('id', params.assetId);
+  // Increment usage_count via RPC to avoid read-modify-write race
+  await db.rpc('increment_asset_usage_count', { p_asset_id: params.assetId }).maybeSingle().catch(() => null);
 }
 
 export async function unlinkAssetFromObject(params: {

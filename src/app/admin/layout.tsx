@@ -11,6 +11,10 @@ const ADMIN_NAV = [
   { href: '/admin/audit', label: 'Audit Logs' },
   { href: '/admin/exports', label: 'Exports' },
   { href: '/admin/flags', label: 'Continuity Flags' },
+  { href: '/admin/planning', label: 'Planning' },
+  { href: '/admin/boards', label: 'Boards' },
+  { href: '/admin/search', label: 'Search Index' },
+  { href: '/admin/revisions', label: 'Revisions' },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
