@@ -131,3 +131,62 @@ export async function finalizeExport(params: {
     })
     .eq('id', params.exportId);
 }
+
+// ---- Production Export Files ----
+
+export async function addExportFile(params: {
+  exportId: string;
+  filePath: string;
+  fileType?: string;
+  r2Key?: string;
+  sizeBytes?: number;
+  warning?: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  const { error } = await db
+    .from('production_export_files')
+    .insert({
+      export_id: params.exportId,
+      file_path: params.filePath,
+      file_type: params.fileType ?? null,
+      r2_key: params.r2Key ?? null,
+      size_bytes: params.sizeBytes ?? null,
+      warning: params.warning ?? null,
+    });
+
+  if (error) throw error;
+}
+
+export async function listExportFiles(exportId: string) {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('production_export_files')
+    .select('*')
+    .eq('export_id', exportId)
+    .order('file_path');
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listProductionExports(params: {
+  workspaceId: string;
+  seriesId?: string;
+  status?: string;
+  limit?: number;
+}) {
+  const db = getAdminClient();
+  let query = db
+    .from('production_exports')
+    .select('*')
+    .eq('workspace_id', params.workspaceId)
+    .order('created_at', { ascending: false });
+
+  if (params.seriesId) query = query.eq('series_id', params.seriesId);
+  if (params.status) query = query.eq('status', params.status);
+  if (params.limit) query = query.limit(params.limit);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}

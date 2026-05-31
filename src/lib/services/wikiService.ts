@@ -387,3 +387,233 @@ export async function generateWikiBacklinks(entryId: string, _seriesId: string):
     .from('wiki_backlinks')
     .upsert(backlinks, { onConflict: 'entry_id,referencing_entry_id' });
 }
+
+// ---- Wiki Categories ----
+
+export async function createWikiCategory(params: {
+  workspaceId: string;
+  seriesId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  parentCategoryId?: string;
+  createdBy: string;
+}): Promise<{ id: string }> {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('wiki_categories')
+    .insert({
+      workspace_id: params.workspaceId,
+      series_id: params.seriesId,
+      name: params.name,
+      slug: params.slug,
+      description: params.description ?? null,
+      parent_category_id: params.parentCategoryId ?? null,
+      created_by: params.createdBy,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function listWikiCategories(params: {
+  workspaceId: string;
+  seriesId?: string;
+}) {
+  const db = getAdminClient();
+  let query = db
+    .from('wiki_categories')
+    .select('*')
+    .eq('workspace_id', params.workspaceId)
+    .order('name');
+
+  if (params.seriesId) query = query.eq('series_id', params.seriesId);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---- Wiki Tags ----
+
+export async function upsertWikiTag(params: {
+  workspaceId: string;
+  seriesId: string;
+  name: string;
+  slug: string;
+}): Promise<{ id: string }> {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('wiki_tags')
+    .upsert(
+      { workspace_id: params.workspaceId, series_id: params.seriesId, name: params.name, slug: params.slug },
+      { onConflict: 'workspace_id,series_id,slug' }
+    )
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function addTagToEntry(params: {
+  wikiEntryId: string;
+  tagId: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  const { error } = await db
+    .from('wiki_entry_tags')
+    .upsert({ wiki_entry_id: params.wikiEntryId, tag_id: params.tagId },
+      { onConflict: 'wiki_entry_id,tag_id' });
+
+  if (error) throw error;
+}
+
+export async function removeTagFromEntry(params: {
+  wikiEntryId: string;
+  tagId: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  const { error } = await db
+    .from('wiki_entry_tags')
+    .delete()
+    .eq('wiki_entry_id', params.wikiEntryId)
+    .eq('tag_id', params.tagId);
+
+  if (error) throw error;
+}
+
+export async function listWikiTags(params: {
+  workspaceId: string;
+  seriesId?: string;
+}) {
+  const db = getAdminClient();
+  let query = db
+    .from('wiki_tags')
+    .select('*')
+    .eq('workspace_id', params.workspaceId)
+    .order('name');
+
+  if (params.seriesId) query = query.eq('series_id', params.seriesId);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---- Wiki Templates ----
+
+export async function createWikiTemplate(params: {
+  workspaceId: string;
+  seriesId: string;
+  name: string;
+  entryType: string;
+  description?: string;
+  defaultFrontmatter?: Record<string, unknown>;
+  createdBy: string;
+}): Promise<{ id: string }> {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('wiki_templates')
+    .insert({
+      workspace_id: params.workspaceId,
+      series_id: params.seriesId,
+      name: params.name,
+      entry_type: params.entryType,
+      description: params.description ?? null,
+      default_frontmatter: params.defaultFrontmatter ?? {},
+      created_by: params.createdBy,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function listWikiTemplates(params: {
+  workspaceId: string;
+  entryType?: string;
+}) {
+  const db = getAdminClient();
+  let query = db
+    .from('wiki_templates')
+    .select('*')
+    .eq('workspace_id', params.workspaceId)
+    .order('name');
+
+  if (params.entryType) query = query.eq('entry_type', params.entryType);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---- Wiki Relationships ----
+
+export async function createWikiRelationship(params: {
+  workspaceId: string;
+  seriesId: string;
+  sourceEntryId: string;
+  targetEntryId: string;
+  relationshipType: string;
+  customLabel?: string;
+  description?: string;
+  createdBy: string;
+}): Promise<{ id: string }> {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('wiki_relationships')
+    .insert({
+      workspace_id: params.workspaceId,
+      series_id: params.seriesId,
+      source_entry_id: params.sourceEntryId,
+      target_entry_id: params.targetEntryId,
+      relationship_type: params.relationshipType,
+      custom_label: params.customLabel ?? null,
+      description: params.description ?? null,
+      created_by: params.createdBy,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function listWikiRelationships(params: {
+  workspaceId: string;
+  sourceEntryId?: string;
+  targetEntryId?: string;
+  relationshipType?: string;
+}) {
+  const db = getAdminClient();
+  let query = db
+    .from('wiki_relationships')
+    .select('*')
+    .eq('workspace_id', params.workspaceId);
+
+  if (params.sourceEntryId) query = query.eq('source_entry_id', params.sourceEntryId);
+  if (params.targetEntryId) query = query.eq('target_entry_id', params.targetEntryId);
+  if (params.relationshipType) query = query.eq('relationship_type', params.relationshipType);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function deleteWikiRelationship(params: {
+  relationshipId: string;
+  workspaceId: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  const { error } = await db
+    .from('wiki_relationships')
+    .delete()
+    .eq('id', params.relationshipId)
+    .eq('workspace_id', params.workspaceId);
+
+  if (error) throw error;
+}

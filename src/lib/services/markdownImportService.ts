@@ -338,15 +338,3 @@ export async function approveImport(params: {
     source: 'human',
   });
 }
-
-// Lazy-loaded to avoid circular dependency
-const wikiService = {
-  createWikiEntry: async (...args: Parameters<typeof import('./wikiService')['createWikiEntry']>) => {
-    const mod = await import('./wikiService');
-    return mod.createWikiEntry(...args);
-  },
-  updateWikiEntry: async (...args: Parameters<typeof import('./wikiService')['updateWikiEntry']>) => {
-    const mod = await import('./wikiService');
-    return mod.updateWikiEntry(...args);
-  },
-};

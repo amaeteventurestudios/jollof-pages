@@ -1,5 +1,6 @@
 // ============================================================
 // ASSET SERVICE — Server-side
+// assets, asset_versions, asset_usages, asset_upload_sessions
 // All images stored in Cloudflare R2, never Supabase Storage
 // ============================================================
 import { getTypedAdminClient as getAdminClient } from '@/lib/supabase/typed';
@@ -181,6 +182,160 @@ export async function linkAssetToObject(params: {
 
   await db
     .from('assets')
-    .update({ usage_count: db.raw('usage_count + 1') as unknown as number })
+    .update({ usage_count: db.rpc('usage_count + 1') as unknown as number })
     .eq('id', params.assetId);
+}
+
+export async function unlinkAssetFromObject(params: {
+  assetId: string;
+  objectType: string;
+  objectId: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  await db
+    .from('asset_usages')
+    .delete()
+    .eq('asset_id', params.assetId)
+    .eq('object_type', params.objectType)
+    .eq('object_id', params.objectId);
+}
+
+export async function getAssetUsages(assetId: string) {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('asset_usages')
+    .select('*')
+    .eq('asset_id', assetId);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listAssets(params: {
+  workspaceId: string;
+  seriesId?: string;
+  assetType?: string;
+  includeDeleted?: boolean;
+  includeArchived?: boolean;
+  limit?: number;
+  offset?: number;
+}): Promise<Asset[]> {
+  const db = getAdminClient();
+  let query = db
+    .from('assets')
+    .select('*')
+    .eq('workspace_id', params.workspaceId)
+    .order('created_at', { ascending: false });
+
+  if (params.seriesId) query = query.eq('series_id', params.seriesId);
+  if (params.assetType) query = query.eq('asset_type', params.assetType);
+  if (!params.includeDeleted) query = query.eq('is_deleted', false);
+  if (!params.includeArchived) query = query.eq('is_archived', false);
+  if (params.limit) query = query.limit(params.limit);
+  if (params.offset !== undefined) {
+    query = query.range(params.offset, params.offset + (params.limit ?? 50) - 1);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---- Asset Versions ----
+
+export async function createAssetVersion(params: {
+  assetId: string;
+  versionNumber: number;
+  r2Key: string;
+  sizeBytes: number;
+  createdBy: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  const { error } = await db
+    .from('asset_versions')
+    .insert({
+      asset_id: params.assetId,
+      version_number: params.versionNumber,
+      r2_key: params.r2Key,
+      size_bytes: params.sizeBytes,
+      created_by: params.createdBy,
+    });
+
+  if (error) throw error;
+}
+
+export async function listAssetVersions(assetId: string) {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('asset_versions')
+    .select('*')
+    .eq('asset_id', assetId)
+    .order('version_number', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---- Upload Sessions (signed-URL flow) ----
+
+export async function createUploadSession(params: {
+  workspaceId: string;
+  seriesId?: string;
+  r2Key: string;
+  r2Bucket: string;
+  uploadUrl: string;
+  originalFilename: string;
+  expectedMimeType?: string;
+  expectedSizeBytes?: number;
+  createdBy: string;
+}): Promise<string> {
+  const db = getAdminClient();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const uploadUrlExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await db
+    .from('asset_upload_sessions')
+    .insert({
+      workspace_id: params.workspaceId,
+      series_id: params.seriesId ?? null,
+      r2_key: params.r2Key,
+      r2_bucket: params.r2Bucket,
+      upload_url: params.uploadUrl,
+      upload_url_expires_at: uploadUrlExpiresAt,
+      original_filename: params.originalFilename,
+      expected_mime_type: params.expectedMimeType ?? null,
+      expected_size_bytes: params.expectedSizeBytes ?? null,
+      created_by: params.createdBy,
+      expires_at: expiresAt,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data.id;
+}
+
+export async function completeUploadSession(params: {
+  sessionId: string;
+  resultingAssetId: string;
+}): Promise<void> {
+  const db = getAdminClient();
+  const { error } = await db
+    .from('asset_upload_sessions')
+    .update({ status: 'completed', resulting_asset_id: params.resultingAssetId })
+    .eq('id', params.sessionId);
+
+  if (error) throw error;
+}
+
+export async function getUploadSession(sessionId: string) {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from('asset_upload_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error;
+  return data ?? null;
 }

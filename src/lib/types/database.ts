@@ -545,3 +545,190 @@ export interface BoardItem {
   created_at: string;
   updated_at: string;
 }
+
+// ---- Planning ----
+export interface StoryArc {
+  id: string;
+  workspace_id: string;
+  series_id: string;
+  book_id: string | null;
+  title: string;
+  description: string | null;
+  arc_type: string;
+  sort_order: number;
+  status: string;
+  color: string | null;
+  wiki_entry_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlotThread {
+  id: string;
+  workspace_id: string;
+  series_id: string;
+  story_arc_id: string | null;
+  title: string;
+  description: string | null;
+  thread_type: string;
+  status: string;
+  color: string | null;
+  sort_order: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  workspace_id: string;
+  series_id: string;
+  wiki_entry_id: string | null;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  event_order: number;
+  event_type: string;
+  is_public: boolean;
+  color: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StoryBeat {
+  id: string;
+  workspace_id: string;
+  series_id: string;
+  book_id: string | null;
+  story_arc_id: string | null;
+  title: string;
+  description: string | null;
+  beat_type: string;
+  sort_order: number;
+  color: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ActStructure {
+  id: string;
+  workspace_id: string;
+  book_id: string;
+  title: string;
+  description: string | null;
+  act_number: number;
+  page_start: number | null;
+  page_end: number | null;
+  progress: number;
+  status: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CharacterArc {
+  id: string;
+  workspace_id: string;
+  series_id: string;
+  character_entry_id: string;
+  story_arc_id: string | null;
+  title: string;
+  description: string | null;
+  arc_start_state: string | null;
+  arc_end_state: string | null;
+  sort_order: number;
+  created_by: string;
+  created_at: string;
+}
+
+// ---- Dependency Graph ----
+export interface DependencyNode {
+  id: string;
+  workspace_id: string;
+  object_type: string;
+  object_id: string;
+  is_stale: boolean;
+  last_validated_at: string | null;
+  created_at: string;
+}
+
+export interface DependencyEdge {
+  id: string;
+  source_node_id: string;
+  target_node_id: string;
+  relationship: string;
+  created_at: string;
+}
+
+// ---- Character States ----
+export interface CharacterState {
+  id: string;
+  workspace_id: string;
+  wiki_entry_id: string;
+  scene_id: string | null;
+  page_id: string | null;
+  panel_id: string | null;
+  outfit: Record<string, unknown> | null;
+  hair: string | null;
+  injuries: Record<string, unknown> | null;
+  weapons: Record<string, unknown> | null;
+  equipment: Record<string, unknown> | null;
+  emotional_state: string | null;
+  knowledge_state: Record<string, unknown> | null;
+  location_context: string | null;
+  props: Record<string, unknown> | null;
+  continuity_notes: string | null;
+  is_stale: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ---- Search ----
+export interface SearchIndexRecord {
+  id: string;
+  workspace_id: string;
+  series_id: string | null;
+  object_type: string;
+  object_id: string;
+  title: string;
+  body: string | null;
+  tags: string[];
+  status: string | null;
+  search_vector: unknown;
+  indexed_at: string;
+}
+
+// ---- Comments ----
+export interface Comment {
+  id: string;
+  workspace_id: string;
+  object_type: string;
+  object_id: string;
+  parent_comment_id: string | null;
+  author_id: string;
+  body_markdown: string;
+  is_resolved: boolean;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ---- Notifications ----
+export interface Notification {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  notification_type: string;
+  object_type: string | null;
+  object_id: string | null;
+  title: string;
+  body: string | null;
+  is_read: boolean;
+  read_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
