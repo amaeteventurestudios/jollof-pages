@@ -30,13 +30,15 @@ export default function RevisionsPage() {
     <AppShell>
       <div className="px-4 py-5 sm:px-6 sm:py-6 w-full max-w-5xl mx-auto">
 
-        <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Revision Impact View</div>
-        <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Revision Impact View</h1>
-        <p className="text-sm text-jollof-subtext mb-5">See what breaks when a canon, scene, character, or panel changes.</p>
+        <div className="text-center mb-5">
+          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Revision Impact View</div>
+          <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Revision Impact View</h1>
+          <p className="text-sm text-jollof-subtext">See what breaks when a canon, scene, character, or panel changes.</p>
+        </div>
 
         {/* Confirmed banner */}
         {confirmed && (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-5 flex items-center gap-3">
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-5 flex flex-col sm:flex-row items-center justify-center gap-3 text-center max-w-2xl mx-auto">
             <CheckCircle size={18} className="text-green-400 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-green-400">Revision Confirmed</p>
@@ -47,7 +49,7 @@ export default function RevisionsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Changed object panel */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-xl mx-auto lg:max-w-none">
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border">
                 <h3 className="text-sm font-semibold text-jollof-text">Changed Object</h3>
@@ -89,7 +91,7 @@ export default function RevisionsPage() {
           </div>
 
           {/* Impact columns */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
             {/* Impacted scenes */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center gap-2">
@@ -112,7 +114,7 @@ export default function RevisionsPage() {
             </div>
 
             {/* Pages + Panels grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-items-center">
               <div className="jollof-card">
                 <div className="p-4 border-b border-jollof-border flex items-center gap-2">
                   <FileText size={14} className="text-purple-400" />
@@ -168,9 +170,9 @@ export default function RevisionsPage() {
             </div>
 
             {/* Dependency chain */}
-            <div className="jollof-card p-4">
+            <div className="jollof-card p-4 text-center">
               <h3 className="text-sm font-semibold text-jollof-text mb-3">Dependency Chain</h3>
-              <div className="flex flex-wrap items-center gap-1.5 text-xs mb-2">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs mb-2">
                 {[
                   { label: "Collapse Engine", color: "text-jollof-orange" },
                   { label: "→", color: "text-jollof-label" },
@@ -181,7 +183,7 @@ export default function RevisionsPage() {
                   { label: "Panel 4", color: "text-blue-400" },
                 ].map((node, i) => <span key={i} className={`font-medium ${node.color}`}>{node.label}</span>)}
               </div>
-              <div className="flex items-center gap-2 text-xs text-jollof-label">
+              <div className="flex items-center justify-center gap-2 text-xs text-jollof-label">
                 <ChevronRight size={12} />
                 <span className="font-medium text-red-400">Scene 05 (Flagged)</span>
                 <span>— dialogue uses old radius parameters</span>
@@ -189,7 +191,7 @@ export default function RevisionsPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 justify-center">
               <Button
                 variant="primary"
                 icon={CheckCircle}

@@ -49,13 +49,15 @@ export default function ExportPage() {
     <AppShell>
       <div className="px-4 py-5 sm:px-6 sm:py-6 w-full max-w-5xl mx-auto">
 
-        <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Production Export</div>
-        <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Production Export</h1>
-        <p className="text-sm text-jollof-subtext mb-5">Package approved book materials for art production handoff.</p>
+        <div className="text-center mb-5">
+          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Production Export</div>
+          <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Production Export</h1>
+          <p className="text-sm text-jollof-subtext">Package approved book materials for art production handoff.</p>
+        </div>
 
         {/* Step indicator — horizontal scroll on mobile */}
         <div className="jollof-card p-3 sm:p-4 mb-5 overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-0 min-w-max">
+          <div className="flex items-center gap-0 min-w-max w-fit mx-auto">
             {STEPS.map((s, i) => (
               <div key={s} className="flex items-center">
                 <div className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap ${i === step ? "bg-jollof-orange text-black" : i < step ? "text-green-400" : "text-jollof-label"}`}>
@@ -70,7 +72,7 @@ export default function ExportPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Main content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
             {/* Step 0: Select Content */}
             {step === 0 && (
               <div className="jollof-card">
@@ -120,7 +122,7 @@ export default function ExportPage() {
                 </div>
                 <div className="p-4 space-y-3">
                   <p className="text-xs text-jollof-subtext">Review what will be included in the export package.</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       { label: "Approved Scenes", value: `${pkg.manifest.approvedScenes}/${pkg.manifest.totalScenes}`, ok: true },
                       { label: "Approved Pages", value: `${pkg.manifest.approvedPages}/${pkg.manifest.totalPages}`, ok: false },
@@ -148,7 +150,7 @@ export default function ExportPage() {
                   <span className="text-xs text-jollof-label">{new Date(pkg.validationSummary.lastRun).toLocaleString()}</span>
                 </div>
                 <div className="p-4 space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="jollof-panel p-3 text-center">
                       <div className="text-xl sm:text-2xl font-bold text-red-400">{pkg.validationSummary.critical}</div>
                       <div className="text-[10px] text-jollof-label">Critical</div>
@@ -180,12 +182,12 @@ export default function ExportPage() {
                       { check: "Character state validation", status: "passed", note: "All visual states confirmed" },
                       { check: "Revision log integrity", status: "passed", note: "No stale revisions pending" },
                     ].map((row) => (
-                      <div key={row.check} className="flex items-center gap-2 text-xs">
+                      <div key={row.check} className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-xs text-center sm:text-left">
                         {row.status === "passed" ? <CheckCircle size={12} className="text-green-400 shrink-0" /> :
                          row.status === "warning" ? <AlertTriangle size={12} className="text-amber-400 shrink-0" /> :
                          <AlertTriangle size={12} className="text-red-400 shrink-0" />}
                         <span className="flex-1 text-jollof-text">{row.check}</span>
-                        <span className="text-jollof-label text-right">{row.note}</span>
+                        <span className="text-jollof-label sm:text-right">{row.note}</span>
                       </div>
                     ))}
                   </div>
@@ -231,10 +233,10 @@ export default function ExportPage() {
             )}
 
             {/* Step navigation */}
-            <div className="flex items-center justify-between">
-              <Button variant="secondary" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>Back</Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
+              <Button variant="secondary" className="w-full sm:w-auto justify-center" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>Back</Button>
               {step < STEPS.length - 1 && (
-                <Button variant="primary" icon={ChevronRight} onClick={() => setStep((s) => s + 1)}>
+                <Button variant="primary" icon={ChevronRight} className="w-full sm:w-auto justify-center" onClick={() => setStep((s) => s + 1)}>
                   Next: {STEPS[step + 1]}
                 </Button>
               )}
@@ -242,7 +244,7 @@ export default function ExportPage() {
           </div>
 
           {/* Package preview tree */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-xl mx-auto lg:max-w-none">
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-jollof-text">Package Preview</h3>

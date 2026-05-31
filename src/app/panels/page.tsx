@@ -56,15 +56,16 @@ export default function PanelStudioPage() {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-jollof-border bg-[#0f0d08]/40 shrink-0">
-          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Panel Studio · Scene 03 · Pages 7–10</div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="text-center mb-3">
+            <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Panel Studio · Scene 03 · Pages 7–10</div>
             <h1 className="text-xl sm:text-2xl font-black text-jollof-text">Panel Studio</h1>
-            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-              <select className="bg-jollof-surface border border-jollof-border rounded-lg px-2.5 py-2 text-xs text-jollof-text focus:outline-none min-h-[40px]">
+          </div>
+          <div className="flex flex-wrap items-center gap-2 justify-center max-w-2xl mx-auto">
+              <select className="w-full sm:w-auto bg-jollof-surface border border-jollof-border rounded-lg px-2.5 py-2 text-xs text-jollof-text focus:outline-none min-h-[40px]">
                 <option>Scene 03: Drift Zone Reveal</option>
                 <option>Scene 01: Lagos Drift Station</option>
               </select>
-              <select className="bg-jollof-surface border border-jollof-border rounded-lg px-2.5 py-2 text-xs text-jollof-text focus:outline-none min-h-[40px]">
+              <select className="w-full sm:w-auto bg-jollof-surface border border-jollof-border rounded-lg px-2.5 py-2 text-xs text-jollof-text focus:outline-none min-h-[40px]">
                 <option>Page 19</option>
                 <option>Page 20</option>
               </select>
@@ -75,12 +76,11 @@ export default function PanelStudioPage() {
               <Button variant={locked ? "danger" : "secondary"} icon={Lock} size="sm" onClick={() => setLockOpen(true)} disabled={locked}>
                 {locked ? "Locked" : "Lock"}
               </Button>
-            </div>
           </div>
         </div>
 
         {/* Mobile panel switcher */}
-        <div className="lg:hidden flex border-b border-jollof-border shrink-0 overflow-x-auto scrollbar-none">
+        <div className="lg:hidden flex justify-center border-b border-jollof-border shrink-0 overflow-x-auto scrollbar-none">
           {(["list", "detail", "structure"] as const).map((p) => (
             <button
               key={p}
@@ -94,14 +94,14 @@ export default function PanelStudioPage() {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Panel list */}
-          <div className={`${mobilePanel === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-52 shrink-0 border-r border-jollof-border overflow-y-auto`}>
-            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0">
+          <div className={`${mobilePanel === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-52 shrink-0 border-r border-jollof-border overflow-y-auto items-center lg:items-stretch`}>
+            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0 w-full">
               <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Panels · Page 19</h3>
               <button onClick={() => setAddPanelOpen(true)} className="text-jollof-label hover:text-jollof-orange p-1">
                 <Plus size={14} />
               </button>
             </div>
-            <div className="divide-y divide-jollof-border overflow-y-auto">
+            <div className="divide-y divide-jollof-border overflow-y-auto jp-mobile-panel lg:max-w-none">
               {panels.map((panel) => (
                 <div
                   key={panel.id}
@@ -133,7 +133,7 @@ export default function PanelStudioPage() {
           {/* Panel detail */}
           <div className={`${mobilePanel === "detail" ? "flex" : "hidden"} lg:flex flex-col flex-1 overflow-y-auto p-4 sm:p-5`}>
             {selectedPanel && (
-              <div className="max-w-2xl">
+              <div className="w-full max-w-2xl mx-auto">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   {/* Mobile back */}
                   <button className="lg:hidden text-xs text-jollof-orange mr-2" onClick={() => setMobilePanel("list")}>← Back</button>
@@ -142,7 +142,7 @@ export default function PanelStudioPage() {
                   {locked && <StatusBadge status="locked" label="Page Locked" />}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-items-center">
                   <div className="jollof-card p-4 space-y-4">
                     <div>
                       <label className="block text-[10px] text-jollof-label uppercase tracking-wider mb-1 flex items-center gap-1"><FileText size={10} /> Shot Type</label>
@@ -216,12 +216,12 @@ export default function PanelStudioPage() {
           </div>
 
           {/* Page structure */}
-          <div className={`${mobilePanel === "structure" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-48 shrink-0 border-l border-jollof-border overflow-y-auto`}>
-            <div className="p-3 border-b border-jollof-border shrink-0">
+          <div className={`${mobilePanel === "structure" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-48 shrink-0 border-l border-jollof-border overflow-y-auto items-center lg:items-stretch`}>
+            <div className="p-3 border-b border-jollof-border shrink-0 w-full">
               <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Page Structure</h3>
               <p className="text-[10px] text-jollof-label">Page 1 of 5</p>
             </div>
-            <div className="p-2 space-y-1 overflow-y-auto">
+            <div className="p-2 space-y-1 overflow-y-auto jp-mobile-panel lg:max-w-none">
               {panels.map((panel, i) => (
                 <div
                   key={panel.id}

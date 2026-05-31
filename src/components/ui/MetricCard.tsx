@@ -13,7 +13,7 @@ interface MetricCardProps {
 
 export function MetricCard({ label, value, sub, icon: Icon, color = "text-jollof-orange", className }: MetricCardProps) {
   return (
-    <div className={cn("jollof-card p-4 flex flex-col gap-1", className)}>
+    <div className={cn("jollof-card p-4 flex flex-col gap-1 w-full max-w-sm mx-auto", className)}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-jollof-label uppercase tracking-wider font-medium">{label}</span>
         {Icon && <Icon size={14} className="text-jollof-label" />}

@@ -74,9 +74,11 @@ export default function ReviewQueuePage() {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-jollof-border shrink-0">
-          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Review Queue</div>
-          <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Review Queue</h1>
-          <p className="text-sm text-jollof-subtext">Keep approvals, blockers, canon suggestions, and revision work organized in one place.</p>
+          <div className="text-center">
+            <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Review Queue</div>
+            <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Review Queue</h1>
+            <p className="text-sm text-jollof-subtext">Keep approvals, blockers, canon suggestions, and revision work organized in one place.</p>
+          </div>
         </div>
 
         {/* Filter tabs */}
@@ -86,8 +88,8 @@ export default function ReviewQueuePage() {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Items list */}
-          <div className={`${mobileView === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-80 shrink-0 border-r border-jollof-border overflow-y-auto`}>
-            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0">
+          <div className={`${mobileView === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-80 shrink-0 border-r border-jollof-border overflow-y-auto items-center lg:items-stretch`}>
+            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0 w-full">
               <span className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Review Items</span>
               <span className="text-xs text-jollof-label">{filtered.length}</span>
             </div>
@@ -97,7 +99,7 @@ export default function ReviewQueuePage() {
                 <p className="text-sm text-jollof-subtext">No items in this category.</p>
               </div>
             ) : (
-              <div className="divide-y divide-jollof-border overflow-y-auto">
+              <div className="divide-y divide-jollof-border overflow-y-auto jp-mobile-panel lg:max-w-none">
                 {filtered.map((item) => (
                   <div
                     key={item.id}
@@ -127,7 +129,7 @@ export default function ReviewQueuePage() {
           {/* Detail panel */}
           {selectedItem && (
             <div className={`${mobileView === "detail" ? "flex" : "hidden"} lg:flex flex-col flex-1 overflow-y-auto p-4 sm:p-5`}>
-              <div className="max-w-2xl">
+              <div className="w-full max-w-2xl mx-auto">
                 {/* Mobile back */}
                 <button className="lg:hidden flex items-center gap-1 text-xs text-jollof-orange mb-4" onClick={() => setMobileView("list")}>
                   <ChevronLeft size={14} /> Back to queue
@@ -179,21 +181,22 @@ export default function ReviewQueuePage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <Link href={selectedItem.type === "continuity" || selectedItem.type === "panels" ? "/scenes/scene-03" : "/canon"}>
-                    <Button variant="secondary" icon={ExternalLink} size="sm">Open in Story</Button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
+                  <Link href={selectedItem.type === "continuity" || selectedItem.type === "panels" ? "/scenes/scene-03" : "/canon"} className="w-full sm:w-auto">
+                    <Button variant="secondary" icon={ExternalLink} size="sm" className="w-full justify-center">Open in Story</Button>
                   </Link>
-                  <Button variant="outline" icon={Zap} size="sm" onClick={() => setSuggestFixOpen(true)}>Suggest Fix</Button>
+                  <Button variant="outline" icon={Zap} size="sm" className="w-full sm:w-auto justify-center" onClick={() => setSuggestFixOpen(true)}>Suggest Fix</Button>
                   <Button
                     variant="danger"
                     icon={Flag}
                     size="sm"
+                    className="w-full sm:w-auto justify-center"
                     onClick={() => handleBlock(selectedItem.id)}
                     disabled={statuses[selectedItem.id] === "blocked"}
                   >
                     {statuses[selectedItem.id] === "blocked" ? "Blocked ✓" : "Mark Blocked"}
                   </Button>
-                  <Button variant="ghost" icon={MessageSquare} size="sm" onClick={() => setAddNoteOpen(true)}>Note</Button>
+                  <Button variant="ghost" icon={MessageSquare} size="sm" className="w-full sm:w-auto justify-center" onClick={() => setAddNoteOpen(true)}>Note</Button>
                 </div>
               </div>
             </div>
@@ -201,13 +204,13 @@ export default function ReviewQueuePage() {
         </div>
 
         {/* Bottom info */}
-        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0">
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0 justify-items-center">
           {[
             { icon: AlertTriangle, title: "Surface What Matters", desc: "Critical issues rise to the top so nothing slips through." },
             { icon: Zap, title: "Take Action, Fast", desc: "Review details, references, and resolution tools in one focused view." },
             { icon: CheckCircle, title: "Keep Production Moving", desc: "Clear ownership, SLAs, and quick actions help you ship with confidence." },
           ].map((c) => (
-            <div key={c.title} className="jollof-panel p-3 flex items-start gap-2">
+            <div key={c.title} className="jollof-panel p-3 flex items-start gap-2 max-w-sm">
               <c.icon size={14} className="text-jollof-orange shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-semibold text-jollof-text">{c.title}</p>

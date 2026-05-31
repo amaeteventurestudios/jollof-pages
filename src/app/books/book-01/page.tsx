@@ -26,39 +26,41 @@ export default function BookDashboardPage() {
       <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-jollof-label mb-4">
+        <div className="flex items-center justify-center gap-2 text-xs text-jollof-label mb-4">
           <Link href="/series" className="hover:text-jollof-orange transition-colors">Equanauts</Link>
           <ChevronRight size={12} />
           <span className="text-jollof-subtext">Book 1</span>
         </div>
 
-        <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Book / Issue Dashboard</div>
-        <h1 className="text-2xl sm:text-3xl font-black text-jollof-text mb-1">Book 1: The Collapse Conjecture</h1>
-        <p className="text-sm text-jollof-subtext mb-5">Track one issue from scenes to pages to continuity.</p>
+        <div className="text-center mb-5">
+          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Book / Issue Dashboard</div>
+          <h1 className="text-2xl sm:text-3xl font-black text-jollof-text mb-1">Book 1: The Collapse Conjecture</h1>
+          <p className="text-sm text-jollof-subtext">Track one issue from scenes to pages to continuity.</p>
+        </div>
 
         {/* Book header */}
-        <div className="jollof-card p-4 sm:p-5 mb-5">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-            <div className="w-14 h-18 rounded-md bg-gradient-to-b from-amber-900/60 to-jollof-surface border border-jollof-border shrink-0 flex items-center justify-center self-start">
+        <div className="jollof-card p-4 sm:p-5 mb-5 text-center">
+          <div className="flex flex-col items-center xl:flex-row xl:items-start gap-4">
+            <div className="w-14 h-18 rounded-md bg-gradient-to-b from-amber-900/60 to-jollof-surface border border-jollof-border shrink-0 flex items-center justify-center self-center">
               <BookOpen size={20} className="text-jollof-orange/40" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
+            <div className="flex-1 min-w-0 text-center xl:text-left">
+              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-2 mb-1">
                 <StatusBadge status={book.status} label="In Production" />
                 <StatusBadge status="active" label="Series: Equanauts" />
               </div>
               <h2 className="text-base sm:text-lg font-bold text-jollof-text mb-1">{book.title}</h2>
               <p className="text-sm text-jollof-subtext leading-relaxed">{book.summary}</p>
             </div>
-            <div className="flex flex-row sm:flex-col gap-2 shrink-0">
-              <Button variant="outline" icon={Download} size="sm" className="flex-1 sm:flex-none justify-center" onClick={handleExport}>Export</Button>
-              <Button variant="secondary" icon={Edit} size="sm" className="flex-1 sm:flex-none justify-center" onClick={() => setEditOpen(true)}>Edit</Button>
+            <div className="flex flex-col sm:flex-row xl:flex-col gap-2 shrink-0 w-full sm:w-auto">
+              <Button variant="outline" icon={Download} size="sm" className="w-full sm:w-auto justify-center" onClick={handleExport}>Export</Button>
+              <Button variant="secondary" icon={Edit} size="sm" className="w-full sm:w-auto justify-center" onClick={() => setEditOpen(true)}>Edit</Button>
             </div>
           </div>
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-5 justify-items-center">
           {[
             { label: "Story Progress", value: `${book.storyProgress}%`, color: "text-jollof-orange", sub: "47% approved" },
             { label: "Pages Planned", value: book.pagesPlanned, color: "text-jollof-text", sub: "10% coverage" },
@@ -66,7 +68,7 @@ export default function BookDashboardPage() {
             { label: "Review Items", value: book.reviewStatus, color: "text-amber-400", sub: "Open" },
             { label: "Production", value: book.productionStatus, color: "text-green-400", sub: `Due: ${book.dueDate}` },
           ].map((m) => (
-            <div key={m.label} className="jollof-card p-3">
+            <div key={m.label} className="jollof-card p-3 max-w-sm">
               <div className="text-[10px] text-jollof-label uppercase tracking-wider mb-1">{m.label}</div>
               <div className={`text-lg sm:text-xl font-bold ${m.color}`}>{m.value}</div>
               <div className="text-[10px] text-jollof-label">{m.sub}</div>
@@ -130,7 +132,7 @@ export default function BookDashboardPage() {
                   <div key={i} className={`h-1.5 rounded-sm ${i < 9 ? "bg-green-500" : i < 12 ? "bg-amber-500/60" : "bg-jollof-border"}`} />
                 ))}
               </div>
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-jollof-label">
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-2 text-[10px] text-jollof-label">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-green-500 inline-block" />Approved</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-500/60 inline-block" />Draft</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-jollof-border inline-block" />Unassigned</span>
@@ -205,7 +207,7 @@ export default function BookDashboardPage() {
             <label className="block text-xs font-medium text-jollof-subtext mb-1.5">Summary</label>
             <textarea defaultValue={book.summary} rows={4} className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-2 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40 resize-none" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-jollof-subtext mb-1.5">Pages Planned</label>
               <input type="number" defaultValue={book.pagesPlanned} className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-3 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40" />

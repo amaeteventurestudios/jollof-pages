@@ -50,7 +50,7 @@ export default function SceneWorkspacePage() {
       <div className="px-4 py-4 sm:px-6 sm:py-5 w-full max-w-5xl mx-auto">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-jollof-label mb-3 overflow-x-auto scrollbar-none whitespace-nowrap">
+        <div className="flex items-center justify-center gap-2 text-xs text-jollof-label mb-3 overflow-x-auto scrollbar-none whitespace-nowrap">
           <Link href="/story" className="hover:text-jollof-orange transition-colors shrink-0">Story Room</Link>
           <ChevronRight size={12} className="shrink-0" />
           <Link href="/books/book-01" className="hover:text-jollof-orange transition-colors shrink-0">Book 1</Link>
@@ -58,24 +58,26 @@ export default function SceneWorkspacePage() {
           <span className="text-jollof-subtext shrink-0">Scene 03</span>
         </div>
 
-        <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Scene Workspace</div>
-        <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Scene Workspace</h1>
-        <p className="text-sm text-jollof-subtext mb-4">Draft, review, and approve one scene with canon and continuity in view.</p>
+        <div className="text-center mb-4">
+          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Scene Workspace</div>
+          <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Scene Workspace</h1>
+          <p className="text-sm text-jollof-subtext">Draft, review, and approve one scene with canon and continuity in view.</p>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Main writing area */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
             {/* Scene header */}
-            <div className="jollof-card p-4">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="jollof-card p-4 text-center xl:text-left">
+              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-2 mb-2">
                 <h2 className="text-base font-bold text-jollof-text">{scene.title}</h2>
                 <StatusBadge status={status} />
               </div>
-              <div className="flex flex-wrap items-center gap-1 text-xs text-jollof-label mb-3">
+              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-1 text-xs text-jollof-label mb-3">
                 <Eye size={11} />
                 <span>{scene.wordCount} words · Pages {scene.pageRange}</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div>
                   <span className="text-jollof-label block mb-0.5">Location</span>
                   <p className="text-jollof-subtext leading-snug">{scene.location}</p>
@@ -122,15 +124,15 @@ export default function SceneWorkspacePage() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="secondary" icon={Save} onClick={handleSave} className="flex-1 sm:flex-none justify-center">Save Draft</Button>
-              <Button variant="danger" icon={RotateCcw} onClick={() => setRevisionOpen(true)} className="flex-1 sm:flex-none justify-center">Request Revision</Button>
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-center">
+              <Button variant="secondary" icon={Save} onClick={handleSave} className="w-full sm:w-auto justify-center">Save Draft</Button>
+              <Button variant="danger" icon={RotateCcw} onClick={() => setRevisionOpen(true)} className="w-full sm:w-auto justify-center">Request Revision</Button>
               <Button
                 variant="primary"
                 icon={CheckCircle}
                 onClick={handleApprove}
                 disabled={status === "approved"}
-                className="w-full sm:w-auto sm:ml-auto justify-center"
+                className="w-full sm:w-auto justify-center"
               >
                 {status === "approved" ? "Approved ✓" : "Approve Scene"}
               </Button>
@@ -147,7 +149,7 @@ export default function SceneWorkspacePage() {
           </div>
 
           {/* Right panels */}
-          <div className={`space-y-4 ${showSidePanels ? "block" : "hidden"} lg:block`}>
+          <div className={`space-y-4 w-full max-w-xl mx-auto lg:max-w-none ${showSidePanels ? "block" : "hidden"} lg:block`}>
             {/* Continuity check */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center justify-between">

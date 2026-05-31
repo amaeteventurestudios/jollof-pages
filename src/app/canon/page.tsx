@@ -49,20 +49,19 @@ export default function CanonVaultPage() {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-jollof-border shrink-0">
-          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Canon Vault</div>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Canon Vault</h1>
-              <p className="text-sm text-jollof-subtext">Manage the source of truth for characters, world lore, and narrative threads.</p>
-            </div>
-            <Button variant="primary" icon={Plus} size="sm" className="shrink-0" onClick={() => setAddOpen(true)}>
-              <span className="hidden sm:inline">Add Entry</span>
-              <span className="sm:hidden">Add</span>
+          <div className="text-center">
+            <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Canon Vault</div>
+            <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Canon Vault</h1>
+            <p className="text-sm text-jollof-subtext mb-3">Manage the source of truth for characters, world lore, and narrative threads.</p>
+          </div>
+          <div className="flex justify-center">
+            <Button variant="primary" icon={Plus} size="sm" className="w-full sm:w-auto justify-center" onClick={() => setAddOpen(true)}>
+              Add Entry
             </Button>
           </div>
 
           {/* Mobile category chips — horizontal scroll */}
-          <div className="flex gap-1.5 mt-3 overflow-x-auto scrollbar-none pb-1 lg:hidden">
+          <div className="flex gap-1.5 mt-3 overflow-x-auto scrollbar-none pb-1 lg:hidden sm:justify-center">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -116,12 +115,12 @@ export default function CanonVaultPage() {
           </div>
 
           {/* Entries list — mobile: show/hide based on mobileView */}
-          <div className={`${mobileView === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-64 shrink-0 border-r border-jollof-border overflow-y-auto`}>
-            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0">
+          <div className={`${mobileView === "list" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-64 shrink-0 border-r border-jollof-border overflow-y-auto items-center lg:items-stretch`}>
+            <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0 w-full">
               <span className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Canon Entries</span>
               <span className="text-xs text-jollof-label">{filtered.length}</span>
             </div>
-            <div className="divide-y divide-jollof-border overflow-y-auto">
+            <div className="divide-y divide-jollof-border overflow-y-auto jp-mobile-panel lg:max-w-none">
               {filtered.map((entry) => (
                 <div
                   key={entry.id}
@@ -144,19 +143,19 @@ export default function CanonVaultPage() {
           {/* Entry detail */}
           <div className={`${mobileView === "detail" ? "flex" : "hidden"} lg:flex flex-col flex-1 overflow-y-auto`}>
             {selectedEntry && (
-              <div className="p-4 sm:p-5">
+              <div className="p-4 sm:p-5 w-full max-w-4xl mx-auto">
                 {/* Mobile back */}
                 <button className="lg:hidden flex items-center gap-1 text-xs text-jollof-orange mb-4" onClick={() => setMobileView("list")}>
                   <ChevronLeft size={14} /> Back to list
                 </button>
 
-                <div className="flex items-start justify-between mb-4 gap-3">
+                <div className="flex flex-col items-center text-center xl:flex-row xl:items-start xl:justify-between xl:text-left mb-4 gap-3">
                   <div>
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center justify-center xl:justify-start gap-2 mb-1">
                       <h2 className="text-lg sm:text-xl font-bold text-jollof-text">{selectedEntry.title}</h2>
                       <StatusBadge status={selectedEntry.status} label={selectedEntry.status.charAt(0).toUpperCase() + selectedEntry.status.slice(1)} />
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-jollof-label">
+                    <div className="flex items-center justify-center xl:justify-start gap-2 text-xs text-jollof-label">
                       {categoryIcons[selectedEntry.category]}
                       <span>{selectedEntry.category}</span>
                     </div>
@@ -214,7 +213,7 @@ export default function CanonVaultPage() {
                             </div>
                             <p className="text-[11px] text-jollof-label">{s.agentNote}</p>
                           </div>
-                          <div className="flex gap-1.5 shrink-0">
+                          <div className="flex gap-1.5 shrink-0 justify-center">
                             <Button variant="outline" size="sm" onClick={() => toast(`"${s.title}" confirmed.`, "success")}>Confirm</Button>
                             <Button variant="danger" size="sm" onClick={() => toast(`"${s.title}" rejected.`, "warning")}>Reject</Button>
                           </div>
@@ -251,13 +250,13 @@ export default function CanonVaultPage() {
         </div>
 
         {/* Bottom info — desktop only */}
-        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0">
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 p-4 border-t border-jollof-border shrink-0 justify-items-center">
           {[
             { icon: Shield, title: "Single Source of Truth", desc: "Collect and verify every canon fact across characters, world, and story." },
             { icon: CheckCircle, title: "Canon Review & Suggestions", desc: "Surface extracted facts from approved scenes and route through review." },
             { icon: AlertTriangle, title: "Continuity Control", desc: "Track status, resolve disputes, and maintain narrative continuity." },
           ].map((c) => (
-            <div key={c.title} className="jollof-panel p-3 flex items-start gap-2">
+            <div key={c.title} className="jollof-panel p-3 flex items-start gap-2 max-w-sm">
               <c.icon size={14} className="text-jollof-orange shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-semibold text-jollof-text">{c.title}</p>
@@ -275,7 +274,7 @@ export default function CanonVaultPage() {
             <label className="block text-xs font-medium text-jollof-subtext mb-1.5">Entry Title</label>
             <input placeholder="e.g. The Equanauts Protocol" className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-3 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-jollof-subtext mb-1.5">Category</label>
               <select className="w-full bg-jollof-surface border border-jollof-border rounded-lg px-3 py-3 text-sm text-jollof-text focus:outline-none focus:border-jollof-orange/40">

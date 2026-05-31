@@ -18,7 +18,7 @@ interface TabsProps {
 export function Tabs({ tabs, active, onChange, className, variant = "default" }: TabsProps) {
   if (variant === "pill") {
     return (
-      <div className={cn("flex items-center gap-1 p-1 bg-jollof-panel rounded-lg border border-jollof-border overflow-x-auto scrollbar-none", className)}>
+      <div className={cn("flex items-center justify-start sm:justify-center gap-1 p-1 bg-jollof-panel rounded-lg border border-jollof-border overflow-x-auto scrollbar-none w-fit max-w-full mx-auto", className)}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -44,7 +44,7 @@ export function Tabs({ tabs, active, onChange, className, variant = "default" }:
   }
 
   return (
-    <div className={cn("flex items-center gap-0 border-b border-jollof-border overflow-x-auto scrollbar-none", className)}>
+    <div className={cn("flex items-center justify-start sm:justify-center gap-0 border-b border-jollof-border overflow-x-auto scrollbar-none w-fit max-w-full mx-auto", className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}

@@ -29,7 +29,7 @@ export default function CharacterProfilePage() {
       <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-jollof-label mb-4 overflow-x-auto scrollbar-none whitespace-nowrap">
+        <div className="flex items-center justify-center gap-2 text-xs text-jollof-label mb-4 overflow-x-auto scrollbar-none whitespace-nowrap">
           <Link href="/canon" className="hover:text-jollof-orange transition-colors shrink-0">Canon Vault</Link>
           <ChevronRight size={12} className="shrink-0" />
           <span className="text-jollof-subtext shrink-0">Characters</span>
@@ -37,19 +37,21 @@ export default function CharacterProfilePage() {
           <span className="text-jollof-subtext shrink-0">Zane Jaja</span>
         </div>
 
-        <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Character Profile</div>
-        <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Character Profile</h1>
-        <p className="text-sm text-jollof-subtext mb-5">Track one character&apos;s canon, visual state, relationships, continuity notes, and appearances.</p>
+        <div className="text-center mb-5">
+          <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Character Profile</div>
+          <h1 className="text-xl sm:text-2xl font-black text-jollof-text mb-0.5">Character Profile</h1>
+          <p className="text-sm text-jollof-subtext">Track one character&apos;s canon, visual state, relationships, continuity notes, and appearances.</p>
+        </div>
 
         {/* Character card */}
-        <div className="jollof-card p-4 sm:p-5 mb-5">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="jollof-card p-4 sm:p-5 mb-5 text-center">
+          <div className="flex flex-col items-center xl:flex-row xl:items-start gap-4">
             {/* Portrait */}
-            <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg bg-gradient-to-b from-amber-900/50 to-jollof-surface border border-jollof-border shrink-0 flex items-center justify-center self-center sm:self-start">
+            <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg bg-gradient-to-b from-amber-900/50 to-jollof-surface border border-jollof-border shrink-0 flex items-center justify-center self-center">
               <User size={28} className="text-jollof-orange/30" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-3 mb-2">
+            <div className="flex-1 min-w-0 text-center xl:text-left">
+              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-3 mb-2">
                 <h2 className="text-xl sm:text-2xl font-black text-jollof-text">{character.name}</h2>
                 <StatusBadge status="confirmed" label="Confirmed Canon" />
               </div>
@@ -70,8 +72,8 @@ export default function CharacterProfilePage() {
               </div>
               <p className="text-xs text-jollof-subtext leading-relaxed">{character.description}</p>
             </div>
-            <div className="shrink-0 self-start">
-              <Button variant="secondary" icon={Edit} size="sm" onClick={() => toast("Edit Profile (prototype only).", "info")}>
+            <div className="shrink-0 self-center">
+              <Button variant="secondary" icon={Edit} size="sm" className="justify-center" onClick={() => toast("Edit Profile (prototype only).", "info")}>
                 <span className="hidden sm:inline">Edit Profile</span>
                 <span className="sm:hidden">Edit</span>
               </Button>
@@ -81,7 +83,7 @@ export default function CharacterProfilePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Left: Canon facts + Visual state + Continuity notes */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 w-full max-w-3xl mx-auto lg:max-w-none">
             {/* Canon facts */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border flex items-center gap-2">
@@ -107,7 +109,7 @@ export default function CharacterProfilePage() {
                 <StatusBadge status="confirmed" className="ml-auto" />
               </div>
               <div className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center">
                   {Object.entries(character.visualState).map(([key, val]) => (
                     <div key={key} className="bg-jollof-surface border border-jollof-border rounded-md p-3">
                       <div className="text-[10px] text-jollof-label uppercase tracking-wider mb-1 capitalize">{key}</div>
@@ -120,7 +122,7 @@ export default function CharacterProfilePage() {
 
             {/* Continuity notes */}
             <div className="jollof-card">
-              <div className="p-4 border-b border-jollof-border flex items-center justify-between">
+              <div className="p-4 border-b border-jollof-border flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={14} className="text-amber-400" />
                   <h3 className="text-sm font-semibold text-jollof-text">Continuity Notes</h3>
@@ -139,7 +141,7 @@ export default function CharacterProfilePage() {
           </div>
 
           {/* Right: Relationships + Appearances */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-xl mx-auto lg:max-w-none">
             {/* Relationships */}
             <div className="jollof-card">
               <div className="p-4 border-b border-jollof-border">
@@ -190,7 +192,7 @@ export default function CharacterProfilePage() {
                 { icon: Eye, title: "Visual Continuity", desc: "Track outfits, injuries, props, and notes to keep the character on-model." },
                 { icon: BookOpen, title: "Appearance Tracking", desc: "See every scene and book the character appears in — past, present, and future." },
               ].map((c) => (
-                <div key={c.title} className="jollof-panel p-3">
+                <div key={c.title} className="jollof-panel p-3 max-w-sm">
                   <div className="flex items-center gap-2 mb-1">
                     <c.icon size={13} className="text-jollof-orange" />
                     <span className="text-xs font-semibold text-jollof-text">{c.title}</span>

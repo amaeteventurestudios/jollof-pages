@@ -35,35 +35,35 @@ export default function SeriesPage() {
       <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
 
         {/* Page header */}
-        <div className="mb-5">
+        <div className="mb-5 text-center">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-1">Series · Equanauts</div>
           <h1 className="text-2xl sm:text-3xl font-black text-jollof-text mb-1">Series Command Center</h1>
           <p className="text-sm text-jollof-subtext">See the health of the entire graphic novel series at a glance.</p>
         </div>
 
         {/* Series header card */}
-        <div className="jollof-card p-4 sm:p-5 mb-5">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="w-14 h-18 sm:w-16 sm:h-20 rounded-md bg-gradient-to-b from-amber-900/60 to-jollof-surface border border-jollof-border shrink-0 flex items-center justify-center self-start sm:self-auto">
+        <div className="jollof-card p-4 sm:p-5 mb-5 text-center">
+          <div className="flex flex-col xl:flex-row xl:items-center gap-4 items-center">
+            <div className="w-14 h-18 sm:w-16 sm:h-20 rounded-md bg-gradient-to-b from-amber-900/60 to-jollof-surface border border-jollof-border shrink-0 flex items-center justify-center self-center">
               <BookOpen size={20} className="text-jollof-orange/50" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
+            <div className="flex-1 min-w-0 text-center xl:text-left">
+              <div className="flex flex-wrap items-center justify-center xl:justify-start gap-2 mb-1">
                 <h2 className="text-lg sm:text-xl font-bold text-jollof-text">{MOCK_SERIES.title}</h2>
                 <StatusBadge status={MOCK_SERIES.status} label="Active Series" />
               </div>
               <p className="text-sm text-jollof-subtext mb-1">{MOCK_SERIES.tagline}</p>
               <p className="text-xs text-jollof-label">Series Bible · Book {MOCK_SERIES.booksCount} Active · Creator: {MOCK_SERIES.creator}</p>
             </div>
-            <div className="flex flex-row sm:flex-col gap-2 shrink-0">
-              <Button variant="outline" icon={BookOpen} size="sm" className="flex-1 sm:flex-none justify-center">View Series Bible</Button>
-              <Button variant="secondary" icon={Activity} size="sm" className="flex-1 sm:flex-none justify-center" onClick={handleHealthCheck}>Run Health Check</Button>
+            <div className="flex flex-col sm:flex-row xl:flex-col gap-2 shrink-0 w-full sm:w-auto">
+              <Button variant="outline" icon={BookOpen} size="sm" className="w-full sm:w-auto justify-center">View Series Bible</Button>
+              <Button variant="secondary" icon={Activity} size="sm" className="w-full sm:w-auto justify-center" onClick={handleHealthCheck}>Run Health Check</Button>
             </div>
           </div>
         </div>
 
         {/* Metrics row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5 justify-items-center">
           <MetricCard label="Books" value={MOCK_SERIES.booksCount} sub="3 active" icon={BookOpen} />
           <MetricCard label="Canon Health" value={`${MOCK_SERIES.canonHealth}%`} sub="2 warnings" icon={Shield} color="text-green-400" />
           <MetricCard label="Review Queue" value={MOCK_SERIES.reviewQueue} sub="Items pending" icon={ClipboardList} color="text-amber-400" />
@@ -84,7 +84,7 @@ export default function SeriesPage() {
         </div>
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 items-start">
           {/* Books overview */}
           <div className="lg:col-span-2">
             <div className="jollof-card">
@@ -193,13 +193,13 @@ export default function SeriesPage() {
         </div>
 
         {/* Bottom info */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5 justify-items-center">
           {[
             { icon: TrendingUp, title: "Total Series Visibility", desc: "Track every book, chapter, and asset in one command center." },
             { icon: Activity, title: "Production Health at a Glance", desc: "Monitor integrity, open flags, and progress so nothing slips through." },
             { icon: BookOpen, title: "Editorial Oversight", desc: "Stay ahead of reviews, continuity issues, and blockers across the entire series." },
           ].map((c) => (
-            <div key={c.title} className="jollof-panel p-4">
+            <div key={c.title} className="jollof-panel p-4 max-w-sm">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full bg-jollof-orange/10 border border-jollof-orange/20 flex items-center justify-center shrink-0">
                   <c.icon size={14} className="text-jollof-orange" />

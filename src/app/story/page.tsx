@@ -31,7 +31,7 @@ export default function StoryRoomPage() {
 
   const tabContent: Record<string, React.ReactNode> = {
     world: (
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2 w-full max-w-2xl mx-auto">
         <h4 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-3">World Entries</h4>
         {["Lagos Drift Zone", "Drift Corridor 7", "The Sovereign Threshold", "RHYFT Command Tower", "Collapse Field Perimeter"].map((loc) => (
           <div key={loc} className="jollof-panel px-3 py-2.5 flex items-center gap-2 min-h-[44px]">
@@ -42,7 +42,7 @@ export default function StoryRoomPage() {
       </div>
     ),
     characters: (
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2 w-full max-w-2xl mx-auto">
         <h4 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-3">Active Characters</h4>
         {["Zane Jaja · Protagonist", "Kira Selene · Scout", "Director Amara · Antagonist", "Ori · Unknown", "Council Elder · Mentor"].map((c) => (
           <div key={c} className="jollof-panel px-3 py-2.5 flex items-center gap-2 min-h-[44px]">
@@ -53,7 +53,7 @@ export default function StoryRoomPage() {
       </div>
     ),
     outlines: (
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2 w-full max-w-2xl mx-auto">
         <h4 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-3">Series Outline</h4>
         {["Book 1: The Collapse Conjecture — 6 acts, 14 scenes", "Book 2: Drift Zone Uprising — outline phase", "Book 3: The Sovereign Threshold — concept phase"].map((o) => (
           <div key={o} className="jollof-panel px-3 py-3"><p className="text-xs text-jollof-subtext">{o}</p></div>
@@ -61,7 +61,7 @@ export default function StoryRoomPage() {
       </div>
     ),
     timelines: (
-      <div className="p-4">
+      <div className="p-4 w-full max-w-2xl mx-auto">
         <h4 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider mb-3">Narrative Timeline</h4>
         <div className="relative pl-4 border-l border-jollof-border space-y-5">
           {[
@@ -86,12 +86,12 @@ export default function StoryRoomPage() {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-jollof-border bg-[#0f0d08]/50 shrink-0">
-          <div className="flex items-start justify-between gap-3">
-            <div>
+          <div className="flex flex-col items-center gap-3 text-center xl:flex-row xl:items-start xl:justify-between xl:text-left">
+            <div className="text-center xl:text-left">
               <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-0.5">Story Room · Book 1</div>
               <h1 className="text-xl sm:text-2xl font-black text-jollof-text">Story Room</h1>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center justify-center gap-2 shrink-0">
               <div className="relative">
                 <Button variant="secondary" icon={ChevronDown} size="sm" onClick={() => setViewOptions(!viewOptions)}>
                   <span className="hidden sm:inline">View Options</span>
@@ -121,7 +121,7 @@ export default function StoryRoomPage() {
         {activeTab === "story" ? (
           <>
             {/* Mobile panel switcher */}
-            <div className="lg:hidden flex border-b border-jollof-border shrink-0 overflow-x-auto scrollbar-none">
+            <div className="lg:hidden flex justify-center border-b border-jollof-border shrink-0 overflow-x-auto scrollbar-none">
               {(["acts", "scenes", "detail"] as const).map((p) => (
                 <button
                   key={p}
@@ -135,12 +135,12 @@ export default function StoryRoomPage() {
 
             <div className="flex flex-1 overflow-hidden">
               {/* Act structure — desktop: always visible; mobile: conditional */}
-              <div className={`${mobilePanel === "acts" ? "flex" : "hidden"} lg:flex w-full lg:w-52 shrink-0 border-r border-jollof-border overflow-y-auto bg-[#0f0d08]/30 flex-col`}>
-                <div className="p-3 border-b border-jollof-border flex items-center justify-between">
+              <div className={`${mobilePanel === "acts" ? "flex" : "hidden"} lg:flex w-full lg:w-52 shrink-0 border-r border-jollof-border overflow-y-auto bg-[#0f0d08]/30 flex-col items-center lg:items-stretch`}>
+                <div className="p-3 border-b border-jollof-border flex items-center justify-between w-full">
                   <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Act Structure</h3>
                   <button onClick={() => toast("Add Act (prototype)", "info")} className="text-jollof-label hover:text-jollof-orange p-1"><Plus size={13} /></button>
                 </div>
-                <div className="p-2 space-y-1">
+                <div className="p-2 space-y-1 jp-mobile-panel lg:max-w-none">
                   {MOCK_ACTS.map((act) => (
                     <div key={act.id} className="rounded-md p-3 hover:bg-jollof-panel/60 transition-colors cursor-pointer min-h-[52px]">
                       <div className="flex items-center gap-1.5 mb-1">
@@ -162,14 +162,14 @@ export default function StoryRoomPage() {
               </div>
 
               {/* Scene board */}
-              <div className={`${mobilePanel === "scenes" ? "flex" : "hidden"} lg:flex flex-col flex-1 overflow-y-auto border-r border-jollof-border bg-[#0a0800]/20`}>
-                <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0">
+              <div className={`${mobilePanel === "scenes" ? "flex" : "hidden"} lg:flex flex-col flex-1 overflow-y-auto border-r border-jollof-border bg-[#0a0800]/20 items-center lg:items-stretch`}>
+                <div className="p-3 border-b border-jollof-border flex items-center justify-between shrink-0 w-full">
                   <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Scenes</h3>
                   <button onClick={() => setAddSceneOpen(true)} className="text-xs text-jollof-orange flex items-center gap-1 p-1 min-h-[44px]">
                     <Plus size={12} /> Add Scene
                   </button>
                 </div>
-                <div className="p-2 space-y-1.5 overflow-y-auto">
+                <div className="p-2 space-y-1.5 overflow-y-auto jp-mobile-panel lg:max-w-none">
                   {MOCK_SCENES.map((scene) => (
                     <div
                       key={scene.id}
@@ -191,13 +191,13 @@ export default function StoryRoomPage() {
               </div>
 
               {/* Scene detail */}
-              <div className={`${mobilePanel === "detail" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-72 shrink-0 overflow-y-auto`}>
+              <div className={`${mobilePanel === "detail" ? "flex" : "hidden"} lg:flex flex-col w-full lg:w-72 shrink-0 overflow-y-auto items-center lg:items-stretch`}>
                 <div className="p-4 border-b border-jollof-border flex items-center justify-between shrink-0">
                   <h3 className="text-xs font-semibold text-jollof-subtext uppercase tracking-wider">Scene Detail</h3>
                   <button className="lg:hidden text-xs text-jollof-orange" onClick={() => setMobilePanel("scenes")}>← Back</button>
                 </div>
                 {selectedScene && (
-                  <div className="p-4 space-y-4 overflow-y-auto">
+                  <div className="p-4 space-y-4 overflow-y-auto jp-mobile-panel lg:max-w-none">
                     <div>
                       <h4 className="text-sm font-bold text-jollof-text">{selectedScene.title}</h4>
                       <StatusBadge status={selectedScene.status} className="mt-1" />

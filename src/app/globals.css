@@ -65,11 +65,23 @@ body {
     background: #161209;
     border: 1px solid #2a1f08;
     border-radius: 8px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
   .jollof-panel {
     background: #1c1608;
     border: 1px solid #2a1f08;
     border-radius: 6px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .jp-mobile-panel {
+    width: 100%;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
   }
   .jollof-glow {
     box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);

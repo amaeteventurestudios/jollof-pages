@@ -41,17 +41,17 @@ export default function HomePage() {
       <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 w-full max-w-5xl mx-auto">
 
         {/* Page header */}
-        <div className="mb-6">
+        <div className="mb-6 text-center">
           <div className="text-jollof-orange font-bold text-xs uppercase tracking-widest mb-1">Jollof Pages</div>
           <h1 className="text-2xl sm:text-3xl font-black text-jollof-text mb-1">Home / Project Launcher</h1>
           <p className="text-sm text-jollof-subtext">Start or resume work across serialized graphic novel projects.</p>
         </div>
 
         {/* Welcome banner */}
-        <div className="jollof-card p-4 sm:p-5 mb-6">
+        <div className="jollof-card p-4 sm:p-5 mb-6 text-center">
           <p className="text-xs text-jollof-label mb-1">Pick up where you left off or launch a new series.</p>
           <h2 className="text-base sm:text-lg font-bold text-jollof-text mb-4">Welcome back!</h2>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row justify-center gap-2">
             <Button variant="primary" icon={Plus} onClick={() => setCreateOpen(true)} className="w-full sm:w-auto justify-center">
               Create New Series
             </Button>
@@ -63,15 +63,15 @@ export default function HomePage() {
 
         {/* Recent series */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-between gap-2 mb-3 text-center xl:text-left">
             <h3 className="text-sm font-semibold text-jollof-text">Recent Series</h3>
             <Link href="/series" className="text-xs text-jollof-orange hover:underline flex items-center gap-1">
               View all <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
             {MOCK_RECENT_SERIES.map((series) => (
-              <Link key={series.id} href={series.id === "series-equanauts" ? "/series" : "#"}>
+              <Link key={series.id} href={series.id === "series-equanauts" ? "/series" : "#"} className="w-full max-w-sm">
                 <div className={`jollof-card p-4 hover:border-jollof-orange/30 transition-all cursor-pointer group ${statusBorderColors[series.status] ?? ""}`}>
                   <div className="w-full h-24 sm:h-28 rounded-md bg-gradient-to-br from-amber-950 to-jollof-surface border border-jollof-border mb-3 flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -103,15 +103,15 @@ export default function HomePage() {
 
         {/* Quick actions */}
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-jollof-text mb-3">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <h3 className="text-sm font-semibold text-jollof-text mb-3 text-center">Quick Actions</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl mx-auto">
             {[
               { label: "Go to Canon", href: "/canon", icon: Shield },
               { label: "Open Story Bible", href: "/story", icon: BookOpen },
               { label: "Review Queue", href: "/review", icon: Flag },
               { label: "Production Export", href: "/export", icon: Zap },
             ].map((action) => (
-              <Link key={action.label} href={action.href}>
+              <Link key={action.label} href={action.href} className="w-full">
                 <div className="jollof-panel p-3 sm:p-3.5 flex items-center gap-2.5 hover:border-jollof-orange/30 hover:bg-jollof-muted/30 transition-all cursor-pointer group min-h-[52px]">
                   <action.icon size={16} className="text-jollof-orange shrink-0" />
                   <span className="text-xs text-jollof-subtext group-hover:text-jollof-text transition-colors leading-snug">{action.label}</span>
@@ -122,13 +122,13 @@ export default function HomePage() {
         </div>
 
         {/* Info cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 justify-items-center">
           {[
             { icon: Zap, title: "Quick Access", desc: "Launch new series, import packages, or jump straight into your recent work." },
             { icon: TrendingUp, title: "Recent Work at a Glance", desc: "See your latest projects, progress, open flags, and where you left off." },
             { icon: ArrowRight, title: "Start Working Fast", desc: "One click opens your project and takes you exactly where you left off." },
           ].map((card) => (
-            <div key={card.title} className="jollof-panel p-4">
+            <div key={card.title} className="jollof-panel p-4 max-w-sm">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full bg-jollof-orange/10 border border-jollof-orange/20 flex items-center justify-center shrink-0">
                   <card.icon size={14} className="text-jollof-orange" />

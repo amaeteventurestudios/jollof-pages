@@ -29,7 +29,7 @@ export default function LoginPage() {
         <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative w-full max-w-sm">
+      <div className="relative w-full max-w-sm mx-auto">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8 sm:mb-10">
           <div className="w-14 h-14 rounded-2xl bg-jollof-orange flex items-center justify-center mb-4 shadow-lg shadow-orange-500/20">
@@ -41,7 +41,7 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-[#161209] border border-jollof-border rounded-2xl p-6 sm:p-8 shadow-2xl">
-          <h2 className="text-lg font-semibold text-jollof-text mb-6 text-center sm:text-left">
+          <h2 className="text-lg font-semibold text-jollof-text mb-6 text-center">
             Sign in to your workspace
           </h2>
 
