@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowLeft, Lock, Mail, Copy, Check, RefreshCw, Shield, Users, GitBranch } from "lucide-react";
 
@@ -12,7 +12,6 @@ function generatePassword(length = 24): string {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Guard against open-redirect: only allow same-origin relative paths
@@ -51,7 +50,9 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-      router.push(redirectPath);
+      // Hard navigation bypasses the Next.js router cache, which can
+      // hold a stale redirect-to-login response from before we were authenticated.
+      window.location.assign(redirectPath);
     } catch {
       setError("Network error. Please check your connection.");
       setLoading(false);
