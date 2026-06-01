@@ -48,10 +48,10 @@ The long-term vision is:
 | Admin/backend audit               | 🟢 Completed                    |
 | Admin auth guard                  | 🟢 Added                        |
 | Admin pages                       | 🟢 Wired to services            |
-| Supabase migrations               | 🟡 Combined SQL prepared — pending apply |
-| First workspace                   | 🔴 Need to create/seed          |
-| DEMO_WORKSPACE_ID                 | 🔴 Need to set                  |
-| Live admin data                   | 🔴 Pending migrations/workspace |
+| Supabase migrations               | 🟢 Applied                      |
+| First workspace                   | 🟢 Created (seed script)        |
+| DEMO_WORKSPACE_ID                 | 🔴 Need to set in .env.local and Vercel |
+| Live admin data                   | 🔴 Pending DEMO_WORKSPACE_ID    |
 | Real wiki CRUD                    | 🔵 Next major build             |
 | Real Story OS integration         | 🔵 Later                        |
 | Public API layer                  | 🔵 Later                        |
@@ -168,7 +168,7 @@ Zero dangling references.
 |     1 |     🟢 | Next.js Product Shell                   | Real app foundation                                            | Next.js, TypeScript, Tailwind, reusable components, routes, mock data, Vercel                                                       | App runs locally and deploys                                                       |
 |     2 |     🟢 | Responsive UI / Layout System           | Mobile, tablet, desktop layout                                 | Mobile polish, tablet polish, desktop full-width cockpit, removed narrow constraints                                                | All screens readable and properly laid out                                         |
 |     3 |     🟢 | Backend/Admin Foundation Audit          | Admin and backend readiness                                    | Supabase wiring, R2 wiring, helper RPCs, admin auth guard, admin pages, env docs, tests/build                                       | Backend/admin shell ready for live database                                        |
-|     4 |     🟡 | Supabase Database Foundation            | Activates live database                                        | Apply migrations `001` through `006`, verify tables, RLS, RPCs, service role                                                        | Live DB exists and works                                                           |
+|     4 |     🟢 | Supabase Database Foundation            | Activates live database                                        | Apply migrations `001` through `006`, verify tables, RLS, RPCs, service role                                                        | Live DB exists and works                                                           |
 |     5 |     🔴 | Workspace/Auth Ownership Layer          | Creates first real workspace                                   | Set admin env vars, create workspace, seed user/member, set `DEMO_WORKSPACE_ID`, test `/admin`                                      | Admin pages show real workspace data                                               |
 |     6 |     🔵 | Live Wiki + Canon System                | First live creative database                                   | Wiki CRUD, tags, canon status, suggested canon queue, confirm/dispute/deprecate canon                                               | User can manage real canon/wiki data                                               |
 |     7 |     🔵 | Creator Onboarding                      | Personalized setup flow                                        | Creator type, project type, genre, source material, output goal                                                                     | User lands in correct workspace path                                               |
@@ -819,8 +819,8 @@ Add these workspace settings pages later.
 
 | Order | Status | Build Item                                    | Why It Comes Next                                                                    |
 | ----: | -----: | --------------------------------------------- | ------------------------------------------------------------------------------------ |
-|     1 |     🔴 | Apply Supabase migrations `001` through `006` | Current blocker                                                                      |
-|     2 |     🔴 | Create/seed first workspace                   | Needed for live admin data                                                           |
+|     1 |     🟢 | Apply Supabase migrations `001` through `006` | Done 2026-06-01                                                                      |
+|     2 |     🟢 | Create/seed first workspace                   | Done — workspace `1dcf06ea-cf55-4a95-96a6-4d981bd73c5d`                             |
 |     3 |     🔴 | Set `DEMO_WORKSPACE_ID` locally and in Vercel | Required for workspace-scoped services                                               |
 |     4 |     🔴 | Test `/admin` with real data                  | Confirms backend is live                                                             |
 |     5 |     🔴 | Generate Supabase types                       | Keeps TypeScript aligned with DB                                                     |
@@ -878,18 +878,23 @@ Because Phase 12A is now added, update the implementation chart to 10 prompts.
 
 The immediate next step does not change.
 
-## Phase 4 Status: 🟡 In Progress
+## Phase 4 Status: 🟢 Complete
 
-Combined SQL prepared at `supabase/combined-phase-4-migrations.sql` (2,178 lines, all 6 migrations in order).
+Applied 2026-06-01. All 6 migrations ran successfully via Supabase SQL Editor.
 
-**Pending action:** Paste into Supabase SQL Editor and run, or provide the DB password to apply via CLI:
-```
-npx supabase db push --db-url "postgresql://postgres:[password]@db.gsxuezwxmgbrgaaplyza.supabase.co:5432/postgres"
-```
+**Verified:**
+- All tables from migrations 001–006: ✅ present
+- RLS enabled on all tables: ✅
+- Service role access: ✅
+- Helper RPCs (006): ✅ all 9 functions exist
+- Project: ✅ Jollof Pages (`gsxuezwxmgbrgaaplyza`)
+- First workspace seeded: ✅ `1dcf06ea-cf55-4a95-96a6-4d981bd73c5d` (Jollof Pages)
+- Auth user created for admin email
 
-**Bug fixed in combined file:** `increment_storage_usage` in 006 referenced non-existent columns `assets_uploaded` / `exports_created` — corrected to `assets_count` (matching 001 schema).
-
-After applying SQL: run `node scripts/seed-workspace.mjs` then set `DEMO_WORKSPACE_ID`.
+**Remaining for Phase 5:**
+- Set `DEMO_WORKSPACE_ID=1dcf06ea-cf55-4a95-96a6-4d981bd73c5d` in `.env.local`
+- Set same value in Vercel environment variables
+- Test `/admin` loads real workspace data
 
 ## Phase 4: Apply Supabase Migrations
 
