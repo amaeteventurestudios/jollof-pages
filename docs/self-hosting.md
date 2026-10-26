@@ -1,9 +1,11 @@
 # Self-hosting Jollof Pages
 
 One small Linux server runs everything: PocketBase (data, logins and files) and the Next.js app
-in Docker, behind the host's Caddy for HTTPS. The production server is the Contabo box at
-169.58.77.98, which also hosts AuthorNX; both apps share one Caddy, one file per site in
-`/etc/caddy/sites/`. A 2 vCPU / 4 GB machine is plenty. Any of your providers works:
+in Docker. The production server is the Contabo box at 169.58.77.98. There, ports 80/443 belong
+to a shared "front door" Caddy container in `/opt/front-door` (it also serves other sites):
+Jollof Pages is one block in `/opt/front-door/config/Caddyfile`, and a server-only
+`docker-compose.override.yml` puts the two containers on the front door's Docker network.
+On a fresh server without that front door, use the host-Caddy steps below. A 2 vCPU / 4 GB machine is plenty. Any of your providers works:
 
 - **Hetzner**: a CX22 or CAX11 (Arm) in the Cloud Console.
 - **Contabo**: the smallest Cloud VPS.
