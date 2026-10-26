@@ -2,11 +2,13 @@
 @import "tw-animate-css";
 
 /*
- * Jollof Pages tokens. A rose-grey paper ground, brown-black ink and one green accent
- * (the green of the Nigerian flag) used for the main action and the current item.
+ * Jollof Pages tokens. A rose-grey paper ground, brown-black ink and one accent, the smoky
+ * tomato red of jollof rice, used for the main action and the current item. The darker
+ * hover is the "party" char at the bottom of the pot.
  *   ink #2b2622 on paper #ebe5e3   ~12.6:1
  *   muted #5f5652 on paper         ~5.9:1
- *   white on accent #0b6e3c        ~6.4:1
+ *   white on accent #ad3a17        ~6.2:1
+ *   accent on paper                ~5.0:1
  */
 :root {
   --radius: 0.25rem;
@@ -30,12 +32,12 @@
   --accent-foreground: var(--ink);
   --border: #ddd5d1;
   --input: #cfc5c0;
-  --ring: #0b6e3c;
+  --ring: #ad3a17;
 
-  --primary: #0b6e3c;
-  --primary-hover: #085a31;
+  --primary: #ad3a17;
+  --primary-hover: #8a2c10;
   --primary-foreground: #ffffff;
-  --primary-soft: #e3f1e8;
+  --primary-soft: #f6e4da;
   --secondary: #ffffff;
   --secondary-foreground: var(--ink);
   --destructive: #b42318;
@@ -62,6 +64,14 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-destructive: var(--destructive);
+  --color-jollof: var(--jollof);
+  --color-jollof-2: var(--jollof-2);
+  --color-pepper: var(--pepper);
+  --color-char: var(--char);
+  --color-char-2: var(--char-2);
+  --color-bonnet: var(--bonnet);
+  --color-cream: var(--cream);
+  --color-cream-2: var(--cream-2);
   --color-paper: var(--paper);
   --color-paper-2: var(--paper-2);
   --color-paper-3: var(--paper-3);
@@ -95,7 +105,7 @@
     outline-offset: 2px;
   }
   ::selection {
-    background: #bfe3cc;
+    background: #f2c6ad;
     color: var(--ink);
   }
 }
@@ -131,7 +141,7 @@
   color: var(--ink-2);
 }
 .manuscript .ProseMirror .callout {
-  background: #e8f1ea;
+  background: #f7e9e1;
   border-radius: 6px;
   padding: 0.9em 1.1em;
 }

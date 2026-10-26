@@ -71,7 +71,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
           </div>
         </Field>
         <Field id="p-accent" label="Accent colour" hint="Used behind the book on its page when there is no cover yet.">
-          <input id="p-accent" type="color" value={book.accent || "#0b6e3c"} onChange={(e) => ws.saveBook({ accent: e.target.value })} className="h-9 w-16 rounded border border-input bg-card" />
+          <input id="p-accent" type="color" value={book.accent || "#ad3a17"} onChange={(e) => ws.saveBook({ accent: e.target.value })} className="h-9 w-16 rounded border border-input bg-card" />
         </Field>
         <p className="text-sm text-soft" role="status">
           {msg}

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 import "./globals.css";
 
-const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+// variable weight plus the width axis, so display lines can be set extra wide
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
 
 export const metadata: Metadata = {
   title: { default: "Jollof Pages", template: "%s · Jollof Pages" },

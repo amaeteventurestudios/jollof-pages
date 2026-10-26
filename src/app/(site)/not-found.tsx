@@ -1,13 +1,17 @@
 import Link from "next/link";
+import { Pattern } from "@/components/site/patterns";
 
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-[70svh] max-w-xl flex-col justify-center px-4">
-      <h1 className="t-head">This page is not on the shelf</h1>
-      <p className="mt-6">It may have moved, or the book is not published yet.</p>
-      <Link href="/books" className="btn mt-10 w-fit">
-        See all books
-      </Link>
+    <main className="relative flex min-h-svh items-center overflow-hidden bg-jollof px-4 text-cream">
+      <Pattern id="p-404" kind="adire" color="var(--char)" opacity={0.22} />
+      <div className="relative mx-auto max-w-2xl">
+        <h1 className="t-head wide font-bold">Not on the shelf</h1>
+        <p className="t-lead mt-6">This page may have moved, or the book is not published yet.</p>
+        <Link href="/books" className="btn mt-10">
+          See all books
+        </Link>
+      </div>
     </main>
   );
 }

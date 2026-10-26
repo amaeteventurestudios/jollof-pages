@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { pb } from "@/lib/pb";
+import { cn } from "@/lib/utils";
 
-export function SubscribeForm({ source = "website" }: { source?: string }) {
+export function SubscribeForm({ source = "website", tone = "light" }: { source?: string; tone?: "light" | "dark" }) {
+  const id = useId();
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
-  if (state === "done") return <p className="mt-4 text-ink">You are on the list. The next book will reach you first.</p>;
+  if (state === "done") return <p className="mt-6 text-[1.125rem] font-semibold">You are on the list. The next book will reach you first.</p>;
   return (
     <form
-      className="mt-5 grid gap-3"
+      className="mt-6"
       onSubmit={async (e) => {
         e.preventDefault();
         setState("busy");
@@ -23,14 +25,25 @@ export function SubscribeForm({ source = "website" }: { source?: string }) {
         }
       }}
     >
-      <label htmlFor="sub-email" className="t-small">
+      <label htmlFor={id} className="t-small font-medium">
         Email address
       </label>
-      <input id="sub-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-13 bg-paper px-4 text-ink" />
-      <button type="submit" className="btn w-full" disabled={state === "busy"}>
-        {state === "busy" ? "Joining…" : "Join the reader list"}
-      </button>
-      {state === "error" && <p className="t-small text-destructive">That did not go through. Please try again.</p>}
+      <div className={cn("mt-2 flex flex-col gap-2 rounded-[30px] p-1.5 sm:flex-row sm:rounded-full", tone === "dark" ? "bg-cream" : "bg-white")}>
+        <input
+          id={id}
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="h-12 min-w-0 flex-1 rounded-full bg-transparent px-5 text-char placeholder:text-char/50 focus-visible:outline-offset-0"
+        />
+        <button type="submit" className="btn btn-ink shrink-0" disabled={state === "busy"}>
+          {state === "busy" ? "Joining…" : "Join"}
+        </button>
+      </div>
+      {state === "error" && <p className={cn("t-small mt-2 font-semibold", tone === "dark" ? "text-bonnet" : "text-jollof")}>That did not go through. Please try again.</p>}
     </form>
   );
 }

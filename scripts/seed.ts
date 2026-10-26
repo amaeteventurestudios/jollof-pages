@@ -101,7 +101,7 @@ const DEMO: { title: string; subtitle: string; pitch: string; description: strin
     paper: "cream",
     theme: "accra",
     featured: true,
-    cover: { bg: "#0b6e3c", fg: "#ffffff", accent: "#f2c14e", font: "Inter", style: "bold" },
+    cover: { bg: "#ad3a17", fg: "#ffffff", accent: "#f2c14e", font: "Inter", style: "bold" },
     categories: ["Writing", "Self-publishing"],
   },
   {

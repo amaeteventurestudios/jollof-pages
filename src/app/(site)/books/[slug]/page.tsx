@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBookBySlug, getSampleChapter, getSite } from "@/lib/pb-server";
-import { StageProvider, Stage } from "@/components/site/stage";
+import { BookObject } from "@/components/site/book-object";
+import { Tilt } from "@/components/site/tilt";
+import { Pattern, Rim } from "@/components/site/patterns";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SubscribeForm } from "@/components/site/subscribe-form";
@@ -60,32 +62,30 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   };
 
   return (
-    <StageProvider books={[sb]}>
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <div className="lg:grid lg:grid-cols-2">
-        <div className="sticky top-0 z-0 h-[56svh] p-3 lg:order-2 lg:h-svh lg:pl-1.5">
-          <Stage books={[sb]} className="h-full" />
-        </div>
-        <main className="relative z-10 bg-paper px-4 sm:px-8 lg:order-1 lg:px-14">
-          <SiteHeader name={name} />
-          <article className="pt-12 pb-24 sm:pt-20">
-            <h1 className="t-head max-w-[16ch]" data-rise>
+      <SiteHeader name={name} overHero />
+      <section className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
+        <Pattern id="p-book" kind="adire" color="var(--char)" opacity={0.22} />
+        <div className="relative mx-auto grid max-w-[1400px] items-center gap-12 px-4 pt-12 pb-28 sm:px-8 lg:min-h-[calc(92svh-72px)] lg:grid-cols-[1.2fr_1fr] lg:pb-36">
+          <div>
+            <h1 className="t-head wide font-bold" data-rise>
               {book.title}
             </h1>
             {book.subtitle && (
-              <p className="t-lead mt-5 max-w-[34ch]" data-rise style={{ ["--i" as string]: 1 }}>
+              <p className="t-lead mt-6 max-w-[34ch]" data-rise style={{ ["--i" as string]: 1 }}>
                 {book.subtitle}
               </p>
             )}
             {author && (
-              <p className="mt-6" data-rise style={{ ["--i" as string]: 2 }}>
+              <p className="mt-6 font-semibold text-bonnet" data-rise style={{ ["--i" as string]: 2 }}>
                 by {author.name}
               </p>
             )}
             <div className="mt-10 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 3 }}>
               {links.length > 0 ? (
                 links.map((l, i) => (
-                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className={i === 0 ? "btn" : "btn btn-quiet"}>
+                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className={i === 0 ? "btn" : "btn btn-ghost"}>
                     {i === 0 ? `Buy on ${l.label || "Amazon"}` : l.label}
                   </a>
                 ))
@@ -95,14 +95,28 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 </a>
               ) : null}
               {sample && (
-                <Link href={`/books/${book.slug}/read`} className="btn btn-ink">
+                <Link href={`/books/${book.slug}/read`} className={links.length || isUpcoming(book) ? "btn btn-ghost" : "btn"}>
                   Read the first pages
                 </Link>
               )}
             </div>
+          </div>
+          <div className="relative flex justify-center max-sm:-my-12 max-sm:scale-[0.75]" data-rise style={{ ["--i" as string]: 2 }}>
+            <div className="absolute top-1/2 left-1/2 aspect-square w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-char" aria-hidden />
+            <Tilt className="float relative" max={12}>
+              <BookObject book={sb} scale={46} className="book3d-enter" />
+            </Tilt>
+          </div>
+        </div>
+        <Rim color="var(--cream)" />
+      </section>
 
+      <main className="relative overflow-hidden bg-cream py-[clamp(4rem,9vw,8rem)]">
+        <Pattern id="p-book-pepper" kind="pepper" color="var(--jollof)" opacity={0.12} drift={false} />
+        <div className="relative mx-auto grid max-w-[1400px] gap-16 px-4 sm:px-8 lg:grid-cols-[1.3fr_1fr]">
+          <div>
             {book.description && (
-              <div className="mt-20 grid max-w-[46ch] gap-[1.1em]" data-reveal>
+              <div className="grid max-w-[52ch] gap-[1.1em] text-[1.125rem] leading-[1.6]" data-reveal>
                 {book.description
                   .split(/\n{2,}/)
                   .filter(Boolean)
@@ -111,44 +125,46 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                   ))}
               </div>
             )}
-
-            {details.length > 0 && (
-              <dl className="mt-20 grid max-w-[46ch] gap-y-2" data-reveal>
-                {details.map(([k, v]) => (
-                  <div key={k} className="flex items-end">
-                    <dt className="text-soft">{k}</dt>
-                    <span className="leader" aria-hidden />
-                    <dd className="tabular text-right">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-
             {author?.bio && (
-              <section className="mt-20 max-w-[46ch]" aria-labelledby="author-title" data-reveal>
+              <section className="mt-16 max-w-[52ch]" aria-labelledby="author-title" data-reveal>
                 <div className="flex items-center gap-4">
                   {author.photo && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={fileUrl(author, author.photo, "400x400")} alt="" width={56} height={56} className="size-14 rounded-full object-cover" />
                   )}
-                  <h2 id="author-title" className="text-[1.5rem] tracking-[-0.01em]">
+                  <h2 id="author-title" className="wide text-[1.75rem] font-bold tracking-[-0.03em]">
                     About {author.name}
                   </h2>
                 </div>
-                <p className="mt-5">{author.bio}</p>
+                <p className="mt-5 text-[1.125rem] leading-[1.6]">{author.bio}</p>
               </section>
             )}
-
-            <section id="notify" className="mt-20 max-w-[30rem] bg-card p-8" aria-labelledby="notify-title" data-reveal>
-              <h2 id="notify-title" className="text-[1.5rem] tracking-[-0.01em]">
-                Hear about the next one
-              </h2>
-              <SubscribeForm source={`book:${book.slug}`} />
+          </div>
+          <div className="grid content-start gap-6">
+            {details.length > 0 && (
+              <dl className="grid gap-y-3 rounded-[28px] bg-white p-7" data-reveal>
+                {details.map(([k, v]) => (
+                  <div key={k} className="flex items-end">
+                    <dt className="text-char/70">{k}</dt>
+                    <span className="leader" aria-hidden />
+                    <dd className="tabular text-right font-medium">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <section id="notify" className="relative overflow-hidden rounded-[28px] bg-char p-7 text-cream" aria-labelledby="notify-title" data-reveal style={{ ["--i" as string]: 1 }}>
+              <Pattern id="p-notify" kind="wax" color="var(--char-2)" />
+              <div className="relative">
+                <h2 id="notify-title" className="wide text-[1.75rem] font-bold tracking-[-0.03em]">
+                  Hear about the next one
+                </h2>
+                <SubscribeForm source={`book:${book.slug}`} tone="dark" />
+              </div>
             </section>
-          </article>
-        </main>
-      </div>
+          </div>
+        </div>
+      </main>
       <SiteFooter name={name} email={site?.email} />
-    </StageProvider>
+    </>
   );
 }

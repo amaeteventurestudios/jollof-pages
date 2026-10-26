@@ -1,11 +1,15 @@
-# Production stack for one server (Hetzner, Contabo or Oracle): PocketBase, the web app and
-# Caddy for HTTPS. Copy .env.example to .env and fill it in, then: docker compose up -d --build
+# Production stack: PocketBase and the web app, bound to localhost only. HTTPS comes from the
+# host's Caddy, which the server shares with AuthorNX: copy deploy/jollofpages.caddy into
+# /etc/caddy/sites/ (the main Caddyfile has `import /etc/caddy/sites/*`) and reload Caddy.
+# Copy .env.example to .env and fill it in, then: docker compose up -d --build
 services:
   pocketbase:
     build:
       context: .
       dockerfile: deploy/pocketbase.Dockerfile
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8096:8090"
     volumes:
       - pb_data:/pb/pb_data
 
@@ -18,27 +22,10 @@ services:
     environment:
       POCKETBASE_INTERNAL_URL: http://pocketbase:8090
       NEXT_PUBLIC_POCKETBASE_URL: https://${PB_DOMAIN}
-    depends_on:
-      - pocketbase
-
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      SITE_DOMAIN: ${SITE_DOMAIN}
-      PB_DOMAIN: ${PB_DOMAIN}
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - "127.0.0.1:3100:3000"
     depends_on:
-      - web
       - pocketbase
 
 volumes:
   pb_data:
-  caddy_data:
-  caddy_config:

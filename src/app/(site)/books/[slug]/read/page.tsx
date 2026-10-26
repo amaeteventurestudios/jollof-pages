@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getBookBySlug, getSampleChapter, getSite } from "@/lib/pb-server";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
+import { Pattern } from "@/components/site/patterns";
 import { orderedElements } from "@/lib/book-model";
 import { elementHtml } from "@/lib/render-element";
 import { themeCss } from "@/lib/theme-css";
@@ -36,30 +37,31 @@ export default async function ReadSample({ params }: { params: Promise<{ slug: s
     <>
       <link rel="stylesheet" href={THEME_FONTS_HREF} />
       <style>{themeCss(theme, { scope: ".reader", dropCaps: f.dropCaps, lineHeight: 1.6 })}</style>
-      <div className="px-4 sm:px-8 lg:px-14">
-        <SiteHeader name={name} />
-      </div>
-      <main className="px-4 pb-16 sm:px-8">
-        <p className="t-small mx-auto max-w-[36rem] pt-10 text-soft">
+      <SiteHeader name={name} />
+      <main className="relative overflow-hidden bg-cream-2 px-4 pt-[72px] pb-24 sm:px-8">
+        <Pattern id="p-read" kind="rice" color="var(--cream)" drift={false} />
+        <div className="relative">
+        <p className="mx-auto max-w-[38rem] pt-12 font-medium">
           A free sample of{" "}
-          <Link href={`/books/${book.slug}`} className="link text-ink">
+          <Link href={`/books/${book.slug}`} className="link text-jollof">
             {book.title}
           </Link>
         </p>
         {chapter ? (
-          <article className="reader mx-auto mt-10 max-w-[36rem] bg-card px-6 py-14 text-[#1d1a17] sm:px-14" dangerouslySetInnerHTML={{ __html: html }} />
+          <article className="reader mx-auto mt-6 max-w-[38rem] rounded-[6px] bg-white px-6 py-14 text-[#1d1a17] shadow-[0_30px_60px_-30px_rgba(58,20,10,0.45)] sm:px-14" dangerouslySetInnerHTML={{ __html: html }} />
         ) : (
-          <p className="mx-auto mt-10 max-w-[36rem]">There is no sample for this book yet.</p>
+          <p className="mx-auto mt-10 max-w-[38rem]">There is no sample for this book yet.</p>
         )}
-        <div className="mx-auto mt-12 flex max-w-[36rem] flex-wrap gap-3">
+        <div className="mx-auto mt-12 flex max-w-[38rem] flex-wrap gap-3">
           {links[0] && (
             <a href={links[0].url} target="_blank" rel="noreferrer" className="btn">
               Keep reading: buy on {links[0].label || "Amazon"}
             </a>
           )}
-          <Link href={`/books/${book.slug}`} className="btn btn-quiet">
+          <Link href={`/books/${book.slug}`} className="btn btn-ink">
             About the book
           </Link>
+        </div>
         </div>
       </main>
       <SiteFooter name={name} email={site?.email} />

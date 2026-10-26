@@ -28,14 +28,14 @@ export const COVER_FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;600&family=Inter:wght@400;700;800&family=Literata:opsz,wght@7..72,400;7..72,700&family=Lora:wght@400;700&family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap";
 
 export const TEMPLATES: { id: CoverDesign["template"]; label: string; design: Partial<CoverDesign> }[] = [
-  { id: "bold", label: "Bold type", design: { bg: "#0b6e3c", fg: "#ffffff", accent: "#f2c14e", font: "Archivo", titleSize: 0.14, title: { x: 0.09, y: 0.1 }, author: { x: 0.09, y: 0.88 } } },
+  { id: "bold", label: "Bold type", design: { bg: "#ad3a17", fg: "#ffffff", accent: "#f2c14e", font: "Archivo", titleSize: 0.14, title: { x: 0.09, y: 0.1 }, author: { x: 0.09, y: 0.88 } } },
   { id: "framed", label: "Framed", design: { bg: "#2b2622", fg: "#f4efe6", accent: "#c9a45c", font: "Playfair Display", titleSize: 0.11, title: { x: 0.5, y: 0.3 }, author: { x: 0.5, y: 0.82 } } },
   { id: "photo", label: "Photograph", design: { bg: "#1d1d1d", fg: "#ffffff", accent: "#ffffff", font: "Inter", titleSize: 0.12, title: { x: 0.08, y: 0.66 }, author: { x: 0.08, y: 0.9 } } },
   { id: "split", label: "Split", design: { bg: "#c8462c", fg: "#1c1a17", accent: "#f4efe6", font: "EB Garamond", titleSize: 0.11, title: { x: 0.08, y: 0.64 }, author: { x: 0.08, y: 0.9 } } },
 ];
 
 export function defaultDesign(): CoverDesign {
-  return { template: "bold", bg: "#0b6e3c", fg: "#ffffff", accent: "#f2c14e", font: "Archivo", titleSize: 0.14, imageUrl: "", title: { x: 0.09, y: 0.1 }, author: { x: 0.09, y: 0.88 }, backBg: "", showBlurb: true };
+  return { template: "bold", bg: "#ad3a17", fg: "#ffffff", accent: "#f2c14e", font: "Archivo", titleSize: 0.14, imageUrl: "", title: { x: 0.09, y: 0.1 }, author: { x: 0.09, y: 0.88 }, backBg: "", showBlurb: true };
 }
 
 function useImage(url: string): HTMLImageElement | null {

@@ -18,7 +18,7 @@ export function BookObject({ book, scale, pages, className }: { book: StageBook;
             </span>
           )}
         </div>
-        <div className="book3d-face" style={{ background: book.accent }}>
+        <div className="book3d-face shadow-[0_40px_70px_-30px_rgba(0,0,0,0.65)]" style={{ background: book.accent }}>
           {book.cover ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={book.cover} alt={`Cover of ${book.title}`} width={Math.round(w)} height={Math.round(h)} className="h-full w-full object-cover" />

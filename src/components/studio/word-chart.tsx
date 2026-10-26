@@ -16,7 +16,7 @@ export function WordChart({ byDay, days, goal }: { byDay: Map<string, number>; d
       <svg viewBox={`0 0 ${W} ${H + 22}`} className="w-full" role="img" aria-label={`Words written per day over the last ${days} days`}>
         {values.map((v, i) => (
           <g key={dates[i]}>
-            <rect x={i * bw + 2} y={y(v)} width={bw - 4} height={H - y(v)} rx={2} fill={goal && v >= goal ? "#0b6e3c" : "#a99e98"}>
+            <rect x={i * bw + 2} y={y(v)} width={bw - 4} height={H - y(v)} rx={2} fill={goal && v >= goal ? "#ad3a17" : "#a99e98"}>
               <title>{`${dates[i]}: ${fmt(v)} words`}</title>
             </rect>
             {(i === 0 || i === days - 1 || i % 7 === 0) && (
@@ -28,7 +28,7 @@ export function WordChart({ byDay, days, goal }: { byDay: Map<string, number>; d
         ))}
         {goal ? <line x1={0} x2={W} y1={y(goal)} y2={y(goal)} stroke="#2b2622" strokeDasharray="4 4" strokeWidth={1} /> : null}
       </svg>
-      <figcaption className="mt-2 text-[13px] text-soft">Green bars met the daily habit{goal ? ` of ${fmt(goal)} words` : ""}. Net words: deleting text counts against the day.</figcaption>
+      <figcaption className="mt-2 text-[13px] text-soft">Jollof-red bars met the daily habit{goal ? ` of ${fmt(goal)} words` : ""}. Net words: deleting text counts against the day.</figcaption>
     </figure>
   );
 }

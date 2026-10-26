@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 export function Reveal() {
   const path = usePathname();
   useEffect(() => {
+    // once the intro has played, later pages in this visit skip it
+    const seen = setTimeout(() => document.documentElement.classList.add("seen"), 2800);
     const targets = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]:not(.is-in)"));
     if (!("IntersectionObserver" in window)) {
       targets.forEach((el) => el.classList.add("is-in"));
@@ -32,6 +34,7 @@ export function Reveal() {
     return () => {
       io.disconnect();
       clearTimeout(safety);
+      clearTimeout(seen);
     };
   }, [path]);
   return null;

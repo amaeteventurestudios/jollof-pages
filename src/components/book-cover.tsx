@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { fileUrl } from "@/lib/pb";
 import type { Book } from "@/lib/types";
 
-const FALLBACK = ["#0b6e3c", "#2b2622", "#7a2e1d", "#1f4a6b", "#5a3d6b"];
+const FALLBACK = ["#ad3a17", "#2b2622", "#7a2e1d", "#1f4a6b", "#5a3d6b"];
 
 function hash(s: string): number {
   let h = 0;

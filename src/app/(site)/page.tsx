@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { getPublishedBooks, getSite } from "@/lib/pb-server";
 import { isUpcoming, toStageBook, year } from "@/lib/site-data";
-import { StageProvider, Stage } from "@/components/site/stage";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SpineCalculator } from "@/components/site/spine-calculator";
 import { SubscribeForm } from "@/components/site/subscribe-form";
+import { BookObject } from "@/components/site/book-object";
+import { BookRows, type BookRow } from "@/components/site/book-rows";
+import { Pattern, Rim } from "@/components/site/patterns";
+import { Lines, splitLines } from "@/components/site/lines";
+import { Marquee } from "@/components/site/marquee";
+import { Tilt } from "@/components/site/tilt";
+import { Badge } from "@/components/site/badge";
+import { Intro } from "@/components/site/intro";
 import { BookCover } from "@/components/book-cover";
 import { fileUrl } from "@/lib/pb";
 import { bookFormat, type Book } from "@/lib/types";
@@ -14,7 +21,7 @@ import { getTrim } from "@/lib/kdp";
 export const revalidate = 60;
 
 const DEFAULT_INTRO =
-  "Jollof Pages publishes practical non-fiction. Every book is written, typeset and made ready for print in our own studio, then sent out to the shops where you already buy books.";
+  "Jollof Pages publishes practical non-fiction. Every book is written, typeset and made ready for print in our own studio, then sent to the shops where you already buy books.";
 
 const DEFAULT_LETTER = `I write non-fiction: books meant to be used, not just read.
 
@@ -26,6 +33,13 @@ Like the dish it is named after, a good book takes one pot, patience and heat at
 
 If one of them helps you, tell me. That is the whole point.`;
 
+const STEPS = [
+  { n: "01", title: "Write", body: "Chapter by chapter, with a daily word goal, sprints and Word import." },
+  { n: "02", title: "Typeset", body: "Print PDFs set with Typst. The gutter grows with the page count, the way KDP asks." },
+  { n: "03", title: "Package", body: "A validated EPUB, a full paperback cover with spine and bleed, at 300 dpi." },
+  { n: "04", title: "Publish", body: "Uploaded to Amazon by hand, then listed here with a free chapter to read." },
+];
+
 function paragraphs(text: string) {
   return text
     .split(/\n{2,}/)
@@ -33,234 +47,245 @@ function paragraphs(text: string) {
     .filter(Boolean);
 }
 
+function toRow(b: Book): BookRow {
+  const t = getTrim(bookFormat(b).trim);
+  const sb = toStageBook(b);
+  return { id: b.id, slug: b.slug, title: b.title, subtitle: b.subtitle, meta: isUpcoming(b) ? year(b.publication_date) || "Soon" : `${t.width} × ${t.height} in`, cover: sb.cover, accent: sb.accent };
+}
+
 export default async function Home() {
   const [site, books] = await Promise.all([getSite(), getPublishedBooks()]);
   const name = site?.publisher_name || "Jollof Pages";
-  const stageBooks = books.map(toStageBook);
   const lead = books.find((b) => b.id === site?.hero_book) ?? books.find((b) => b.featured) ?? books[0];
+  const leadStage = lead ? toStageBook(lead) : null;
   const available = books.filter((b) => !isUpcoming(b));
   const upcoming = books.filter(isUpcoming);
   const covers = books.filter((b) => b.cover);
+  const letter = paragraphs(site?.about || DEFAULT_LETTER);
 
   return (
-    <StageProvider books={stageBooks}>
-      <div className="lg:grid lg:grid-cols-2">
-        {/* the fixed half: the book itself, at its real proportions */}
-        {stageBooks.length > 0 && (
-          <div className="sticky top-0 z-0 hidden h-svh p-3 pl-1.5 lg:order-2 lg:block">
-            <Stage books={stageBooks} className="h-full" />
-          </div>
-        )}
+    <>
+      <Intro name={name} />
+      <SiteHeader name={name} overHero />
 
-        <main className="relative z-10 bg-paper px-4 sm:px-8 lg:order-1 lg:px-14 xl:px-18">
-          <SiteHeader name={name} />
-
-          <section aria-labelledby="hero-title" className="flex flex-col justify-center py-12 sm:py-16 lg:min-h-[calc(88svh-88px)]" data-stage={lead?.id}>
-            <h1 id="hero-title" className="t-display max-w-[14ch] text-primary" data-rise style={{ ["--i" as string]: 0 }}>
-              {site?.tagline || "Useful books, slowly cooked."}
+      {/* hero: the pot itself, red with adire circles */}
+      <section aria-labelledby="hero-title" className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
+        <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.22} />
+        <div className="relative mx-auto grid min-h-[calc(100svh-72px)] max-w-[1600px] items-center gap-10 px-4 pt-10 pb-24 sm:px-8 lg:grid-cols-[1.5fr_1fr] lg:pb-32">
+          <div>
+            <h1 id="hero-title" className="t-display wide">
+              <Lines lines={splitLines(site?.tagline || "Useful books, slowly cooked.")} />
             </h1>
-            <p className="t-lead mt-8 max-w-[40ch]" data-rise style={{ ["--i" as string]: 1 }}>
+            <p className="t-lead mt-8 max-w-[38ch] text-cream" data-rise style={{ ["--i" as string]: 3 }}>
               {site?.intro || DEFAULT_INTRO}
             </p>
-            <div className="mt-10 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 2 }}>
+            <div className="mt-10 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 4 }}>
               <a href="#list" className="btn">
                 See the books
+                <Arrow />
               </a>
               {lead && (
-                <Link href={`/books/${lead.slug}`} className="btn btn-quiet">
-                  Start with {lead.title}
+                <Link href={`/books/${lead.slug}/read`} className="btn btn-ghost">
+                  Read a free chapter
                 </Link>
               )}
             </div>
-          </section>
-
-          {/* on a phone the stage sits under the hero instead of beside it */}
-          {stageBooks.length > 0 && (
-            <div className="-mx-4 h-[64svh] sm:-mx-8 lg:hidden">
-              <Stage books={stageBooks} className="h-full" />
+          </div>
+          {leadStage && (
+            <div className="relative flex justify-center max-sm:-my-14 max-sm:scale-[0.72]" data-rise style={{ ["--i" as string]: 2 }}>
+              <div className="absolute top-1/2 left-1/2 aspect-square w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-char" aria-hidden />
+              <Tilt className="float relative" max={12}>
+                <BookObject book={leadStage} scale={Math.min(52, 46)} className="book3d-enter" />
+              </Tilt>
+              <Badge text="WRITTEN · TYPESET · PUBLISHED · " className="absolute -bottom-4 left-0 size-32 sm:size-36 lg:left-2" />
             </div>
           )}
+        </div>
+        <Rim color="var(--char)" />
+      </section>
 
-          {/* the list, set like a printed menu sheet */}
-          <section id="list" aria-labelledby="list-title" className="scroll-mt-6 py-[clamp(4rem,10vw,9rem)]">
-            <div className="sheet mx-auto max-w-[640px] bg-card px-6 py-14 sm:px-14 sm:py-16">
-              <h2 id="list-title" className="t-head text-center" data-reveal>
+      <Marquee items={books.length ? books.map((b) => b.title) : ["Practical non-fiction", "Written in our own studio", "Paperback and ebook"]} className="bg-char py-5 text-[clamp(1.25rem,1rem+1.2vw,2rem)] font-bold text-bonnet" />
+
+      <main>
+        {/* the list, on a scatter of rice */}
+        <section id="list" aria-labelledby="list-title" className="relative scroll-mt-16 overflow-hidden bg-cream py-[clamp(5rem,12vw,10rem)]">
+          <Pattern id="p-rice" kind="rice" color="var(--cream-2)" />
+          <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <h2 id="list-title" className="t-head wide font-bold" data-reveal>
                 The list
               </h2>
-              <p className="t-small mt-3 text-center text-soft" data-reveal style={{ ["--i" as string]: 1 }}>
-                Practical non-fiction, in paperback and ebook
-              </p>
-              {books.length === 0 ? (
-                <p className="mt-12 text-center">The first books are in the pot. Join the reader list below to hear the day they are ready.</p>
-              ) : (
-                <>
-                  <ListGroup title="Available now" books={available} />
-                  {upcoming.length > 0 && <ListGroup title="Coming soon" books={upcoming} />}
-                </>
-              )}
-              <p className="t-small mt-14 text-center text-soft">
-                New books reach the reader list first.
-                <br />
-                Every title is also on Amazon.
+              <p className="max-w-[30ch] text-char/80" data-reveal style={{ ["--i" as string]: 1 }}>
+                Practical non-fiction in paperback and ebook. Every title is also on Amazon.
               </p>
             </div>
-          </section>
+            {books.length === 0 ? (
+              <p className="mt-12 text-[1.25rem]">The first books are in the pot. Join the reader list to hear the day they are ready.</p>
+            ) : (
+              <>
+                <div className="mt-12">
+                  <BookRows rows={available.map(toRow)} />
+                </div>
+                {upcoming.length > 0 && (
+                  <>
+                    <h3 className="wide mt-16 text-[1.5rem] font-bold" data-reveal>
+                      Coming soon
+                    </h3>
+                    <div className="mt-6">
+                      <BookRows rows={upcoming.map(toRow)} start={available.length + 1} />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </section>
 
-          {lead && <Showcase book={lead} />}
+        {lead && <Showcase book={lead} />}
 
-          <section id="studio" aria-labelledby="studio-title" className="scroll-mt-6 py-[clamp(4rem,10vw,9rem)]">
-            <h2 id="studio-title" className="t-head max-w-[12ch]" data-reveal>
-              Made in our own studio
-            </h2>
-            <p className="mt-6 max-w-[40ch]" data-reveal style={{ ["--i" as string]: 1 }}>
-              We built the tool we write in. It knows Amazon&apos;s print rules, so a manuscript becomes a paperback and an ebook without leaving the kitchen. Try it: set a page count and watch the book change thickness.
-            </p>
-            <SpineCalculator trim={lead ? bookFormat(lead).trim : "6x9"} />
-            <div className="mt-16 max-w-[480px]">
-              <Slip />
+        {/* the studio, on a woven strip */}
+        <section id="studio" aria-labelledby="studio-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,12vw,10rem)]">
+          <Pattern id="p-weave" kind="weave" color="var(--jollof)" opacity={0.16} />
+          <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
+            <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-end">
+              <h2 id="studio-title" className="t-head wide font-bold" data-reveal>
+                <span className="line">
+                  <span>Made in our</span>
+                </span>
+                <span className="line">
+                  <span>own kitchen</span>
+                </span>
+              </h2>
+              <p className="max-w-[44ch] text-[1.125rem]" data-reveal style={{ ["--i" as string]: 1 }}>
+                We built the tool we write in. It knows Amazon&apos;s print rules, so a manuscript becomes a paperback and an ebook without leaving the studio. Try it: slide the page count and watch the book change thickness.
+              </p>
             </div>
-          </section>
+            <div className="mt-12" data-reveal style={{ ["--i" as string]: 2 }}>
+              <SpineCalculator book={leadStage} />
+            </div>
+            <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {STEPS.map((s, i) => (
+                <li key={s.n} className="group rounded-[28px] bg-cream p-6 transition-transform duration-500 hover:-translate-y-1.5" data-reveal style={{ ["--i" as string]: i }}>
+                  <span className="tabular text-jollof font-bold">{s.n}</span>
+                  <h3 className="wide mt-6 text-[1.75rem] font-bold tracking-[-0.03em]">{s.title}</h3>
+                  <p className="mt-2 text-char/85">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
 
-          <section id="about" aria-label="A letter from the publisher" className="scroll-mt-6 py-[clamp(5rem,12vw,10rem)]">
-            <div className="mx-auto max-w-[520px]" data-reveal>
+        {/* the letter, on pepper seeds */}
+        <section id="about" aria-label="A letter from the publisher" className="relative scroll-mt-16 overflow-hidden bg-cream py-[clamp(5rem,12vw,10rem)]">
+          <Pattern id="p-pepper" kind="pepper" color="var(--jollof)" opacity={0.14} drift={false} />
+          <div className="relative mx-auto grid max-w-[1400px] gap-12 px-4 sm:px-8 lg:grid-cols-[1fr_1.1fr]">
+            <blockquote className="wide text-[clamp(1.5rem,1.1rem+1.6vw,2.25rem)] leading-[1.1] font-bold tracking-[-0.03em] text-jollof lg:sticky lg:top-28 lg:self-start" data-reveal>
+              “A good book takes one pot, patience and heat at the bottom.”
+            </blockquote>
+            <div data-reveal style={{ ["--i" as string]: 1 }}>
               {lead?.expand?.author?.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={fileUrl(lead.expand.author, lead.expand.author.photo, "400x400")} alt="" width={44} height={44} className="size-11 rounded-full object-cover" />
+                <img src={fileUrl(lead.expand.author, lead.expand.author.photo, "400x400")} alt="" width={56} height={56} className="size-14 rounded-full object-cover" />
               ) : null}
-              <div className="mt-7 grid gap-[1.55em] leading-[1.55]">
-                {paragraphs(site?.about || DEFAULT_LETTER).map((p, i) => (
+              <div className="mt-6 grid gap-[1.3em] text-[1.125rem] leading-[1.6]">
+                {letter.map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
-              <p className="mt-10 text-[1.375rem] italic">{site?.about ? name : "Amaete Umanah"}</p>
-              <p className="t-small text-soft">Publisher, {name}</p>
+              <p className="wide mt-10 text-[1.5rem] font-bold">{site?.about ? name : "Amaete Umanah"}</p>
+              <p className="text-char/70">Publisher, {name}</p>
             </div>
-          </section>
-        </main>
-      </div>
-
-      {/* breaks the split: every cover at once, with the reader list on top */}
-      <section id="reader-list" aria-labelledby="rl-title" className="relative z-10 scroll-mt-6 bg-ink">
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6" aria-hidden={covers.length > 0}>
-          {(covers.length ? Array.from({ length: 12 }, (_, i) => covers[i % covers.length]) : []).map((b, i) => (
-            <div key={i} className="aspect-[2/3] overflow-hidden">
-              <BookCover book={b} thumb="480x0" className="h-full" />
-            </div>
-          ))}
-        </div>
-        <div className="relative -mt-20 px-4 pb-4 sm:absolute sm:top-[60px] sm:right-[60px] sm:mt-0 sm:w-[380px] sm:p-0">
-          <div className="bg-paper p-8">
-            <h2 id="rl-title" className="text-[1.75rem] leading-tight tracking-[-0.02em]">
-              The reader list
-            </h2>
-            <p className="mt-3">One email when a new book is out, sometimes a free chapter before it is. Nothing else.</p>
-            <SubscribeForm source="home" />
-            {site?.email && (
-              <p className="t-small mt-6 text-soft">
-                Bookshops and press:{" "}
-                <a href={`mailto:${site.email}`} className="link text-ink">
-                  {site.email}
-                </a>
-              </p>
-            )}
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* every cover at once, with the reader list on top */}
+        <section id="reader-list" aria-labelledby="rl-title" className="relative scroll-mt-16 overflow-hidden bg-char">
+          {covers.length > 0 && (
+            <div className="scroll-grow grid grid-cols-3 overflow-hidden sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
+              {Array.from({ length: 12 }, (_, i) => covers[i % covers.length]).map((b, i) => (
+                <div key={i} className="aspect-[2/3] overflow-hidden">
+                  <div className="scroll-rise h-full" style={{ animationDelay: `${(i % 3) * -0.2}s` }}>
+                    <BookCover book={b} thumb="480x0" className="h-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className={covers.length ? "relative -mt-24 px-4 pb-6 sm:absolute sm:top-1/2 sm:left-1/2 sm:mt-0 sm:w-[min(560px,90vw)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-0" : "relative px-4 py-24"}>
+            <div className="relative overflow-hidden rounded-[32px] bg-jollof p-8 text-cream sm:p-12">
+              <Pattern id="p-rl" kind="adire" color="var(--char)" opacity={0.2} />
+              <div className="relative">
+                <h2 id="rl-title" className="wide text-[clamp(2rem,1.4rem+2vw,3rem)] leading-none font-bold tracking-[-0.04em]">
+                  The reader list
+                </h2>
+                <p className="mt-4 text-[1.125rem]">One email when a new book is out, sometimes a free chapter before it is. Nothing else.</p>
+                <SubscribeForm source="home" tone="dark" />
+                {site?.email && (
+                  <p className="t-small mt-6 text-cream/80">
+                    Bookshops and press:{" "}
+                    <a href={`mailto:${site.email}`} className="link text-cream">
+                      {site.email}
+                    </a>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
 
       <SiteFooter name={name} email={site?.email} />
-    </StageProvider>
+    </>
   );
 }
 
-function ListGroup({ title, books }: { title: string; books: Book[] }) {
-  if (!books.length) return null;
+function Arrow() {
   return (
-    <div className="mt-14">
-      <h3 className="text-center text-[1.375rem]" data-reveal>
-        {title}
-      </h3>
-      <ul className="mx-auto mt-6 grid max-w-[420px] gap-4">
-        {books.map((b, i) => (
-          <li key={b.id} data-stage={b.id} data-reveal style={{ ["--i" as string]: i }}>
-            <Link href={`/books/${b.slug}`} className="group block">
-              <span className="flex items-baseline justify-between gap-4">
-                <span className="link group-hover:text-primary">{b.title}</span>
-                <span className="tabular shrink-0">{isUpcoming(b) ? year(b.publication_date) || "Soon" : `${getTrim(bookFormat(b).trim).width} × ${getTrim(bookFormat(b).trim).height}`}</span>
-              </span>
-              {b.subtitle && <span className="t-small mt-0.5 block text-soft">{b.subtitle}</span>}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <svg viewBox="0 0 24 24" className="arrow size-5" aria-hidden>
+      <path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.2" />
+    </svg>
   );
 }
 
 function Showcase({ book }: { book: Book }) {
   const buy = (book.buy_links ?? []).filter((l) => l.url)[0];
   return (
-    <section aria-labelledby="showcase-title" data-stage={book.id} className="grid min-h-[88svh] items-center gap-10 py-[clamp(4rem,10vw,9rem)] xl:grid-cols-2">
-      <div className="flex aspect-square items-center justify-center bg-paper-2 p-[14%]" data-reveal>
-        <div className="w-[62%]">
-          <BookCover book={book} thumb="960x0" sizes="(min-width: 1280px) 220px, 50vw" />
+    <section aria-labelledby="showcase-title" className="relative overflow-hidden bg-char py-[clamp(5rem,12vw,10rem)] text-cream">
+      <Pattern id="p-wax" kind="wax" color="var(--char-2)" />
+      <div className="relative mx-auto grid max-w-[1400px] items-center gap-12 px-4 sm:px-8 lg:grid-cols-2">
+        <div className="relative mx-auto w-[min(380px,72vw)]" data-reveal>
+          <div className="absolute top-1/2 left-1/2 aspect-square w-[150%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-bonnet" aria-hidden />
+          <div className="scroll-turn relative">
+            <BookCover book={book} thumb="960x0" sizes="(min-width: 1024px) 380px, 72vw" className="shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)]" />
+          </div>
         </div>
-      </div>
-      <div className="flex h-full flex-col justify-between gap-10">
-        <p className="text-[1.125rem]" data-reveal>
-          Paperback and ebook{book.expand?.author?.name ? `, by ${book.expand.author.name}` : ""}
-        </p>
-        <div data-reveal style={{ ["--i" as string]: 1 }}>
-          <h2 id="showcase-title" className="text-[clamp(2rem,2.6vw,2.5rem)] leading-[1.05] font-semibold tracking-[-0.02em]">
+        <div>
+          <p className="font-semibold text-bonnet" data-reveal>
+            Start here{book.expand?.author?.name ? `, by ${book.expand.author.name}` : ""}
+          </p>
+          <h2 id="showcase-title" className="t-head wide mt-4 font-bold" data-reveal style={{ ["--i" as string]: 1 }}>
             {book.title}
           </h2>
-          <p className="mt-12 max-w-[34ch]">{book.pitch || book.subtitle || book.description.split(/\n/)[0]}</p>
-        </div>
-        <div className="grid grid-cols-2" data-reveal style={{ ["--i" as string]: 2 }}>
-          <Link href={`/books/${book.slug}/read`} className="flex h-[72px] items-center justify-center bg-ink px-3 text-center font-semibold text-paper transition-colors hover:bg-black">
-            Read a sample
-          </Link>
-          {buy ? (
-            <a href={buy.url} target="_blank" rel="noreferrer" className="flex h-[72px] items-center justify-center bg-paper-2 px-3 text-center font-semibold transition-colors hover:bg-paper-3">
-              Buy on {buy.label || "Amazon"}
-            </a>
-          ) : (
-            <Link href={`/books/${book.slug}`} className="flex h-[72px] items-center justify-center bg-paper-2 px-3 text-center font-semibold transition-colors hover:bg-paper-3">
-              About the book
+          <p className="mt-6 max-w-[40ch] text-[1.25rem] text-cream/90" data-reveal style={{ ["--i" as string]: 2 }}>
+            {book.pitch || book.subtitle || book.description.split(/\n/)[0]}
+          </p>
+          <div className="mt-10 flex flex-wrap gap-3" data-reveal style={{ ["--i" as string]: 3 }}>
+            <Link href={`/books/${book.slug}/read`} className="btn">
+              Read a sample
+              <Arrow />
             </Link>
-          )}
+            {buy ? (
+              <a href={buy.url} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                Buy on {buy.label || "Amazon"}
+              </a>
+            ) : (
+              <Link href={`/books/${book.slug}`} className="btn btn-ghost">
+                About the book
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-const SLIP: { group: string; rows: [string, string][] }[] = [
-  { group: "Writing", rows: [["Drafted chapter by chapter", "in the studio"], ["Daily word goal and sprints", "500 words"], ["Word manuscripts imported", ".docx"]] },
-  { group: "Formatting", rows: [["Typeset for print with Typst", "6 × 9 in"], ["Gutter set from the page count", "0.375–0.875 in"], ["Ebook built and validated", "EPUBCheck"]] },
-  { group: "Publishing", rows: [["Full cover with spine and bleed", "300 dpi"], ["Uploaded to Amazon KDP", "by hand"]] },
-];
-
-function Slip() {
-  return (
-    <div className="slip bg-card px-5 pt-8 pb-12 text-[0.9375rem] sm:px-8 sm:text-[1rem]" data-reveal style={{ ["--i" as string]: 2 }}>
-      {SLIP.map((g) => (
-        <div key={g.group} className="mt-7 first:mt-0">
-          <h3 className="font-semibold">{g.group}</h3>
-          <ul className="mt-2 grid gap-2">
-            {g.rows.map(([what, value]) => (
-              <li key={what} className="flex items-end">
-                <span>{what}</span>
-                <span className="leader" aria-hidden />
-                <span className="tabular shrink-0 text-right">{value}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-      <p className="mt-8 flex h-11 items-center justify-between bg-ink px-3 text-paper">
-        <span>In your hands</span>
-        <span>paperback and ebook</span>
-      </p>
-    </div>
   );
 }

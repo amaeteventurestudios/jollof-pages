@@ -19,7 +19,7 @@ export interface StageBook {
   height: number;
 }
 
-const FALLBACK = ["#0b6e3c", "#7a2e1d", "#1f4a6b", "#5a3d6b", "#2b2622"];
+const FALLBACK = ["#ad3a17", "#7a2e1d", "#1f4a6b", "#5a3d6b", "#2b2622"];
 
 export function toStageBook(b: Book, i = 0): StageBook {
   const f = bookFormat(b);
