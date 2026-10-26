@@ -52,3 +52,14 @@ export function year(date: string | undefined): string {
 export function isUpcoming(b: Pick<Book, "publication_date">): boolean {
   return !!b.publication_date && new Date(b.publication_date) > new Date();
 }
+
+/** True when a colour is dark enough that cream text reads on it (WCAG relative luminance). */
+export function isDark(hex: string): boolean {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return true;
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(m[1].slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.18;
+}

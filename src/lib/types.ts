@@ -57,6 +57,15 @@ export const DEFAULT_GOAL: BookGoal = { targetWords: 50000, deadline: "", dailyW
 export interface BuyLink {
   label: string;
   url: string;
+  price?: string; // shown on the button, e.g. "$18"
+}
+
+/** A quotation on a book's page: praise from a person, or a review from a publication. */
+export interface Quote {
+  quote: string;
+  source: string; // person or publication
+  role?: string; // e.g. "author of The Long Table"
+  url?: string;
 }
 
 export interface Book {
@@ -87,6 +96,8 @@ export interface Book {
   format: Partial<BookFormat> | null;
   goal: Partial<BookGoal> | null;
   buy_links: BuyLink[] | null;
+  praise: Quote[] | null;
+  reviews: Quote[] | null;
   accent: string;
   word_count: number;
   page_count: number;

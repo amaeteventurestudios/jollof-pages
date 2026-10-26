@@ -4,13 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, ExternalLink, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
 import { Field, Panel } from "./details-tab";
 import { uniqueSlug } from "@/lib/studio";
 import { slugify } from "@/lib/slug";
 import { errorMessage, pb } from "@/lib/pb";
 import { coverGeometry, maxPages, MIN_PAGES, getTrim } from "@/lib/kdp";
-import { bookFormat, type BuyLink } from "@/lib/types";
+import { bookFormat, type BuyLink, type Quote } from "@/lib/types";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
 
@@ -123,11 +123,12 @@ export function PublishTab({ ws }: { ws: Workspace }) {
         )}
       </Panel>
 
-      <Panel title="Where to buy" description="Links shown on the book's page. Add them once the book is live on each store.">
+      <Panel title="Where to buy" description="Buttons on the book's page, with the price if you add one. Add them once the book is live on each store.">
         <ul className="grid gap-2">
           {links.map((l, i) => (
-            <li key={i} className="grid grid-cols-[10rem_1fr_auto] gap-2">
+            <li key={i} className="grid grid-cols-[9rem_5rem_1fr_auto] gap-2">
               <Input aria-label="Store" list="stores" value={l.label} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} onBlur={() => saveLinks(links)} />
+              <Input aria-label="Price" placeholder="$18" value={l.price ?? ""} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))} onBlur={() => saveLinks(links)} />
               <Input aria-label="Link" type="url" placeholder="https://" value={l.url} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))} onBlur={() => saveLinks(links)} />
               <Button variant="ghost" size="icon" aria-label="Remove link" onClick={() => saveLinks(links.filter((_, j) => j !== i))}>
                 <Trash2 />
@@ -147,8 +148,45 @@ export function PublishTab({ ws }: { ws: Workspace }) {
         </div>
       </Panel>
 
+      <QuotesPanel ws={ws} field="praise" title="Praise" description="Quotes from people about the book, shown under Praise on its page." sourceLabel="Name" roleLabel="Who they are" />
+      <QuotesPanel ws={ws} field="reviews" title="Reviews" description="Excerpts from published reviews, shown under Reviews with a link to the full review." sourceLabel="Publication" />
+
       <KdpChecklist ws={ws} />
     </div>
+  );
+}
+
+function QuotesPanel({ ws, field, title, description, sourceLabel, roleLabel }: { ws: Workspace; field: "praise" | "reviews"; title: string; description: string; sourceLabel: string; roleLabel?: string }) {
+  const [items, setItems] = useState<Quote[]>(ws.book[field] ?? []);
+  const save = (next: Quote[]) => {
+    setItems(next);
+    return ws.saveBook({ [field]: next.filter((q) => q.quote.trim()) });
+  };
+  const edit = (i: number, patch: Partial<Quote>) => setItems(items.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  return (
+    <Panel title={title} description={description}>
+      {items.map((q, i) => (
+        <div key={i} className="grid gap-2 border-l-2 border-primary pl-4">
+          <Textarea aria-label="Quote" rows={3} placeholder="The quote, without quotation marks" value={q.quote} onChange={(e) => edit(i, { quote: e.target.value })} onBlur={() => save(items)} />
+          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <Input aria-label={sourceLabel} placeholder={sourceLabel} value={q.source} onChange={(e) => edit(i, { source: e.target.value })} onBlur={() => save(items)} />
+            {roleLabel ? (
+              <Input aria-label={roleLabel} placeholder={roleLabel} value={q.role ?? ""} onChange={(e) => edit(i, { role: e.target.value })} onBlur={() => save(items)} />
+            ) : (
+              <Input aria-label="Link to the review" type="url" placeholder="https://" value={q.url ?? ""} onChange={(e) => edit(i, { url: e.target.value })} onBlur={() => save(items)} />
+            )}
+            <Button variant="ghost" size="icon" aria-label="Remove" onClick={() => save(items.filter((_, j) => j !== i))}>
+              <Trash2 />
+            </Button>
+          </div>
+        </div>
+      ))}
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setItems([...items, { quote: "", source: "" }])}>
+          <Plus /> Add {field === "praise" ? "praise" : "a review"}
+        </Button>
+      </div>
+    </Panel>
   );
 }
 

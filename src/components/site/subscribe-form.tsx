@@ -28,7 +28,7 @@ export function SubscribeForm({ source = "website", tone = "light" }: { source?:
       <label htmlFor={id} className="t-small font-medium">
         Email address
       </label>
-      <div className={cn("mt-2 flex flex-col gap-2 rounded-[30px] p-1.5 sm:flex-row sm:rounded-full", tone === "dark" ? "bg-cream" : "bg-white")}>
+      <div className={cn("mt-2 flex flex-col gap-2 p-1.5 sm:flex-row", tone === "dark" ? "bg-cream" : "bg-white")}>
         <input
           id={id}
           type="email"
@@ -37,7 +37,7 @@ export function SubscribeForm({ source = "website", tone = "light" }: { source?:
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-12 min-w-0 flex-1 rounded-full bg-transparent px-5 text-char placeholder:text-char/50 focus-visible:outline-offset-0"
+          className="h-12 min-w-0 flex-1 bg-transparent px-5 text-char placeholder:text-char/50 focus-visible:outline-offset-0"
         />
         <button type="submit" className="btn btn-ink shrink-0" disabled={state === "busy"}>
           {state === "busy" ? "Joining…" : "Join"}

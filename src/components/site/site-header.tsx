@@ -65,7 +65,7 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
           </nav>
           <button
             type="button"
-            className="relative z-[60] flex size-11 items-center justify-center rounded-full md:hidden"
+            className="relative z-[60] flex size-11 items-center justify-center md:hidden"
             aria-expanded={open}
             aria-controls="site-menu"
             aria-label={open ? "Close menu" : "Open menu"}

@@ -5,13 +5,11 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SpineCalculator } from "@/components/site/spine-calculator";
 import { SubscribeForm } from "@/components/site/subscribe-form";
-import { BookObject } from "@/components/site/book-object";
 import { BookRows, type BookRow } from "@/components/site/book-rows";
 import { Pattern, Rim } from "@/components/site/patterns";
-import { Lines, splitLines } from "@/components/site/lines";
+import { Lines } from "@/components/site/lines";
 import { Marquee } from "@/components/site/marquee";
-import { Tilt } from "@/components/site/tilt";
-import { Badge } from "@/components/site/badge";
+import { Shelf } from "@/components/site/shelf";
 import { Intro } from "@/components/site/intro";
 import { BookCover } from "@/components/book-cover";
 import { fileUrl } from "@/lib/pb";
@@ -23,15 +21,15 @@ export const revalidate = 60;
 const DEFAULT_INTRO =
   "Jollof Pages publishes practical non-fiction. Every book is written, typeset and made ready for print in our own studio, then sent to the shops where you already buy books.";
 
-const DEFAULT_LETTER = `I write non-fiction: books meant to be used, not just read.
+const DEFAULT_LETTER = `We publish non-fiction: books meant to be used, not just read.
 
 For years the hard part was never the writing. It was everything after it: wrestling a manuscript into print margins, rebuilding the ebook, paying for software that did half the job.
 
-So I built Jollof Pages. It is a publisher, and it is the studio where the books are made. Every title here was drafted, formatted and checked in it before it went to Amazon and the other stores.
+So we built our own kitchen. Jollof Pages is a publisher, and it is the studio where the books are made. Every title here was drafted, formatted and checked in it before it went to Amazon and the other stores.
 
-Like the dish it is named after, a good book takes one pot, patience and heat at the bottom. I would rather publish a few books that work than many that fill a shelf.
+Like the dish we are named after, a good book takes one pot, patience and heat at the bottom. We would rather publish a few books that work than many that fill a shelf.
 
-If one of them helps you, tell me. That is the whole point.`;
+If one of them helps you, tell us. That is the whole point.`;
 
 const STEPS = [
   { n: "01", title: "Write", body: "Chapter by chapter, with a daily word goal, sprints and Word import." },
@@ -58,6 +56,7 @@ export default async function Home() {
   const name = site?.publisher_name || "Jollof Pages";
   const lead = books.find((b) => b.id === site?.hero_book) ?? books.find((b) => b.featured) ?? books[0];
   const leadStage = lead ? toStageBook(lead) : null;
+  const stageBooks = books.map((b, i) => toStageBook(b, i));
   const available = books.filter((b) => !isUpcoming(b));
   const upcoming = books.filter(isUpcoming);
   const covers = books.filter((b) => b.cover);
@@ -71,35 +70,34 @@ export default async function Home() {
       {/* hero: the pot itself, red with adire circles */}
       <section aria-labelledby="hero-title" className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
         <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.22} />
-        <div className="relative mx-auto grid min-h-[calc(100svh-72px)] max-w-[1600px] items-center gap-10 px-4 pt-10 pb-24 sm:px-8 lg:grid-cols-[1.5fr_1fr] lg:pb-32">
-          <div>
-            <h1 id="hero-title" className="t-display wide">
-              <Lines lines={splitLines(site?.tagline || "Useful books, slowly cooked.")} />
-            </h1>
-            <p className="t-lead mt-8 max-w-[38ch] text-cream" data-rise style={{ ["--i" as string]: 3 }}>
-              {site?.intro || DEFAULT_INTRO}
-            </p>
-            <div className="mt-10 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 4 }}>
-              <a href="#list" className="btn">
-                See the books
-                <Arrow />
-              </a>
-              {lead && (
-                <Link href={`/books/${lead.slug}/read`} className="btn btn-ghost">
-                  Read a free chapter
-                </Link>
-              )}
+        <div className="relative mx-auto flex min-h-[calc(100svh-72px)] max-w-[1600px] flex-col justify-end gap-12 px-4 pt-12 pb-16 sm:px-8 lg:pb-20">
+          <h1 id="hero-title" className="hero-line wide font-bold">
+            <Lines lines={[site?.tagline || "Useful books, slowly cooked."]} />
+          </h1>
+          <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,34rem)_1fr]">
+            <div>
+              <p className="t-lead max-w-[38ch] text-cream" data-rise style={{ ["--i" as string]: 2 }}>
+                {site?.intro || DEFAULT_INTRO}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 3 }}>
+                <a href="#list" className="btn">
+                  See the books
+                  <Arrow />
+                </a>
+                {lead && (
+                  <Link href={`/books/${lead.slug}/read`} className="btn btn-ghost">
+                    Read a free chapter
+                  </Link>
+                )}
+              </div>
             </div>
+            {stageBooks.length > 0 && (
+              <div className="relative min-w-0 lg:justify-self-end">
+                <Shelf books={stageBooks} unit={46} />
+                <div className="h-3 bg-char" aria-hidden />
+              </div>
+            )}
           </div>
-          {leadStage && (
-            <div className="relative flex justify-center max-sm:-my-14 max-sm:scale-[0.72]" data-rise style={{ ["--i" as string]: 2 }}>
-              <div className="absolute top-1/2 left-1/2 aspect-square w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-char" aria-hidden />
-              <Tilt className="float relative" max={12}>
-                <BookObject book={leadStage} scale={Math.min(52, 46)} className="book3d-enter" />
-              </Tilt>
-              <Badge text="WRITTEN · TYPESET · PUBLISHED · " className="absolute -bottom-4 left-0 size-32 sm:size-36 lg:left-2" />
-            </div>
-          )}
         </div>
         <Rim color="var(--char)" />
       </section>
@@ -165,7 +163,7 @@ export default async function Home() {
             </div>
             <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STEPS.map((s, i) => (
-                <li key={s.n} className="group rounded-[28px] bg-cream p-6 transition-transform duration-500 hover:-translate-y-1.5" data-reveal style={{ ["--i" as string]: i }}>
+                <li key={s.n} className="group bg-cream p-6 transition-transform duration-500 hover:-translate-y-1.5" data-reveal style={{ ["--i" as string]: i }}>
                   <span className="tabular text-jollof font-bold">{s.n}</span>
                   <h3 className="wide mt-6 text-[1.75rem] font-bold tracking-[-0.03em]">{s.title}</h3>
                   <p className="mt-2 text-char/85">{s.body}</p>
@@ -185,15 +183,15 @@ export default async function Home() {
             <div data-reveal style={{ ["--i" as string]: 1 }}>
               {lead?.expand?.author?.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={fileUrl(lead.expand.author, lead.expand.author.photo, "400x400")} alt="" width={56} height={56} className="size-14 rounded-full object-cover" />
+                <img src={fileUrl(lead.expand.author, lead.expand.author.photo, "400x400")} alt="" width={56} height={56} className="size-14 object-cover" />
               ) : null}
               <div className="mt-6 grid gap-[1.3em] text-[1.125rem] leading-[1.6]">
                 {letter.map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
-              <p className="wide mt-10 text-[1.5rem] font-bold">{site?.about ? name : "Amaete Umanah"}</p>
-              <p className="text-char/70">Publisher, {name}</p>
+              <p className="wide mt-10 text-[1.5rem] font-bold">{name}</p>
+              <p className="text-char/70">The publisher</p>
             </div>
           </div>
         </section>
@@ -212,7 +210,7 @@ export default async function Home() {
             </div>
           )}
           <div className={covers.length ? "relative -mt-24 px-4 pb-6 sm:absolute sm:top-1/2 sm:left-1/2 sm:mt-0 sm:w-[min(560px,90vw)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-0" : "relative px-4 py-24"}>
-            <div className="relative overflow-hidden rounded-[32px] bg-jollof p-8 text-cream sm:p-12">
+            <div className="relative overflow-hidden bg-jollof p-8 text-cream sm:p-12">
               <Pattern id="p-rl" kind="adire" color="var(--char)" opacity={0.2} />
               <div className="relative">
                 <h2 id="rl-title" className="wide text-[clamp(2rem,1.4rem+2vw,3rem)] leading-none font-bold tracking-[-0.04em]">
@@ -254,7 +252,7 @@ function Showcase({ book }: { book: Book }) {
       <Pattern id="p-wax" kind="wax" color="var(--char-2)" />
       <div className="relative mx-auto grid max-w-[1400px] items-center gap-12 px-4 sm:px-8 lg:grid-cols-2">
         <div className="relative mx-auto w-[min(380px,72vw)]" data-reveal>
-          <div className="absolute top-1/2 left-1/2 aspect-square w-[150%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-bonnet" aria-hidden />
+          <div className="absolute top-1/2 left-1/2 aspect-square w-[150%] -translate-x-1/2 -translate-y-1/2 bg-bonnet" aria-hidden />
           <div className="scroll-turn relative">
             <BookCover book={book} thumb="960x0" sizes="(min-width: 1024px) 380px, 72vw" className="shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)]" />
           </div>

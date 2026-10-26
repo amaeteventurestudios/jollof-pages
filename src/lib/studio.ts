@@ -1,6 +1,5 @@
 "use client";
 
-import type { RecordModel } from "pocketbase";
 import { pb } from "./pb";
 import { sortChapters, type ExportInput } from "./book-model";
 import { countWords, collectImages, type DocNode } from "./doc/types";
@@ -15,11 +14,6 @@ export function userId(): string {
   return id;
 }
 
-export function userName(): string {
-  const r = pb().authStore.record as (RecordModel & { name?: string; email?: string }) | null;
-  return r?.name || r?.email?.split("@")[0] || "Author";
-}
-
 export async function listBooks(): Promise<Book[]> {
   return pb().collection("books").getFullList<Book>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-updated", expand: "author" });
 }
@@ -28,10 +22,12 @@ export async function listAuthors(): Promise<Author[]> {
   return pb().collection("authors").getFullList<Author>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "name" });
 }
 
-export async function ensureAuthor(): Promise<Author> {
+export async function ensureAuthor(id?: string): Promise<Author> {
   const existing = await listAuthors();
-  if (existing.length) return existing[0];
-  const name = userName();
+  const chosen = existing.find((a) => a.id === id) ?? existing[0];
+  if (chosen) return chosen;
+  // no pen names yet: a placeholder the owner renames on the Pen names page
+  const name = "New pen name";
   return pb().collection("authors").create<Author>({ owner: userId(), name, slug: await uniqueSlug("authors", slugify(name)) });
 }
 
@@ -53,8 +49,8 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
   return list.items[0] ?? null;
 }
 
-export async function createBook(input: { title: string; subtitle?: string; withStarter?: boolean }): Promise<Book> {
-  const author = await ensureAuthor();
+export async function createBook(input: { title: string; subtitle?: string; author?: string; withStarter?: boolean }): Promise<Book> {
+  const author = await ensureAuthor(input.author);
   const site = await getSiteSettings().catch(() => null);
   const book = await pb()
     .collection("books")
@@ -72,6 +68,8 @@ export async function createBook(input: { title: string; subtitle?: string; with
       keywords: [],
       categories: [],
       buy_links: [],
+      praise: [],
+      reviews: [],
       published: false,
     });
   if (input.withStarter !== false) {
@@ -93,7 +91,7 @@ export async function createChapter(
     o.content ??
     defaultContent(o.kind, {
       title: book.title,
-      author: o.authorName || book.expand?.author?.name || userName(),
+      author: o.authorName || book.expand?.author?.name || "",
       year: new Date().getFullYear(),
       imprint: book.imprint || "Jollof Pages",
       isbnEbook: book.isbn_ebook,

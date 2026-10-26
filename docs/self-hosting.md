@@ -61,7 +61,7 @@ Then, from your own computer (with the repo checked out and `npm install` done):
 ```bash
 PB_URL=https://pb.jollofpages.com \
 PB_SUPERUSER_EMAIL=admin@example.com PB_SUPERUSER_PASSWORD='a-long-password' \
-OWNER_EMAIL=you@example.com OWNER_PASSWORD='another-long-password' OWNER_NAME="Amaete Umanah" \
+OWNER_EMAIL=you@example.com OWNER_PASSWORD='another-long-password' OWNER_NAME="Your Name" \
 npm run seed
 ```
 

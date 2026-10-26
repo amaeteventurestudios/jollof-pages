@@ -48,7 +48,7 @@ export default async function ReadSample({ params }: { params: Promise<{ slug: s
           </Link>
         </p>
         {chapter ? (
-          <article className="reader mx-auto mt-6 max-w-[38rem] rounded-[6px] bg-white px-6 py-14 text-[#1d1a17] shadow-[0_30px_60px_-30px_rgba(58,20,10,0.45)] sm:px-14" dangerouslySetInnerHTML={{ __html: html }} />
+          <article className="reader mx-auto mt-6 max-w-[38rem] bg-white px-6 py-14 text-[#1d1a17] shadow-[0_30px_60px_-30px_rgba(58,20,10,0.45)] sm:px-14" dangerouslySetInnerHTML={{ __html: html }} />
         ) : (
           <p className="mx-auto mt-10 max-w-[38rem]">There is no sample for this book yet.</p>
         )}

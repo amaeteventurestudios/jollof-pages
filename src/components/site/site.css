@@ -42,7 +42,6 @@
   gap: 0.6rem;
   min-height: 3.5rem;
   padding: 0 1.75rem;
-  border-radius: 999px;
   background: var(--bonnet);
   color: var(--char);
   font-weight: 600;
@@ -55,7 +54,6 @@
   inset: 0;
   z-index: -1;
   background: var(--char);
-  border-radius: inherit;
   transform: translateY(101%);
   transition: transform 420ms var(--ease-out);
 }
@@ -205,7 +203,7 @@
 }
 @keyframes jp-scroll-turn { from { transform: rotate(-8deg) translateY(8%); } to { transform: rotate(6deg) translateY(-8%); } }
 @keyframes jp-scroll-rise { from { transform: translateY(14%); } to { transform: translateY(-14%); } }
-@keyframes jp-scroll-grow { from { transform: scale(0.86); border-radius: 48px; } to { transform: none; border-radius: 0; } }
+@keyframes jp-scroll-grow { from { transform: scale(0.86); } to { transform: none; } }
 
 /* ---------- pointer tilt ---------- */
 .site .tilt { transition: transform 700ms var(--ease-out); transform: perspective(1200px) rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); }
@@ -230,3 +228,43 @@
 @media (max-width: 640px) {
   .site .t-display.wide, .site .t-head.wide { font-stretch: 112%; font-variation-settings: "wdth" 112; }
 }
+
+/* ---------- the shelf ---------- */
+.site .shelf-slot { width: var(--s); height: var(--h); perspective: 1800px; transition: width 700ms var(--ease-out); }
+.site .shelf-book { position: relative; width: var(--s); height: var(--h); transform-style: preserve-3d; transform-origin: left center; transition: transform 700ms var(--ease-out); }
+.site .shelf-spine, .site .shelf-cover { position: absolute; top: 0; height: 100%; backface-visibility: hidden; }
+.site .shelf-spine {
+  left: 0; width: var(--s);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 14px 0; color: var(--cream);
+  box-shadow: inset -6px 0 10px -6px rgba(0, 0, 0, 0.45), inset 6px 0 10px -6px rgba(255, 255, 255, 0.18);
+}
+.site .shelf-title, .site .shelf-author { writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 70%; }
+.site .shelf-title { font-weight: 700; font-size: min(calc(var(--s) * 0.42), 1.35rem); letter-spacing: -0.02em; }
+.site .shelf-author { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; max-height: 26%; }
+.site .shelf-cover { left: var(--s); width: var(--w); transform-origin: left center; transform: rotateY(90deg); }
+@media (hover: hover) and (pointer: fine) {
+  .site .shelf-slot:hover, .site .shelf-slot:focus-within { width: var(--w); }
+  .site .shelf-slot:hover .shelf-book, .site .shelf-slot:focus-within .shelf-book { transform: translateY(-14px) translateZ(calc(var(--s) * -1)) rotateY(-90deg); }
+}
+.site .shelf-slot:focus-within .shelf-book { outline: none; }
+
+/* the hero line stays on one line from tablets up */
+.site .hero-line { font-size: clamp(2.5rem, 1rem + 6vw, 4rem); line-height: 0.92; letter-spacing: -0.045em; }
+@media (min-width: 768px) {
+  .site .hero-line { font-size: min(5.6vw, 7.5rem); white-space: nowrap; }
+}
+
+/* ---------- book page: the book turns as the page scrolls ---------- */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site .book-spin .book3d-inner { animation: jp-spin linear both; animation-timeline: scroll(root); }
+  }
+}
+@keyframes jp-spin { from { transform: rotateY(34deg) rotateX(3deg); } to { transform: rotateY(-14deg) rotateX(-2deg); } }
+.site .buy-row { position: relative; isolation: isolate; overflow: hidden; }
+.site .buy-row::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--bonnet); transform: scaleX(0); transform-origin: left; transition: transform 420ms var(--ease-out); }
+.site .buy-row:hover::before, .site .buy-row:focus-visible::before { transform: scaleX(1); }
+.site .buy-row:hover, .site .buy-row:focus-visible { color: var(--char); border-color: var(--bonnet); }
+.site .buy-row .arrow { transition: transform 420ms var(--ease-out); }
+.site .buy-row:hover .arrow { transform: translateX(6px); }

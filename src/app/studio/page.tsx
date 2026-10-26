@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createBook, createChapter, listBooks, loadLogs, userId } from "@/lib/studio";
-import { BOOK_STATUSES, bookGoal, type Book, type Section, type WritingLog } from "@/lib/types";
+import { createBook, createChapter, listAuthors, listBooks, loadLogs, userId } from "@/lib/studio";
+import { BOOK_STATUSES, bookGoal, type Author, type Book, type Section, type WritingLog } from "@/lib/types";
 import { fmt, lastDays, streak, wordsByDay } from "@/lib/progress";
 import { today } from "@/lib/slug";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
@@ -131,6 +131,11 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
   const [starter, setStarter] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [author, setAuthor] = useState("");
+  useEffect(() => {
+    if (open) listAuthors().then((a) => setAuthors(a)).catch(() => {});
+  }, [open]);
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -141,7 +146,7 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
             setBusy(true);
             setError("");
             try {
-              const book = await createBook({ title: title.trim(), subtitle: subtitle.trim(), withStarter: starter });
+              const book = await createBook({ title: title.trim(), subtitle: subtitle.trim(), author: author || undefined, withStarter: starter });
               router.push(`/studio/books/${book.id}`);
             } catch (err) {
               setError(errorMessage(err));
@@ -159,6 +164,18 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
             <Label htmlFor="nb-sub">Subtitle</Label>
             <Input id="nb-sub" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
           </div>
+          {authors.length > 0 && (
+            <div className="grid gap-1.5">
+              <Label htmlFor="nb-author">Pen name</Label>
+              <select id="nb-author" value={author || authors[0].id} onChange={(e) => setAuthor(e.target.value)} className="h-9 rounded-md border border-input bg-card px-3 text-sm">
+                {authors.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" className="mt-1" checked={starter} onChange={(e) => setStarter(e.target.checked)} />
             <span>Add title page, copyright, dedication, contents, introduction, a first chapter, acknowledgments and about the author.</span>

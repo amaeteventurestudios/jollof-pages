@@ -110,6 +110,8 @@ export function sampleExportInput(): ExportInput {
     format: { ...DEFAULT_FORMAT },
     goal: null,
     buy_links: [],
+    praise: [],
+    reviews: [],
     accent: "",
     word_count: 0,
     page_count: 0,

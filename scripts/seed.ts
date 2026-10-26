@@ -1,12 +1,13 @@
 /**
  * Sets up a Jollof Pages PocketBase:
  *   - the owner account (the only studio login; public sign-up is closed)
- *   - the publisher site settings and the owner's author profile
+ *   - the publisher site settings (pen names are added in the studio, so the owner's own name
+ *     never appears on the public site)
  *   - with --demo, four clearly marked sample books with covers, for trying the app out
  *
  * Usage:
  *   PB_URL=http://127.0.0.1:8090 PB_SUPERUSER_EMAIL=… PB_SUPERUSER_PASSWORD=… \
- *   OWNER_EMAIL=… OWNER_PASSWORD=… OWNER_NAME="Amaete Umanah" npx tsx scripts/seed.ts [--demo | --remove-demo]
+ *   OWNER_EMAIL=… OWNER_PASSWORD=… OWNER_NAME="Your Name" npx tsx scripts/seed.ts [--demo | --remove-demo]
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -151,7 +152,7 @@ async function main() {
 
   const email = env("OWNER_EMAIL");
   const password = env("OWNER_PASSWORD");
-  const name = env("OWNER_NAME", "Amaete Umanah");
+  const name = env("OWNER_NAME", "Owner");
   const existing = await pb
     .collection("users")
     .getFirstListItem(pb.filter("email = {:e}", { e: email }))
@@ -167,11 +168,6 @@ async function main() {
     console.log("Site settings created");
   }
 
-  let author = (await pb.collection("authors").getFullList<Author>({ filter: pb.filter("owner = {:o}", { o: owner.id }) }))[0];
-  if (!author) {
-    author = await pb.collection("authors").create<Author>({ owner: owner.id, name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") });
-    console.log(`Author profile: ${name}`);
-  }
   if (process.argv.includes("--remove-demo")) {
     const sample = await pb
       .collection("authors")

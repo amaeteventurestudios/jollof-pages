@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getBookBySlug, getSampleChapter, getSite } from "@/lib/pb-server";
 import { BookObject } from "@/components/site/book-object";
 import { Tilt } from "@/components/site/tilt";
-import { Pattern, Rim } from "@/components/site/patterns";
+import { Pattern } from "@/components/site/patterns";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SubscribeForm } from "@/components/site/subscribe-form";
-import { isUpcoming, spineOf, toStageBook } from "@/lib/site-data";
+import { isDark, isUpcoming, spineOf, toStageBook } from "@/lib/site-data";
 import { fileUrl } from "@/lib/pb";
 import { PAPER_LABELS, type PaperType } from "@/lib/kdp";
-import { bookFormat } from "@/lib/types";
+import { bookFormat, type Quote } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
 
@@ -25,6 +27,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+/**
+ * A book's own page, set in the book's colour: the book stands on the left and turns as you scroll,
+ * while the right column carries everything about it: what it is, where to buy it and at what price,
+ * the author, praise, reviews and the printed details.
+ */
 export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [site, book] = await Promise.all([getSite(), getBookBySlug(slug)]);
@@ -34,9 +41,12 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const sb = toStageBook(book);
   const f = bookFormat(book);
   const links = (book.buy_links ?? []).filter((l) => l.url);
+  const praise = (book.praise ?? []).filter((q) => q.quote);
+  const reviews = (book.reviews ?? []).filter((q) => q.quote);
   const author = book.expand?.author;
+  const upcoming = isUpcoming(book);
+  const dark = isDark(sb.accent);
   const details: [string, string][] = [
-    ["Author", author?.name ?? ""],
     ["Format", `Paperback, ${sb.trimLabel}`],
     ["Pages", book.page_count ? String(book.page_count) : ""],
     ["Paper", PAPER_LABELS[f.paper as PaperType] ?? ""],
@@ -59,64 +69,43 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     numberOfPages: book.page_count || undefined,
     image: book.cover ? fileUrl(book, book.cover) : undefined,
     description: book.description || undefined,
+    review: reviews.map((r) => ({ "@type": "Review", reviewBody: r.quote, author: { "@type": "Organization", name: r.source }, url: r.url || undefined })),
   };
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <SiteHeader name={name} overHero />
-      <section className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
-        <Pattern id="p-book" kind="adire" color="var(--char)" opacity={0.22} />
-        <div className="relative mx-auto grid max-w-[1400px] items-center gap-12 px-4 pt-12 pb-28 sm:px-8 lg:min-h-[calc(92svh-72px)] lg:grid-cols-[1.2fr_1fr] lg:pb-36">
-          <div>
-            <h1 className="t-head wide font-bold" data-rise>
-              {book.title}
-            </h1>
-            {book.subtitle && (
-              <p className="t-lead mt-6 max-w-[34ch]" data-rise style={{ ["--i" as string]: 1 }}>
-                {book.subtitle}
-              </p>
-            )}
-            {author && (
-              <p className="mt-6 font-semibold text-bonnet" data-rise style={{ ["--i" as string]: 2 }}>
-                by {author.name}
-              </p>
-            )}
-            <div className="mt-10 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 3 }}>
-              {links.length > 0 ? (
-                links.map((l, i) => (
-                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className={i === 0 ? "btn" : "btn btn-ghost"}>
-                    {i === 0 ? `Buy on ${l.label || "Amazon"}` : l.label}
-                  </a>
-                ))
-              ) : isUpcoming(book) ? (
-                <a href="#notify" className="btn">
-                  Tell me when it is out
-                </a>
-              ) : null}
-              {sample && (
-                <Link href={`/books/${book.slug}/read`} className={links.length || isUpcoming(book) ? "btn btn-ghost" : "btn"}>
-                  Read the first pages
-                </Link>
-              )}
+      <div className={cn("relative pt-[72px]", dark ? "text-cream" : "text-char")} style={{ background: sb.accent }}>
+        <Pattern id="p-book" kind="adire" color={dark ? "#000" : "var(--char)"} opacity={dark ? 0.14 : 0.08} drift={false} />
+        <div className="relative mx-auto grid max-w-[1400px] gap-x-16 px-4 sm:px-8 lg:grid-cols-[1fr_minmax(0,40rem)]">
+          <div className="lg:sticky lg:top-[72px] lg:h-[calc(100svh-72px)]">
+            <div className="flex h-full items-center justify-center py-16 max-sm:-my-10 max-sm:scale-[0.72] lg:py-0" data-rise>
+              <Tilt className="float" max={10}>
+                <BookObject book={sb} scale={62} className="book3d-enter book-spin" />
+              </Tilt>
             </div>
           </div>
-          <div className="relative flex justify-center max-sm:-my-12 max-sm:scale-[0.75]" data-rise style={{ ["--i" as string]: 2 }}>
-            <div className="absolute top-1/2 left-1/2 aspect-square w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-char" aria-hidden />
-            <Tilt className="float relative" max={12}>
-              <BookObject book={sb} scale={46} className="book3d-enter" />
-            </Tilt>
-          </div>
-        </div>
-        <Rim color="var(--cream)" />
-      </section>
 
-      <main className="relative overflow-hidden bg-cream py-[clamp(4rem,9vw,8rem)]">
-        <Pattern id="p-book-pepper" kind="pepper" color="var(--jollof)" opacity={0.12} drift={false} />
-        <div className="relative mx-auto grid max-w-[1400px] gap-16 px-4 sm:px-8 lg:grid-cols-[1.3fr_1fr]">
-          <div>
+          <main className="pb-24 lg:pt-[12vh]">
+            <header>
+              <h1 className="t-head wide font-bold" data-rise>
+                {book.title}
+              </h1>
+              {book.subtitle && (
+                <p className="t-lead mt-5" data-rise style={{ ["--i" as string]: 1 }}>
+                  {book.subtitle}
+                </p>
+              )}
+              {author && (
+                <p className="mt-5 text-[1.125rem] font-semibold" data-rise style={{ ["--i" as string]: 2 }}>
+                  {author.name}
+                </p>
+              )}
+            </header>
+
             {book.description && (
-              <div className="grid max-w-[52ch] gap-[1.1em] text-[1.125rem] leading-[1.6]" data-reveal>
+              <div className="mt-10 grid gap-[1.1em] text-[1.125rem] leading-[1.6]" data-rise style={{ ["--i" as string]: 3 }}>
                 {book.description
                   .split(/\n{2,}/)
                   .filter(Boolean)
@@ -125,46 +114,122 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                   ))}
               </div>
             )}
-            {author?.bio && (
-              <section className="mt-16 max-w-[52ch]" aria-labelledby="author-title" data-reveal>
-                <div className="flex items-center gap-4">
+
+            <Block title={links.length ? (upcoming ? "Preorder" : "Purchase") : upcoming ? "Coming soon" : "Purchase"} dark={dark}>
+              {links.length > 0 ? (
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {links.map((l) => (
+                    <li key={l.url}>
+                      <a href={l.url} target="_blank" rel="noreferrer" className={cn("buy-row flex h-16 items-center justify-between gap-4 border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}>
+                        <span>{l.label || "Amazon"}</span>
+                        <span className="flex items-center gap-3">
+                          {l.price && <span className="tabular">{l.price}</span>}
+                          <ArrowUpRight className="arrow size-5" aria-hidden />
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[1.125rem]">{upcoming ? "Not in the shops yet. Leave your email below and we will tell you the day it is." : "Store links are on their way."}</p>
+              )}
+              {sample && (
+                <Link href={`/books/${book.slug}/read`} className={cn("buy-row mt-2 flex h-16 items-center justify-between border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}>
+                  Read the first pages
+                  <ArrowRight className="arrow size-5" aria-hidden />
+                </Link>
+              )}
+            </Block>
+
+            {author && (author.bio || author.photo) && (
+              <Block title="Author" dark={dark}>
+                <div className="flex items-start gap-5">
                   {author.photo && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={fileUrl(author, author.photo, "400x400")} alt="" width={56} height={56} className="size-14 rounded-full object-cover" />
+                    <img src={fileUrl(author, author.photo, "400x400")} alt={author.name} width={96} height={96} className="size-24 shrink-0 object-cover" />
                   )}
-                  <h2 id="author-title" className="wide text-[1.75rem] font-bold tracking-[-0.03em]">
-                    About {author.name}
-                  </h2>
-                </div>
-                <p className="mt-5 text-[1.125rem] leading-[1.6]">{author.bio}</p>
-              </section>
-            )}
-          </div>
-          <div className="grid content-start gap-6">
-            {details.length > 0 && (
-              <dl className="grid gap-y-3 rounded-[28px] bg-white p-7" data-reveal>
-                {details.map(([k, v]) => (
-                  <div key={k} className="flex items-end">
-                    <dt className="text-char/70">{k}</dt>
-                    <span className="leader" aria-hidden />
-                    <dd className="tabular text-right font-medium">{v}</dd>
+                  <div>
+                    <p className="text-[1.125rem] leading-[1.6]">{author.bio}</p>
+                    {author.website && (
+                      <a href={author.website} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1 font-semibold underline decoration-2 underline-offset-4">
+                        Website <ArrowUpRight className="size-4" aria-hidden />
+                      </a>
+                    )}
                   </div>
-                ))}
-              </dl>
+                </div>
+              </Block>
             )}
-            <section id="notify" className="relative overflow-hidden rounded-[28px] bg-char p-7 text-cream" aria-labelledby="notify-title" data-reveal style={{ ["--i" as string]: 1 }}>
+
+            {praise.length > 0 && (
+              <Block title="Praise" dark={dark}>
+                <Quotes items={praise} />
+              </Block>
+            )}
+
+            {reviews.length > 0 && (
+              <Block title="Reviews" dark={dark}>
+                <Quotes items={reviews} />
+              </Block>
+            )}
+
+            {details.length > 0 && (
+              <Block title="Details" dark={dark}>
+                <dl className="grid gap-y-3">
+                  {details.map(([k, v]) => (
+                    <div key={k} className="flex items-end">
+                      <dt className="opacity-75">{k}</dt>
+                      <span className="leader" aria-hidden />
+                      <dd className="tabular text-right font-medium">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Block>
+            )}
+
+            <section id="notify" className="relative mt-16 overflow-hidden bg-char p-7 text-cream sm:p-9" aria-labelledby="notify-title" data-reveal>
               <Pattern id="p-notify" kind="wax" color="var(--char-2)" />
               <div className="relative">
                 <h2 id="notify-title" className="wide text-[1.75rem] font-bold tracking-[-0.03em]">
-                  Hear about the next one
+                  {upcoming ? "Tell me when it is out" : "Hear about the next one"}
                 </h2>
                 <SubscribeForm source={`book:${book.slug}`} tone="dark" />
               </div>
             </section>
-          </div>
+          </main>
         </div>
-      </main>
+      </div>
       <SiteFooter name={name} email={site?.email} />
     </>
+  );
+}
+
+function Block({ title, dark, children }: { title: string; dark: boolean; children: React.ReactNode }) {
+  return (
+    <section className={cn("mt-16 border-t-4 pt-6", dark ? "border-cream" : "border-char")} data-reveal>
+      <h2 className="wide mb-6 text-[1.5rem] font-bold tracking-[-0.03em]">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Quotes({ items }: { items: Quote[] }) {
+  return (
+    <ul className="grid gap-10">
+      {items.map((q, i) => (
+        <li key={i}>
+          <blockquote className="text-[1.375rem] leading-[1.4] tracking-[-0.01em]">&ldquo;{q.quote}&rdquo;</blockquote>
+          <p className="mt-3">
+            {q.url ? (
+              <a href={q.url} target="_blank" rel="noreferrer" className="font-semibold underline decoration-2 underline-offset-4">
+                {q.source}
+              </a>
+            ) : (
+              <span className="font-semibold">{q.source}</span>
+            )}
+            {q.role && <span className="opacity-80">, {q.role}</span>}
+          </p>
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, ExternalLink, Flame, LogOut, Settings2 } from "lucide-react";
+import { BookOpen, ExternalLink, Feather, Flame, LogOut, Settings2 } from "lucide-react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/studio", label: "Books", icon: BookOpen, exact: true },
+  { href: "/studio/authors", label: "Pen names", icon: Feather },
   { href: "/studio/progress", label: "Progress", icon: Flame },
   { href: "/studio/site", label: "Publisher site", icon: Settings2 },
 ];

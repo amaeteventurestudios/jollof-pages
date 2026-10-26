@@ -14,7 +14,7 @@ export function SpineCalculator({ book }: { book: StageBook | null }) {
   const spine = pages * SPINE_PER_PAGE[paper];
   const width = BLEED * 2 + t.width * 2 + spine;
   return (
-    <div className="grid overflow-hidden rounded-[28px] bg-char text-cream lg:grid-cols-[1.1fr_1fr]">
+    <div className="grid overflow-hidden bg-char text-cream lg:grid-cols-[1.1fr_1fr]">
       <div className="p-6 sm:p-10">
         <label htmlFor="spine-pages" className="block font-medium">
           Pages in your book
@@ -36,7 +36,7 @@ export function SpineCalculator({ book }: { book: StageBook | null }) {
         <label htmlFor="spine-paper" className="mt-6 block font-medium">
           Paper
         </label>
-        <select id="spine-paper" value={paper} onChange={(e) => setPaper(e.target.value as PaperType)} className="mt-2 h-12 w-full rounded-full bg-cream px-5 text-char">
+        <select id="spine-paper" value={paper} onChange={(e) => setPaper(e.target.value as PaperType)} className="mt-2 h-12 w-full bg-cream px-5 text-char">
           {(Object.keys(PAPER_LABELS) as PaperType[]).map((p) => (
             <option key={p} value={p}>
               {PAPER_LABELS[p]}
@@ -44,11 +44,11 @@ export function SpineCalculator({ book }: { book: StageBook | null }) {
           ))}
         </select>
         <dl className="mt-8 grid grid-cols-2 gap-4" aria-live="polite">
-          <div className="rounded-2xl bg-char-2 p-4">
+          <div className=" bg-char-2 p-4">
             <dt className="t-small text-cream/75">Spine</dt>
             <dd className="tabular wide mt-1 text-[1.75rem] font-bold">{spine.toFixed(3)} in</dd>
           </div>
-          <div className="rounded-2xl bg-char-2 p-4">
+          <div className=" bg-char-2 p-4">
             <dt className="t-small text-cream/75">Full cover</dt>
             <dd className="tabular mt-1 text-[1.25rem] font-semibold">
               {width.toFixed(3)} × {(t.height + BLEED * 2).toFixed(3)} in

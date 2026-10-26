@@ -101,11 +101,18 @@ export function Pattern({ id, kind, color, opacity = 1, drift = true, className 
   );
 }
 
-/** A soft rim between two colour fields, like the edge of the pot. */
+/** A hard woven edge between two colour fields: a row of squares in the next section's colour. */
 export function Rim({ color, flip, className }: { color: string; flip?: boolean; className?: string }) {
   return (
-    <svg aria-hidden viewBox="0 0 1440 64" preserveAspectRatio="none" className={cn("pointer-events-none absolute inset-x-0 block h-[clamp(28px,4vw,64px)] w-full", flip ? "top-[-1px] rotate-180" : "bottom-[-1px]", className)}>
-      <path d="M0 64V40C180 8 360 0 540 14s360 44 540 34 270-38 360-44v60z" fill={color} />
+    <svg aria-hidden className={cn("pointer-events-none absolute inset-x-0 block h-6 w-full", flip ? "top-[-1px] rotate-180" : "bottom-[-1px]", className)}>
+      <defs>
+        <pattern id={`rim-${color.replace(/\W/g, "")}`} width="48" height="24" patternUnits="userSpaceOnUse">
+          <rect x="0" y="12" width="48" height="12" fill={color} />
+          <rect x="0" y="0" width="12" height="12" fill={color} />
+          <rect x="24" y="0" width="12" height="12" fill={color} />
+        </pattern>
+      </defs>
+      <rect width="100%" height="24" fill={`url(#rim-${color.replace(/\W/g, "")})`} />
     </svg>
   );
 }
