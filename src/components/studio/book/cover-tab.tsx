@@ -262,8 +262,9 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           </p>
           {mode === "print" && !g.spineTextAllowed && <p className="text-soft">Spine text appears from 79 pages.</p>}
         </div>
-        <div ref={boxRef} className="flex justify-center rounded-md bg-paper p-1" key={fontsReady}>
+        <div ref={boxRef} className="flex justify-center rounded-md bg-paper p-1">
           <CoverStage
+            key={`${mode}-${fontsReady}`}
             ref={stageRef}
             mode={mode}
             book={{ title: book.title, subtitle: book.subtitle, description: book.description, imprint: book.imprint, authorName }}

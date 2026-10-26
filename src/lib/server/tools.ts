@@ -11,7 +11,7 @@ const ROOT = process.cwd();
 export function typstBin(): string {
   if (process.env.TYPST_BIN) return process.env.TYPST_BIN;
   const local = path.join(ROOT, "tools", "typst");
-  return existsSync(local) ? local : "typst";
+  return existsSync(/*turbopackIgnore: true*/ local) ? local : "typst";
 }
 
 export function fontPath(): string {
@@ -20,5 +20,5 @@ export function fontPath(): string {
 
 export function epubcheckJar(): string | null {
   const p = process.env.EPUBCHECK_JAR || path.join(ROOT, "tools", "epubcheck", "epubcheck.jar");
-  return existsSync(p) ? p : null;
+  return existsSync(/*turbopackIgnore: true*/ p) ? p : null;
 }

@@ -18,7 +18,7 @@
   --ink-2: #4a423e;
   --soft: #5f5652;
 
-  --background: #f4f1ef;
+  --background: #f0eded;
   --foreground: var(--ink);
   --card: #ffffff;
   --card-foreground: var(--ink);
@@ -104,6 +104,42 @@
 .manuscript .ProseMirror {
   outline: none;
   min-height: 60vh;
+}
+.manuscript .ProseMirror > * + * {
+  margin-top: 0.9em;
+}
+.manuscript .ProseMirror h2,
+.manuscript .ProseMirror h3,
+.manuscript .ProseMirror h4 {
+  font-family: var(--font-archivo), ui-sans-serif, sans-serif;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin-top: 1.8em;
+}
+.manuscript .ProseMirror h2 { font-size: 1.35em; }
+.manuscript .ProseMirror h3 { font-size: 1.15em; }
+.manuscript .ProseMirror h4 { font-size: 1em; }
+.manuscript .ProseMirror ul { list-style: disc; padding-left: 1.4em; }
+.manuscript .ProseMirror ol { list-style: decimal; padding-left: 1.4em; }
+.manuscript .ProseMirror li + li { margin-top: 0.25em; }
+.manuscript .ProseMirror li > p { margin: 0; }
+.manuscript .ProseMirror blockquote {
+  border-left: 3px solid var(--paper-3);
+  padding-left: 1em;
+  font-style: italic;
+  color: var(--ink-2);
+}
+.manuscript .ProseMirror .callout {
+  background: #e8f1ea;
+  border-radius: 6px;
+  padding: 0.9em 1.1em;
+}
+.manuscript .ProseMirror .callout > * + * { margin-top: 0.6em; }
+.manuscript .ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .manuscript .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

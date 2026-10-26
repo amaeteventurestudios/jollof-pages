@@ -1,0 +1,123 @@
+/* Public site. Tokens and motion helpers; layout lives in Tailwind classes. */
+.site {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --t-press: 140ms;
+  --t-hover: 180ms;
+  --t-reveal: 800ms;
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --step-display: clamp(2.75rem, 1rem + 4.5vw, 5.5rem);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--step-body);
+  line-height: 1.5;
+}
+.site .t-small { font-size: var(--step-small); }
+.site .t-body { font-size: var(--step-body); }
+.site .t-lead { font-size: var(--step-lead); line-height: 1.35; }
+.site .t-head { font-size: var(--step-head); line-height: 1; letter-spacing: -0.02em; }
+.site .t-display { font-size: var(--step-display); line-height: 0.95; letter-spacing: -0.03em; }
+
+.site .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3.25rem;
+  padding: 0 1.5rem;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease;
+}
+.site .btn:active { transform: scale(0.97); }
+.site .btn-ink { background: var(--ink); color: var(--paper); }
+.site .btn-quiet { background: var(--paper-2); color: var(--ink); }
+.site .link {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 0.07em;
+  transition: text-decoration-color var(--t-hover) ease, color var(--t-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .site .btn:hover { background: var(--primary-hover); }
+  .site .btn-ink:hover { background: #000; }
+  .site .btn-quiet:hover { background: var(--paper-3); }
+  .site .link:hover { text-decoration-color: currentColor; }
+  .site .shelf-item:hover .shelf-cover { transform: translateY(-6px); }
+}
+.site .shelf-cover { transition: transform 320ms var(--ease-out); }
+
+/* the printed sheet: scalloped top and bottom edges */
+.site .sheet {
+  --top: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 0a8 8 0 0 0 16 0v10H0z'/%3E%3C/svg%3E");
+  --bottom: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M0 10a8 8 0 0 1 16 0V0H0z'/%3E%3C/svg%3E");
+  --fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4'/%3E%3C/svg%3E");
+  mask-image: var(--top), var(--fill), var(--bottom);
+  mask-size: 16px 10px, 100% calc(100% - 20px), 16px 10px;
+  mask-position: top left, center, bottom left;
+  mask-repeat: repeat-x, no-repeat, repeat-x;
+}
+/* the slip: zigzag bottom edge */
+.site .slip {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), 96% 100%, 92% calc(100% - 12px), 88% 100%, 84% calc(100% - 12px), 80% 100%, 76% calc(100% - 12px), 72% 100%, 68% calc(100% - 12px), 64% 100%, 60% calc(100% - 12px), 56% 100%, 52% calc(100% - 12px), 48% 100%, 44% calc(100% - 12px), 40% 100%, 36% calc(100% - 12px), 32% 100%, 28% calc(100% - 12px), 24% 100%, 20% calc(100% - 12px), 16% 100%, 12% calc(100% - 12px), 8% 100%, 4% calc(100% - 12px), 0 100%);
+}
+.site .leader {
+  flex: 1;
+  min-width: 1.5rem;
+  margin: 0 0.6rem 0.35em;
+  height: 4px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='4'%3E%3Ccircle cx='2' cy='2' r='1.6' fill='%235f5652'/%3E%3C/svg%3E");
+  background-size: 9px 4px;
+  background-repeat: repeat-x;
+  align-self: flex-end;
+}
+
+/* the book as an object: front cover plus a spine whose depth is the real spine width */
+.site .book3d { perspective: 2200px; }
+.site .book3d-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateY(32deg) rotateX(3deg);
+  transition: transform 900ms var(--ease-out);
+}
+.site .book3d-face { position: absolute; inset: 0; backface-visibility: hidden; overflow: hidden; }
+.site .book3d-spine {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  transition: width 500ms var(--ease-out), left 500ms var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.site .book3d-spine span {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* motion: content stays visible without scripting */
+@media (prefers-reduced-motion: no-preference) {
+  .js .site [data-rise] { opacity: 0; transform: translateY(20px); animation: jp-rise var(--t-reveal) var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+  .js .site [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); transition-delay: calc(var(--i, 0) * 75ms); }
+  .js .site [data-reveal].is-in { opacity: 1; transform: none; }
+  .js .site .book3d-enter { animation: jp-turn 1400ms var(--ease-soft) both; }
+  .site .stage-drift { animation: jp-drift 9s var(--ease-in-out) infinite alternate; }
+}
+@keyframes jp-rise { to { opacity: 1; transform: none; } }
+@keyframes jp-turn { from { opacity: 0; transform: rotateY(62deg) rotateX(3deg) translateZ(-60px); } to { opacity: 1; transform: rotateY(32deg) rotateX(3deg); } }
+@keyframes jp-drift { from { transform: translateY(-1.5%); } to { transform: translateY(1.5%); } }
+
+/* sample reader */
+.site .reader { font-size: 1.1875rem; }
+.site .reader .chapter-head { margin-top: 0; }
