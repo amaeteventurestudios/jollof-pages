@@ -17,10 +17,15 @@ export function Tilt({ children, className, max = 10 }: { children: React.ReactN
         const y = (e.clientY - r.top) / r.height - 0.5;
         ref.current.style.setProperty("--ry", `${x * max * 2}deg`);
         ref.current.style.setProperty("--rx", `${-y * max}deg`);
+        // where the light catches the laminate, opposite the lean
+        ref.current.style.setProperty("--gx", `${50 - x * 120}%`);
+        ref.current.style.setProperty("--gy", `${50 - y * 120}%`);
       }}
       onPointerLeave={() => {
         ref.current?.style.setProperty("--ry", "0deg");
         ref.current?.style.setProperty("--rx", "0deg");
+        ref.current?.style.removeProperty("--gx");
+        ref.current?.style.removeProperty("--gy");
       }}
     >
       {children}

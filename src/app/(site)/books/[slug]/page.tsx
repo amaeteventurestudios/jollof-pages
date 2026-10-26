@@ -23,7 +23,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: book.title,
     description: book.pitch || book.subtitle || book.description.slice(0, 160),
-    openGraph: { title: book.title, description: book.pitch || book.subtitle, images: book.cover ? [fileUrl(book, book.cover, "960x0")] : [] },
+    openGraph: {
+      title: book.title,
+      description: book.pitch || book.subtitle,
+      images: book.cover ? [fileUrl(book, book.cover, "960x0")] : [],
+    },
   };
 }
 
@@ -51,7 +55,16 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     ["Pages", book.page_count ? String(book.page_count) : ""],
     ["Paper", PAPER_LABELS[f.paper as PaperType] ?? ""],
     ["Spine", book.page_count ? `${spineOf(sb).toFixed(3)} in` : ""],
-    ["Published", book.publication_date ? new Date(book.publication_date).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" }) : ""],
+    [
+      "Published",
+      book.publication_date
+        ? new Date(book.publication_date).toLocaleDateString("en-GB", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "",
+    ],
     ["Paperback ISBN", book.isbn_paperback],
     ["Ebook ISBN", book.isbn_ebook],
     ["Series", book.series ? `${book.series}${book.series_number ? `, book ${book.series_number}` : ""}` : ""],
@@ -69,21 +82,33 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     numberOfPages: book.page_count || undefined,
     image: book.cover ? fileUrl(book, book.cover) : undefined,
     description: book.description || undefined,
-    review: reviews.map((r) => ({ "@type": "Review", reviewBody: r.quote, author: { "@type": "Organization", name: r.source }, url: r.url || undefined })),
+    review: reviews.map((r) => ({
+      "@type": "Review",
+      reviewBody: r.quote,
+      author: { "@type": "Organization", name: r.source },
+      url: r.url || undefined,
+    })),
   };
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <SiteHeader name={name} overHero />
       <div className={cn("relative pt-[72px]", dark ? "text-cream" : "text-char")} style={{ background: sb.accent }}>
         <Pattern id="p-book" kind="adire" color={dark ? "#000" : "var(--char)"} opacity={dark ? 0.14 : 0.08} drift={false} />
-        <div className="relative mx-auto grid max-w-[1400px] gap-x-16 px-4 sm:px-8 lg:grid-cols-[1fr_minmax(0,40rem)]">
+        <div className="relative mx-auto grid max-w-[1700px] gap-x-16 px-4 sm:px-8 lg:grid-cols-[1fr_minmax(0,40rem)] 2xl:grid-cols-[1fr_minmax(0,46rem)]">
           <div className="lg:sticky lg:top-[72px] lg:h-[calc(100svh-72px)]">
             <div className="flex h-full items-center justify-center py-16 max-sm:-my-10 max-sm:scale-[0.72] lg:py-0" data-rise>
-              <Tilt className="float" max={10}>
-                <BookObject book={sb} scale={62} className="book3d-enter book-spin" />
-              </Tilt>
+              <div className="min-[1800px]:scale-125">
+                <Tilt className="float" max={10}>
+                  <BookObject book={sb} scale={62} className="book3d-enter book-spin" />
+                </Tilt>
+              </div>
             </div>
           </div>
 
@@ -120,7 +145,12 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 <ul className="grid gap-2 sm:grid-cols-2">
                   {links.map((l) => (
                     <li key={l.url}>
-                      <a href={l.url} target="_blank" rel="noreferrer" className={cn("buy-row flex h-16 items-center justify-between gap-4 border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}>
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={cn("buy-row flex h-16 items-center justify-between gap-4 border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}
+                      >
                         <span>{l.label || "Amazon"}</span>
                         <span className="flex items-center gap-3">
                           {l.price && <span className="tabular">{l.price}</span>}

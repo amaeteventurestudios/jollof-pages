@@ -22,6 +22,8 @@ import {
   createFrontCover,
   createSpineCover,
   createTitleDecal,
+  createFoilMask,
+  foilMaskFromImage,
 } from "./cover-art";
 
 export type ShelfMode = "browse" | "focusing" | "inspect" | "returning";
@@ -106,6 +108,14 @@ function toTexture(
   return texture;
 }
 
+/** Jollof Pages: foil masks hold material data, not colour, so they stay linear. */
+function toDataTexture(canvas: HTMLCanvasElement, renderer: THREE.WebGLRenderer) {
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return texture;
+}
+
 function createLivingMaterial(color: string) {
   return new THREE.ShaderMaterial({
     transparent: true,
@@ -154,6 +164,9 @@ export class ShelfEngine {
   private pickTargets: THREE.Object3D[] = [];
   private raycaster = new THREE.Raycaster();
   private pointer = new THREE.Vector2(10, 10);
+  // Jollof Pages: the book in front leans toward the pointer so its foil and gloss catch the light
+  private pointerInside = false;
+  private tilt = new THREE.Vector2();
   private animationFrame = 0;
   private resizeObserver: ResizeObserver;
   private mode: ShelfMode = "browse";
@@ -519,7 +532,8 @@ export class ShelfEngine {
     const titleTexture = toTexture(createTitleDecal(book), this.renderer);
     const spineTexture = toTexture(createSpineCover(book), this.renderer, 4);
     const backTexture = toTexture(createBackCover(book), this.renderer);
-    const textures = [frontTexture, titleTexture, spineTexture, backTexture];
+    const foilTexture = toDataTexture(createFoilMask(book), this.renderer);
+    const textures = [frontTexture, titleTexture, spineTexture, backTexture, foilTexture];
 
     const frontSurface = new THREE.Mesh<
       THREE.PlaneGeometry,
@@ -528,8 +542,11 @@ export class ShelfEngine {
       new THREE.PlaneGeometry(width - 0.065, book.height - 0.065),
       new THREE.MeshPhysicalMaterial({
         map: frontTexture,
-        roughness: 0.38,
-        metalness: 0,
+        // the foil mask scales both: paper 0.42 rough and not metal, foil 0.14 rough and metal
+        roughness: 1,
+        metalness: 1,
+        roughnessMap: foilTexture,
+        metalnessMap: foilTexture,
         clearcoat: 1,
         clearcoatRoughness: 0.06,
       }),
@@ -721,6 +738,7 @@ export class ShelfEngine {
   };
 
   private handlePointerLeave = () => {
+    this.pointerInside = false;
     if (!this.pointerDown) {
       this.runtimeBooks.forEach((book) => {
         book.targetHover = 0;
@@ -765,6 +783,7 @@ export class ShelfEngine {
   };
 
   private updatePointer(event: PointerEvent) {
+    this.pointerInside = true;
     const rect = this.canvas.getBoundingClientRect();
     this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1058,6 +1077,9 @@ export class ShelfEngine {
   }
 
   private updateBooks(delta: number, elapsed: number) {
+    const lean = this.pointerInside && !this.pointerDown && !this.reducedMotion;
+    this.tilt.x = damp(this.tilt.x, lean ? clamp(this.pointer.x, -1, 1) : 0, 4, delta);
+    this.tilt.y = damp(this.tilt.y, lean ? clamp(this.pointer.y, -1, 1) : 0, 4, delta);
     const motionFocus =
       this.mode === "returning"
         ? this.focusProgress
@@ -1098,11 +1120,14 @@ export class ShelfEngine {
       const idlePhase = elapsed * 0.78 + book.index * 0.37;
       book.inspectionIdle.position.y =
         Math.sin(idlePhase) * inspectionIdleLift * idleStrength;
+      const leans = book.index === this.presentedIndex && this.mode === "browse";
       book.inspectionIdle.rotation.set(
         Math.sin(idlePhase * 0.73 + 0.8) *
           inspectionIdlePitch *
-          idleStrength,
-        Math.sin(idlePhase * 0.61) * inspectionIdleYaw * idleStrength,
+          idleStrength +
+          (leans ? -this.tilt.y * 0.07 : 0),
+        Math.sin(idlePhase * 0.61) * inspectionIdleYaw * idleStrength +
+          (leans ? this.tilt.x * 0.16 : 0),
         Math.sin(idlePhase * 0.89 + 1.7) *
           inspectionIdleRoll *
           idleStrength,
@@ -1238,8 +1263,33 @@ export class ShelfEngine {
       const material = runtime.frontSurface.material;
       const proceduralTexture = material.map;
       material.map = texture;
-      material.needsUpdate = true;
       runtime.textures.push(texture);
+
+      // Jollof Pages: the generated foil no longer lines up, so find the foil on the image itself.
+      const oldFoil = material.metalnessMap;
+      let mask: HTMLCanvasElement | null = null;
+      try {
+        mask = foilMaskFromImage(texture.image as HTMLImageElement);
+      } catch {
+        mask = null;
+      }
+      if (mask) {
+        const foil = toDataTexture(mask, this.renderer);
+        material.metalnessMap = foil;
+        material.roughnessMap = foil;
+        runtime.textures.push(foil);
+      } else {
+        material.metalnessMap = null;
+        material.roughnessMap = null;
+        material.metalness = 0;
+        material.roughness = 0.38;
+      }
+      if (oldFoil) {
+        const index = runtime.textures.indexOf(oldFoil);
+        if (index >= 0) runtime.textures.splice(index, 1);
+        oldFoil.dispose();
+      }
+      material.needsUpdate = true;
 
       if (proceduralTexture) {
         const index = runtime.textures.indexOf(proceduralTexture);

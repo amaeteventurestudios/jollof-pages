@@ -18,8 +18,7 @@ import { getTrim } from "@/lib/kdp";
 
 export const revalidate = 60;
 
-const DEFAULT_INTRO =
-  "Jollof Pages publishes practical non-fiction. Every book is written, typeset and made ready for print in our own studio, then sent to the shops where you already buy books.";
+const DEFAULT_INTRO = "Jollof Pages publishes practical non-fiction. Every book is written, typeset and made ready for print in our own studio, then sent to the shops where you already buy books.";
 
 const DEFAULT_LETTER = `We publish non-fiction: books meant to be used, not just read.
 
@@ -32,10 +31,26 @@ Like the dish we are named after, a good book takes one pot, patience and heat a
 If one of them helps you, tell us. That is the whole point.`;
 
 const STEPS = [
-  { n: "01", title: "Write", body: "Chapter by chapter, with a daily word goal, sprints and Word import." },
-  { n: "02", title: "Typeset", body: "Print PDFs set with Typst. The gutter grows with the page count, the way KDP asks." },
-  { n: "03", title: "Package", body: "A validated EPUB, a full paperback cover with spine and bleed, at 300 dpi." },
-  { n: "04", title: "Publish", body: "Uploaded to Amazon by hand, then listed here with a free chapter to read." },
+  {
+    n: "01",
+    title: "Write",
+    body: "Chapter by chapter, with a daily word goal, sprints and Word import.",
+  },
+  {
+    n: "02",
+    title: "Typeset",
+    body: "Print PDFs set with Typst. The gutter grows with the page count, the way KDP asks.",
+  },
+  {
+    n: "03",
+    title: "Package",
+    body: "A validated EPUB, a full paperback cover with spine and bleed, at 300 dpi.",
+  },
+  {
+    n: "04",
+    title: "Publish",
+    body: "Uploaded to Amazon by hand, then listed here with a free chapter to read.",
+  },
 ];
 
 function paragraphs(text: string) {
@@ -48,7 +63,15 @@ function paragraphs(text: string) {
 function toRow(b: Book): BookRow {
   const t = getTrim(bookFormat(b).trim);
   const sb = toStageBook(b);
-  return { id: b.id, slug: b.slug, title: b.title, subtitle: b.subtitle, meta: isUpcoming(b) ? year(b.publication_date) || "Soon" : `${t.width} × ${t.height} in`, cover: sb.cover, accent: sb.accent };
+  return {
+    id: b.id,
+    slug: b.slug,
+    title: b.title,
+    subtitle: b.subtitle,
+    meta: isUpcoming(b) ? year(b.publication_date) || "Soon" : `${t.width} × ${t.height} in`,
+    cover: sb.cover,
+    accent: sb.accent,
+  };
 }
 
 export default async function Home() {
@@ -57,8 +80,10 @@ export default async function Home() {
   const lead = books.find((b) => b.id === site?.hero_book) ?? books.find((b) => b.featured) ?? books[0];
   const leadStage = lead ? toStageBook(lead) : null;
   const stageBooks = books.map((b, i) => toStageBook(b, i));
-  const available = books.filter((b) => !isUpcoming(b));
-  const upcoming = books.filter(isUpcoming);
+  // the lead book has its own section, so the list holds the rest and nothing is shown twice
+  const rest = books.filter((b) => b.id !== lead?.id);
+  const available = rest.filter((b) => !isUpcoming(b));
+  const upcoming = rest.filter(isUpcoming);
   const covers = books.filter((b) => b.cover);
   const letter = paragraphs(site?.about || DEFAULT_LETTER);
 
@@ -70,7 +95,7 @@ export default async function Home() {
       {/* hero: the pot itself, red with adire circles */}
       <section aria-labelledby="hero-title" className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
         <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.22} />
-        <div className="relative mx-auto flex min-h-[calc(100svh-72px)] max-w-[1600px] flex-col justify-end gap-12 px-4 pt-12 pb-16 sm:px-8 lg:pb-20">
+        <div className="hero-box relative mx-auto flex max-w-[1600px] flex-col gap-12 px-4 pt-[clamp(3rem,10vh,8rem)] pb-16 sm:px-8 lg:gap-16 lg:pb-20">
           <h1 id="hero-title" className="hero-line wide font-bold">
             <Lines lines={[site?.tagline || "Useful books, slowly cooked."]} />
           </h1>
@@ -93,7 +118,7 @@ export default async function Home() {
             </div>
             {stageBooks.length > 0 && (
               <div className="relative min-w-0 lg:justify-self-end">
-                <Shelf books={stageBooks} unit={46} />
+                <Shelf books={stageBooks} unit={54} />
                 <div className="h-3 bg-char" aria-hidden />
               </div>
             )}
@@ -102,44 +127,49 @@ export default async function Home() {
         <Rim color="var(--char)" />
       </section>
 
-      <Marquee items={books.length ? books.map((b) => b.title) : ["Practical non-fiction", "Written in our own studio", "Paperback and ebook"]} className="bg-char py-5 text-[clamp(1.25rem,1rem+1.2vw,2rem)] font-bold text-bonnet" />
+      <Marquee
+        items={["Practical non-fiction", "Written in our own studio", "Paperback and ebook", "Slowly cooked"]}
+        className="bg-char py-5 text-[clamp(1.25rem,1rem+1.2vw,2rem)] font-bold text-bonnet"
+      />
 
       <main>
-        {/* the list, on a scatter of rice */}
-        <section id="list" aria-labelledby="list-title" className="relative scroll-mt-16 overflow-hidden bg-cream py-[clamp(5rem,12vw,10rem)]">
-          <Pattern id="p-rice" kind="rice" color="var(--cream-2)" />
-          <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <h2 id="list-title" className="t-head wide font-bold" data-reveal>
-                The list
-              </h2>
-              <p className="max-w-[30ch] text-char/80" data-reveal style={{ ["--i" as string]: 1 }}>
-                Practical non-fiction in paperback and ebook. Every title is also on Amazon.
-              </p>
-            </div>
-            {books.length === 0 ? (
-              <p className="mt-12 text-[1.25rem]">The first books are in the pot. Join the reader list to hear the day they are ready.</p>
-            ) : (
-              <>
-                <div className="mt-12">
-                  <BookRows rows={available.map(toRow)} />
-                </div>
-                {upcoming.length > 0 && (
-                  <>
-                    <h3 className="wide mt-16 text-[1.5rem] font-bold" data-reveal>
-                      Coming soon
-                    </h3>
-                    <div className="mt-6">
-                      <BookRows rows={upcoming.map(toRow)} start={available.length + 1} />
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        </section>
-
         {lead && <Showcase book={lead} />}
+
+        {/* the list, on a scatter of rice */}
+        {(books.length === 0 || rest.length > 0) && (
+          <section id="list" aria-labelledby="list-title" className="relative scroll-mt-16 overflow-hidden bg-cream py-[clamp(5rem,12vw,10rem)]">
+            <Pattern id="p-rice" kind="rice" color="var(--cream-2)" />
+            <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
+              <div className="flex flex-wrap items-end justify-between gap-6">
+                <h2 id="list-title" className="t-head wide font-bold" data-reveal>
+                  The list
+                </h2>
+                <p className="max-w-[30ch] text-char/80" data-reveal style={{ ["--i" as string]: 1 }}>
+                  Practical non-fiction in paperback and ebook. Every title is also on Amazon.
+                </p>
+              </div>
+              {books.length === 0 ? (
+                <p className="mt-12 text-[1.25rem]">The first books are in the pot. Join the reader list to hear the day they are ready.</p>
+              ) : (
+                <>
+                  <div className="mt-12">
+                    <BookRows rows={available.map(toRow)} />
+                  </div>
+                  {upcoming.length > 0 && (
+                    <>
+                      <h3 className="wide mt-16 text-[1.5rem] font-bold" data-reveal>
+                        Coming soon
+                      </h3>
+                      <div className="mt-6">
+                        <BookRows rows={upcoming.map(toRow)} start={available.length + 1} />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* the studio, on a woven strip */}
         <section id="studio" aria-labelledby="studio-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,12vw,10rem)]">
@@ -155,7 +185,8 @@ export default async function Home() {
                 </span>
               </h2>
               <p className="max-w-[44ch] text-[1.125rem]" data-reveal style={{ ["--i" as string]: 1 }}>
-                We built the tool we write in. It knows Amazon&apos;s print rules, so a manuscript becomes a paperback and an ebook without leaving the studio. Try it: slide the page count and watch the book change thickness.
+                We built the tool we write in. It knows Amazon&apos;s print rules, so a manuscript becomes a paperback and an ebook without leaving the studio. Try it: slide the page count and watch
+                the book change thickness.
               </p>
             </div>
             <div className="mt-12" data-reveal style={{ ["--i" as string]: 2 }}>
@@ -200,16 +231,26 @@ export default async function Home() {
         <section id="reader-list" aria-labelledby="rl-title" className="relative scroll-mt-16 overflow-hidden bg-char">
           {covers.length > 0 && (
             <div className="scroll-grow grid grid-cols-3 overflow-hidden sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
-              {Array.from({ length: 12 }, (_, i) => covers[i % covers.length]).map((b, i) => (
-                <div key={i} className="aspect-[2/3] overflow-hidden">
-                  <div className="scroll-rise h-full" style={{ animationDelay: `${(i % 3) * -0.2}s` }}>
-                    <BookCover book={b} thumb="480x0" className="h-full" />
-                  </div>
+              {mosaic(covers).map((b, i) => (
+                <div key={i} className="relative aspect-[2/3] overflow-hidden">
+                  {b ? (
+                    <div className="scroll-rise h-full" style={{ animationDelay: `${(i % 3) * -0.2}s` }}>
+                      <BookCover book={b} thumb="480x0" className="h-full" />
+                    </div>
+                  ) : (
+                    <div className={TILE_TONES[i % TILE_TONES.length].bg}>
+                      <Pattern id={`p-tile-${i}`} kind={TILE_TONES[i % TILE_TONES.length].kind} color={TILE_TONES[i % TILE_TONES.length].color} drift={false} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
-          <div className={covers.length ? "relative -mt-24 px-4 pb-6 sm:absolute sm:top-1/2 sm:left-1/2 sm:mt-0 sm:w-[min(560px,90vw)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-0" : "relative px-4 py-24"}>
+          <div
+            className={
+              covers.length ? "relative -mt-24 px-4 pb-6 sm:absolute sm:top-1/2 sm:left-1/2 sm:mt-0 sm:w-[min(560px,90vw)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-0" : "relative px-4 py-24"
+            }
+          >
             <div className="relative overflow-hidden bg-jollof p-8 text-cream sm:p-12">
               <Pattern id="p-rl" kind="adire" color="var(--char)" opacity={0.2} />
               <div className="relative">
@@ -237,6 +278,39 @@ export default async function Home() {
   );
 }
 
+/** Twelve tiles with each cover once, spread out, and woven pattern tiles between them. */
+function mosaic(covers: Book[]): (Book | null)[] {
+  const tiles: (Book | null)[] = Array(12).fill(null);
+  const shown = covers.slice(0, 12);
+  shown.forEach((b, i) => {
+    tiles[Math.floor((i * 12) / shown.length + (12 / shown.length) * 0.4) % 12] = b;
+  });
+  return tiles;
+}
+
+const TILE_TONES = [
+  {
+    bg: "absolute inset-0 bg-bonnet",
+    kind: "pepper" as const,
+    color: "var(--jollof)",
+  },
+  {
+    bg: "absolute inset-0 bg-jollof",
+    kind: "adire" as const,
+    color: "var(--char)",
+  },
+  {
+    bg: "absolute inset-0 bg-cream",
+    kind: "rice" as const,
+    color: "var(--cream-2)",
+  },
+  {
+    bg: "absolute inset-0 bg-char-2",
+    kind: "wax" as const,
+    color: "var(--char)",
+  },
+];
+
 function Arrow() {
   return (
     <svg viewBox="0 0 24 24" className="arrow size-5" aria-hidden>
@@ -259,7 +333,8 @@ function Showcase({ book }: { book: Book }) {
         </div>
         <div>
           <p className="font-semibold text-bonnet" data-reveal>
-            Start here{book.expand?.author?.name ? `, by ${book.expand.author.name}` : ""}
+            Start here
+            {book.expand?.author?.name ? `, by ${book.expand.author.name}` : ""}
           </p>
           <h2 id="showcase-title" className="t-head wide mt-4 font-bold" data-reveal style={{ ["--i" as string]: 1 }}>
             {book.title}

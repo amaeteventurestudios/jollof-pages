@@ -654,3 +654,76 @@ export function createBackCover(book: CatalogBook) {
   ctx.restore();
   return canvas;
 }
+
+/*
+ * Jollof Pages: foil. A mask in the same layout as the front cover tells the material where the
+ * foil is. Blue is metalness and green is roughness (the channels three.js reads), so the title and
+ * motif become polished metal that flashes as the book turns, while the laminate stays gloss.
+ */
+const PAPER = "rgb(0, 107, 0)"; // roughness 0.42, not metal
+const FOIL = "rgb(0, 36, 255)"; // roughness 0.14, metal
+
+export function createFoilMask(book: CatalogBook) {
+  const logicalWidth = 1024;
+  const logicalHeight = 1536;
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 768;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  ctx.scale(0.5, 0.5);
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+  const foil = { ...book, accent: FOIL, ink: FOIL };
+  drawMotif(ctx, foil, logicalWidth, logicalHeight);
+  drawCoverTypography(ctx, foil, logicalWidth, logicalHeight);
+  return canvas;
+}
+
+/**
+ * For an uploaded cover, finds the foil by colour: the cover's ground is its most common colour,
+ * and lettering or rules that stand well apart from it are treated as foil. Busy, photographic
+ * covers (where too much stands apart) get no foil, only the gloss laminate.
+ */
+export function foilMaskFromImage(image: CanvasImageSource & { width: number; height: number }) {
+  const w = 256;
+  const h = Math.round((w * image.height) / Math.max(1, image.width));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(image, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h);
+  const px = data.data;
+  const bins = new Map<number, number>();
+  for (let i = 0; i < px.length; i += 4) {
+    const key = ((px[i] >> 4) << 8) | ((px[i + 1] >> 4) << 4) | (px[i + 2] >> 4);
+    bins.set(key, (bins.get(key) ?? 0) + 1);
+  }
+  let ground = 0;
+  let best = 0;
+  bins.forEach((count, key) => {
+    if (count > best) {
+      best = count;
+      ground = key;
+    }
+  });
+  const gr = ((ground >> 8) & 15) * 16 + 8;
+  const gg = ((ground >> 4) & 15) * 16 + 8;
+  const gb = (ground & 15) * 16 + 8;
+  let foil = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    const d = Math.hypot(px[i] - gr, px[i + 1] - gg, px[i + 2] - gb);
+    const on = d > 110;
+    if (on) foil += 1;
+    px[i] = 0;
+    px[i + 1] = on ? 36 : 107;
+    px[i + 2] = on ? 255 : 0;
+    px[i + 3] = 255;
+  }
+  const share = foil / (w * h);
+  if (share < 0.004 || share > 0.3) return null;
+  ctx.putImageData(data, 0, 0);
+  return canvas;
+}

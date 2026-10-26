@@ -251,8 +251,10 @@
 
 /* the hero line stays on one line from tablets up */
 .site .hero-line { font-size: clamp(2.5rem, 1rem + 6vw, 4rem); line-height: 0.92; letter-spacing: -0.045em; }
+/* sized to its own box, not the window, so it fits whole at every width up to the widest screen */
+.site .hero-box { container-type: inline-size; }
 @media (min-width: 768px) {
-  .site .hero-line { font-size: min(5.6vw, 7.5rem); white-space: nowrap; }
+  .site .hero-line { font-size: 5.5cqi; white-space: nowrap; }
 }
 
 /* ---------- book page: the book turns as the page scrolls ---------- */
@@ -268,3 +270,32 @@
 .site .buy-row:hover, .site .buy-row:focus-visible { color: var(--char); border-color: var(--bonnet); }
 .site .buy-row .arrow { transition: transform 420ms var(--ease-out); }
 .site .buy-row:hover .arrow { transform: translateX(6px); }
+
+/* ---------- gloss laminate on the drawn books: a soft glare that follows the pointer, and a sheen ---------- */
+.site .book3d-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(60% 45% at var(--gx, 28%) var(--gy, 18%), rgba(255, 255, 255, 0.48), transparent 70%),
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.16) 46%, rgba(255, 255, 255, 0.04) 52%, transparent 60%);
+  background-size: 100% 100%, 260% 100%;
+  background-position: 0 0, 100% 0;
+  transition: background-position 1200ms var(--ease-out);
+}
+.site .book3d-face::before {
+  /* a thin hard edge of light along the spine fold, as on a laminated paperback */
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.14) 40%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .site .book3d-face::after { animation: jp-sheen 7s var(--ease-in-out) infinite; }
+}
+@keyframes jp-sheen { 0%, 55% { background-position: 0 0, 100% 0; } 100% { background-position: 0 0, -60% 0; } }

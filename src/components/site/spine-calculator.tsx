@@ -7,7 +7,33 @@ import { BookObject } from "./book-object";
 import { Pattern } from "./patterns";
 
 /** Slide the page count; the book beside it thickens to the real KDP spine width. */
-export function SpineCalculator({ book }: { book: StageBook | null }) {
+/** A blank "your book", so the demo never repeats a title shown elsewhere on the page. */
+const YOURS: StageBook = {
+  id: "yours",
+  slug: "",
+  title: "Your book",
+  subtitle: "",
+  author: "",
+  cover: "",
+  accent: "#ad3a17",
+  trim: "6x9",
+  trimLabel: "6 × 9 in",
+  paper: "cream",
+  pages: 240,
+  width: 6,
+  height: 9,
+};
+
+export function SpineCalculator({ book: from }: { book: StageBook | null }) {
+  const book = from
+    ? {
+        ...YOURS,
+        trim: from.trim,
+        trimLabel: from.trimLabel,
+        width: from.width,
+        height: from.height,
+      }
+    : YOURS;
   const [pages, setPages] = useState(240);
   const [paper, setPaper] = useState<PaperType>("cream");
   const t = getTrim(book?.trim ?? "6x9");
@@ -20,15 +46,7 @@ export function SpineCalculator({ book }: { book: StageBook | null }) {
           Pages in your book
         </label>
         <div className="mt-3 flex items-center gap-5">
-          <input
-            id="spine-pages"
-            type="range"
-            min={24}
-            max={828}
-            value={pages}
-            onChange={(e) => setPages(Number(e.target.value))}
-            className="h-11 flex-1 accent-[var(--bonnet)]"
-          />
+          <input id="spine-pages" type="range" min={24} max={828} value={pages} onChange={(e) => setPages(Number(e.target.value))} className="h-11 flex-1 accent-[var(--bonnet)]" />
           <output htmlFor="spine-pages" className="tabular wide w-20 text-right text-[2.25rem] leading-none font-bold">
             {pages}
           </output>
