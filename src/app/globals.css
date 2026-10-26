@@ -1,99 +1,163 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Hide scrollbar but keep scroll functionality */
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
+/*
+ * Jollof Pages tokens. A rose-grey paper ground, brown-black ink and one green accent
+ * (the green of the Nigerian flag) used for the main action and the current item.
+ *   ink #2b2622 on paper #ebe5e3   ~12.6:1
+ *   muted #5f5652 on paper         ~5.9:1
+ *   white on accent #0b6e3c        ~6.4:1
+ */
 :root {
-  --jollof-black: #0a0800;
-  --jollof-dark: #0f0d08;
-  --jollof-surface: #161209;
-  --jollof-panel: #1c1608;
-  --jollof-border: #2a1f08;
-  --jollof-orange: #f97316;
-  --jollof-amber: #f59e0b;
-  --jollof-glow: #ea580c;
+  --radius: 0.25rem;
+
+  --paper: #ebe5e3;
+  --paper-2: #e1dad7;
+  --paper-3: #d6cdc9;
+  --ink: #2b2622;
+  --ink-2: #4a423e;
+  --soft: #5f5652;
+
+  --background: #f4f1ef;
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --muted: #ece7e4;
+  --muted-foreground: var(--soft);
+  --accent: #ece7e4;
+  --accent-foreground: var(--ink);
+  --border: #ddd5d1;
+  --input: #cfc5c0;
+  --ring: #0b6e3c;
+
+  --primary: #0b6e3c;
+  --primary-hover: #085a31;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e3f1e8;
+  --secondary: #ffffff;
+  --secondary-foreground: var(--ink);
+  --destructive: #b42318;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-soft: var(--soft);
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
 }
 
-html {
-  scroll-behavior: smooth;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: #bfe3cc;
+    color: var(--ink);
+  }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  background: var(--jollof-black);
-  color: #fef3c7;
-  font-family: 'Inter', system-ui, sans-serif;
+/* ---------- editor ---------- */
+.manuscript .ProseMirror {
+  outline: none;
+  min-height: 60vh;
+}
+.manuscript .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #8f8580;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.manuscript .ProseMirror hr {
+  border: 0;
+  text-align: center;
+  margin: 1.6em 0;
+  height: 1.2em;
+  overflow: visible;
+}
+.manuscript .ProseMirror hr::after {
+  content: "*\2003*\2003*";
+  color: var(--soft);
+}
+.manuscript .ProseMirror hr.ProseMirror-selectednode::after {
+  color: var(--primary);
+}
+.manuscript .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em auto;
+  display: block;
+}
+.manuscript .ProseMirror img.ProseMirror-selectednode {
+  outline: 3px solid var(--primary);
+}
+.manuscript .footnote-ref {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 1px;
+}
+.manuscript .footnote-ref::before {
+  content: "[note]";
+}
+.manuscript .search-hit {
+  background: #ffe28a;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: #0f0d08;
-}
-::-webkit-scrollbar-thumb {
-  background: #2a1f08;
-  border-radius: 2px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #f97316;
-}
-
-@layer utilities {
-  .jollof-border {
-    border: 1px solid #2a1f08;
-  }
-  .jollof-border-orange {
-    border: 1px solid rgba(249, 115, 22, 0.3);
-  }
-  .jollof-card {
-    background: #161209;
-    border: 1px solid #2a1f08;
-    border-radius: 8px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .jollof-panel {
-    background: #1c1608;
-    border: 1px solid #2a1f08;
-    border-radius: 6px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .jp-mobile-panel {
-    width: 100%;
-    max-width: 42rem;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .jollof-glow {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);
-  }
-  .text-orange-glow {
-    text-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
-  }
-  .bg-jollof-radial {
-    background: radial-gradient(ellipse at 50% -20%, rgba(120, 53, 15, 0.25) 0%, transparent 70%);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

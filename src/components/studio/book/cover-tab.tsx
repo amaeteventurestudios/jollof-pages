@@ -1,0 +1,288 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import type Konva from "konva";
+import { Download, ImagePlus, Loader2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CoverStage, COVER_FONTS, COVER_FONTS_HREF, TEMPLATES, U, defaultDesign, type CoverDesign } from "./cover-designer";
+import { BookCover } from "@/components/book-cover";
+import { coverGeometry, inches } from "@/lib/kdp";
+import { bookFormat } from "@/lib/types";
+import { download, userId } from "@/lib/studio";
+import { errorMessage, fileUrl, pb } from "@/lib/pb";
+import { slugify } from "@/lib/slug";
+import { cn } from "@/lib/utils";
+import { usePageCount } from "./format-tab";
+import type { Workspace } from "./workspace";
+
+function dataUrlToBlob(url: string): Blob {
+  const [head, b64] = url.split(",");
+  const type = head.match(/data:([^;]+)/)?.[1] ?? "image/png";
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type });
+}
+
+export function CoverTab({ ws }: { ws: Workspace }) {
+  const { book } = ws;
+  const f = bookFormat(book);
+  const { pages } = usePageCount(ws);
+  const g = coverGeometry(f.trim, pages, f.paper);
+  const [mode, setMode] = useState<"ebook" | "print">("ebook");
+  const [design, setDesign] = useState<CoverDesign>(() => ({ ...defaultDesign(), ...((book.cover_design as Partial<CoverDesign>) ?? {}) }));
+  const [guides, setGuides] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
+  const [fontsReady, setFontsReady] = useState(0);
+  const stageRef = useRef<Konva.Stage>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [boxWidth, setBoxWidth] = useState(800);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setBoxWidth(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    // Konva draws to canvas, so fonts must finish loading before text is measured
+    Promise.all(COVER_FONTS.flatMap((ff) => [document.fonts.load(`400 40px "${ff}"`), document.fonts.load(`700 40px "${ff}"`)])).then(() => setFontsReady((n) => n + 1));
+  }, []);
+
+  function update(patch: Partial<CoverDesign>) {
+    setDesign((d) => {
+      const next = { ...d, ...patch };
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => ws.saveBook({ cover_design: next }), 800);
+      return next;
+    });
+  }
+
+  const panelW = mode === "ebook" ? 6.25 : g.width;
+  const panelH = mode === "ebook" ? 10 : g.height;
+  const zoom = Math.min((boxWidth - 8) / (panelW * U), (mode === "ebook" ? 640 : 560) / (panelH * U));
+  const authorName = book.expand?.author?.name || "Author name";
+
+  async function withoutGuides<T>(fn: (stage: Konva.Stage) => T): Promise<T> {
+    const stage = stageRef.current!;
+    const guideLayer = stage.getLayers()[1];
+    guideLayer?.hide();
+    try {
+      return fn(stage);
+    } finally {
+      guideLayer?.show();
+    }
+  }
+
+  async function saveEbookCover() {
+    setBusy("ebook");
+    setMsg("");
+    try {
+      const url = await withoutGuides((s) => s.toDataURL({ mimeType: "image/jpeg", quality: 0.92, pixelRatio: 1600 / (6.25 * U * zoom) }));
+      const blob = dataUrlToBlob(url);
+      const fd = new FormData();
+      fd.append("cover", new File([blob], `${slugify(book.title)}-cover.jpg`, { type: "image/jpeg" }));
+      fd.append("cover_design", JSON.stringify(design));
+      const updated = await ws.track(pb().collection("books").update(book.id, fd, { expand: "author" }));
+      ws.setBook((b) => (b ? { ...b, cover: updated.cover } : b));
+      setMsg("Saved as the ebook cover (1600 x 2560 px). It is also used on your website.");
+    } catch (e) {
+      setMsg(`Could not save: ${errorMessage(e)}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function exportPrintCover() {
+    setBusy("print");
+    setMsg("");
+    try {
+      const url = await withoutGuides((s) => s.toDataURL({ mimeType: "image/jpeg", quality: 0.95, pixelRatio: 3 / zoom }));
+      const { PDFDocument } = await import("pdf-lib");
+      const pdf = await PDFDocument.create();
+      pdf.setTitle(`${book.title} – cover`);
+      const jpg = await pdf.embedJpg(await dataUrlToBlob(url).arrayBuffer());
+      const page = pdf.addPage([g.width * 72, g.height * 72]);
+      page.drawImage(jpg, { x: 0, y: 0, width: g.width * 72, height: g.height * 72 });
+      const bytes = await pdf.save();
+      const file = new File([bytes as BlobPart], `${slugify(book.title)}-paperback-cover.pdf`, { type: "application/pdf" });
+      const updated = await ws.track(pb().collection("books").update(book.id, { cover_full: file, cover_design: design }));
+      ws.setBook((b) => (b ? { ...b, cover_full: updated.cover_full } : b));
+      download(bytes, file.name, "application/pdf");
+      setMsg(`Paperback cover PDF saved: ${inches(g.width)} x ${inches(g.height)} at 300 dpi for ${pages} pages on ${f.paper} paper.`);
+    } catch (e) {
+      setMsg(`Could not export: ${errorMessage(e)}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function uploadImage(file: File) {
+    setBusy("image");
+    try {
+      const rec = await pb().collection("assets").create({ owner: userId(), book: book.id, file, alt: "Cover image" });
+      update({ imageUrl: fileUrl(rec, rec.file), template: design.template === "framed" ? "photo" : design.template });
+    } catch (e) {
+      setMsg(`Upload failed: ${errorMessage(e)}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function uploadOwn(field: "cover" | "cover_full", file: File) {
+    setBusy(field);
+    try {
+      const updated = await ws.track(pb().collection("books").update(book.id, { [field]: file }));
+      ws.setBook((b) => (b ? { ...b, [field]: updated[field] } : b));
+      setMsg(field === "cover" ? "Ebook cover uploaded." : "Paperback cover uploaded.");
+    } catch (e) {
+      setMsg(`Upload failed: ${errorMessage(e)}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-6 sm:px-8 lg:grid-cols-[20rem_1fr]">
+      <link rel="stylesheet" href={COVER_FONTS_HREF} />
+      <aside className="grid h-fit gap-6">
+        <div role="tablist" aria-label="Cover type" className="grid grid-cols-2 gap-1 rounded-md bg-paper-2 p-1">
+          {(["ebook", "print"] as const).map((m) => (
+            <button key={m} role="tab" type="button" aria-selected={mode === m} onClick={() => setMode(m)} className={cn("rounded px-3 py-1.5 text-sm", mode === m ? "bg-card font-medium" : "text-ink-2")}>
+              {m === "ebook" ? "Ebook" : "Paperback wrap"}
+            </button>
+          ))}
+        </div>
+
+        <fieldset>
+          <legend className="text-sm font-medium">Layout</legend>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {TEMPLATES.map((t) => (
+              <button key={t.id} type="button" onClick={() => update({ ...t.design, template: t.id })} className={cn("rounded-md bg-card px-3 py-2 text-left text-sm ring-2 ring-transparent", design.template === t.id && "ring-primary")}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="grid grid-cols-3 gap-3 text-sm">
+          {(
+            [
+              ["bg", "Background"],
+              ["fg", "Text"],
+              ["accent", "Accent"],
+            ] as const
+          ).map(([k, label]) => (
+            <label key={k} className="grid gap-1">
+              <span>{label}</span>
+              <input type="color" value={design[k]} onChange={(e) => update({ [k]: e.target.value })} className="h-9 w-full rounded border border-input bg-card" />
+            </label>
+          ))}
+        </div>
+
+        <label className="grid gap-1 text-sm">
+          <span className="font-medium">Typeface</span>
+          <select value={design.font} onChange={(e) => update({ font: e.target.value })} className="h-9 rounded-md border border-input bg-card px-2">
+            {COVER_FONTS.map((ff) => (
+              <option key={ff}>{ff}</option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm">
+          <span className="font-medium">Title size</span>
+          <input type="range" min={0.06} max={0.2} step={0.005} value={design.titleSize} onChange={(e) => update({ titleSize: Number(e.target.value) })} className="accent-[var(--primary)]" />
+        </label>
+
+        <div className="grid gap-2 text-sm">
+          <span className="font-medium">Picture</span>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 py-2 hover:bg-muted">
+            {busy === "image" ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+            {design.imageUrl ? "Replace picture" : "Add a picture"}
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} />
+          </label>
+          {design.imageUrl && (
+            <button type="button" className="text-left text-soft underline" onClick={() => update({ imageUrl: "" })}>
+              Remove picture
+            </button>
+          )}
+          <p className="text-[13px] text-soft">Use a picture at least 1600 x 2560 px. Only use images you have the rights to.</p>
+        </div>
+
+        {mode === "print" && (
+          <div className="grid gap-2 text-sm">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={design.showBlurb} onChange={(e) => update({ showBlurb: e.target.checked })} /> Description on the back
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={guides} onChange={(e) => setGuides(e.target.checked)} /> Show trim, safe area and barcode guides
+            </label>
+            <label className="grid gap-1">
+              <span>Back cover colour</span>
+              <input type="color" value={design.backBg || design.bg} onChange={(e) => update({ backBg: e.target.value })} className="h-9 w-20 rounded border border-input bg-card" />
+            </label>
+          </div>
+        )}
+
+        <div className="grid gap-2 border-t border-border pt-5">
+          {mode === "ebook" ? (
+            <Button onClick={saveEbookCover} disabled={!!busy}>
+              {busy === "ebook" ? <Loader2 className="animate-spin" /> : <Download />} Save as ebook cover
+            </Button>
+          ) : (
+            <Button onClick={exportPrintCover} disabled={!!busy}>
+              {busy === "print" ? <Loader2 className="animate-spin" /> : <Download />} Export paperback cover PDF
+            </Button>
+          )}
+          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-md border border-input bg-card px-3 py-2 text-sm hover:bg-muted">
+            <Upload className="size-4" />
+            {mode === "ebook" ? "Upload a finished front cover" : "Upload a finished wrap PDF"}
+            <input
+              type="file"
+              className="sr-only"
+              accept={mode === "ebook" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png"}
+              onChange={(e) => e.target.files?.[0] && uploadOwn(mode === "ebook" ? "cover" : "cover_full", e.target.files[0])}
+            />
+          </label>
+          {msg && (
+            <p className="text-sm text-ink-2" role="status">
+              {msg}
+            </p>
+          )}
+        </div>
+      </aside>
+
+      <section className="min-w-0">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+          <p className="text-ink-2">
+            {mode === "ebook" ? "Front cover, 1600 x 2560 px. Drag the title and author to move them." : `Full wrap ${inches(g.width)} x ${inches(g.height)}: back, ${inches(g.spine, 4)} spine, front. Bleed included.`}
+          </p>
+          {mode === "print" && !g.spineTextAllowed && <p className="text-soft">Spine text appears from 79 pages.</p>}
+        </div>
+        <div ref={boxRef} className="flex justify-center rounded-md bg-paper p-1" key={fontsReady}>
+          <CoverStage
+            ref={stageRef}
+            mode={mode}
+            book={{ title: book.title, subtitle: book.subtitle, description: book.description, imprint: book.imprint, authorName }}
+            design={design}
+            geometry={g}
+            zoom={zoom}
+            guides={guides}
+            onMove={(key, pos) => update({ [key]: pos })}
+          />
+        </div>
+        {book.cover && (
+          <div className="mt-6 flex items-center gap-4">
+            <div className="w-20">
+              <BookCover book={book} thumb="480x0" />
+            </div>
+            <p className="text-sm text-soft">Current ebook cover</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

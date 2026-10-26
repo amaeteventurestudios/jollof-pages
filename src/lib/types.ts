@@ -1,0 +1,157 @@
+import type { PaperType } from "./kdp";
+import type { DocNode } from "./doc/types";
+
+export type BookStatus = "idea" | "drafting" | "revising" | "editing" | "ready" | "published";
+
+export const BOOK_STATUSES: { id: BookStatus; label: string }[] = [
+  { id: "idea", label: "Idea" },
+  { id: "drafting", label: "Drafting" },
+  { id: "revising", label: "Revising" },
+  { id: "editing", label: "Editing" },
+  { id: "ready", label: "Ready to publish" },
+  { id: "published", label: "Published" },
+];
+
+export type Section = "front" | "body" | "back";
+
+export interface BookFormat {
+  trim: string;
+  paper: PaperType;
+  theme: string;
+  fontSize: number;
+  lineHeight: number;
+  bleed: boolean;
+  /** start every chapter on a right-hand page in print */
+  chaptersOnRight: boolean;
+  dropCaps: boolean;
+  /** show a running header with author and chapter title in print */
+  runningHeads: boolean;
+  /** print the table of contents at the front */
+  printToc: boolean;
+  /** large-print edition: 16pt body, wider leading */
+  largePrint: boolean;
+}
+
+export const DEFAULT_FORMAT: BookFormat = {
+  trim: "6x9",
+  paper: "cream",
+  theme: "accra",
+  fontSize: 11,
+  lineHeight: 1.45,
+  bleed: false,
+  chaptersOnRight: true,
+  dropCaps: true,
+  runningHeads: true,
+  printToc: true,
+  largePrint: false,
+};
+
+export interface BookGoal {
+  targetWords: number;
+  deadline: string; // YYYY-MM-DD, may be empty
+  dailyWords: number; // habit goal
+}
+
+export const DEFAULT_GOAL: BookGoal = { targetWords: 50000, deadline: "", dailyWords: 500 };
+
+export interface BuyLink {
+  label: string;
+  url: string;
+}
+
+export interface Book {
+  id: string;
+  collectionId: string;
+  owner: string;
+  title: string;
+  subtitle: string;
+  slug: string;
+  author: string; // relation to authors
+  series: string;
+  series_number: number;
+  description: string; // blurb (plain text paragraphs)
+  pitch: string; // one-line hook for the site
+  keywords: string[] | null;
+  categories: string[] | null;
+  language: string;
+  isbn_ebook: string;
+  isbn_paperback: string;
+  imprint: string;
+  publication_date: string;
+  status: BookStatus;
+  published: boolean;
+  featured: boolean;
+  cover: string;
+  cover_full: string;
+  cover_design: unknown;
+  format: Partial<BookFormat> | null;
+  goal: Partial<BookGoal> | null;
+  buy_links: BuyLink[] | null;
+  accent: string;
+  word_count: number;
+  page_count: number;
+  created: string;
+  updated: string;
+  expand?: { author?: Author };
+}
+
+export interface Chapter {
+  id: string;
+  collectionId: string;
+  book: string;
+  owner: string;
+  title: string;
+  subtitle: string;
+  kind: string;
+  section: Section;
+  order: number;
+  content: DocNode | null;
+  word_count: number;
+  status: "draft" | "revised" | "final";
+  is_sample: boolean;
+  in_toc: boolean;
+  numbered: boolean;
+  created: string;
+  updated: string;
+}
+
+export interface Author {
+  id: string;
+  collectionId: string;
+  owner: string;
+  name: string;
+  slug: string;
+  bio: string;
+  photo: string;
+  website: string;
+}
+
+export interface WritingLog {
+  id: string;
+  owner: string;
+  book: string;
+  date: string;
+  words: number;
+}
+
+export interface SiteSettings {
+  id: string;
+  collectionId: string;
+  owner: string;
+  publisher_name: string;
+  tagline: string;
+  intro: string;
+  about: string;
+  email: string;
+  logo: string;
+  socials: { label: string; url: string }[] | null;
+  hero_book: string;
+}
+
+export function bookFormat(b: Pick<Book, "format">): BookFormat {
+  return { ...DEFAULT_FORMAT, ...(b.format ?? {}) };
+}
+
+export function bookGoal(b: Pick<Book, "goal">): BookGoal {
+  return { ...DEFAULT_GOAL, ...(b.goal ?? {}) };
+}
