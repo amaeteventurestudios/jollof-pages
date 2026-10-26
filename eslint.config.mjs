@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // PocketBase migrations run inside PocketBase's own JS runtime, not the app
+    "pocketbase/**",
+    // downloaded binaries and local working files
+    "tools/**",
+    ".taste-skill/**",
   ]),
 ]);
 
