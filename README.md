@@ -52,7 +52,8 @@ All permissively licensed (MIT, Apache-2.0, BSD, ISC, OFL fonts). `npm run licen
 | Ebook | JSZip, validated with EPUBCheck |
 | Word | mammoth (import), docx (export) |
 | Covers | Konva, pdf-lib |
-| Fonts | EB Garamond, Literata, Source Serif 4, Crimson Pro, Lora, Playfair Display, Inter, Archivo (SIL OFL) |
+| 3D shelf on /books | Three.js, adapted from Mint Playground's [Complete Shelf](https://github.com/mintdotgg/mint-playground/tree/main/experiences/complete-shelf) (MIT, see `src/components/site/complete-shelf/LICENSE`) |
+| Fonts | EB Garamond, Literata, Source Serif 4, Crimson Pro, Lora, Playfair Display, Inter, Archivo, Newsreader (SIL OFL) |
 
 ## Run it locally
 

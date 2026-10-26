@@ -7,6 +7,8 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { isUpcoming, year } from "@/lib/site-data";
 import { Pattern, Rim } from "@/components/site/patterns";
 import { Lines } from "@/components/site/lines";
+import { CompleteShelf } from "@/components/site/complete-shelf/complete-shelf";
+import { toShelfBook } from "@/lib/shelf-catalog";
 
 export const revalidate = 60;
 export const metadata: Metadata = { title: "Books", description: "Every Jollof Pages title, in paperback and ebook." };
@@ -16,8 +18,13 @@ export default async function BooksPage() {
   const name = site?.publisher_name || "Jollof Pages";
   return (
     <>
-      <SiteHeader name={name} overHero />
-      <section className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
+      <SiteHeader name={name} overHero={books.length === 0} />
+      {books.length > 0 && (
+        <div className="pt-[72px]" style={{ ["--cs-height" as string]: "calc(100svh - 72px)" }}>
+          <CompleteShelf books={books.map(toShelfBook)} />
+        </div>
+      )}
+      <section className={books.length > 0 ? "sr-only" : "relative overflow-hidden bg-jollof pt-[72px] text-cream"}>
         <Pattern id="p-books" kind="wax" color="var(--char)" opacity={0.22} />
         <div className="relative mx-auto max-w-[1400px] px-4 pt-16 pb-28 sm:px-8 sm:pt-24 sm:pb-36">
           <h1 className="t-display wide">
@@ -32,6 +39,9 @@ export default async function BooksPage() {
       <main className="relative overflow-hidden bg-cream pt-12 pb-[clamp(5rem,10vw,9rem)]">
         <Pattern id="p-books-rice" kind="rice" color="var(--cream-2)" />
         <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
+          {books.length > 0 && (
+            <h2 className="wide mb-10 text-[clamp(1.75rem,3vw,2.5rem)] font-bold tracking-[-0.03em]">Every book</h2>
+          )}
           {books.length === 0 ? (
             <p className="t-lead max-w-[40ch]">The first books are in the pot. Join the reader list on the home page to hear the day they are ready.</p>
           ) : (
