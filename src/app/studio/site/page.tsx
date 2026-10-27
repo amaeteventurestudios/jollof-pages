@@ -10,8 +10,12 @@ import { Field, Panel } from "@/components/studio/book/details-tab";
 import { getSiteSettings, listBooks, userId } from "@/lib/studio";
 import { errorMessage, pb } from "@/lib/pb";
 import type { Book, SiteSettings } from "@/lib/types";
-import { siteLabel, siteUrl } from "@/lib/sites";
+import { hasPro, siteLabel, siteUrl } from "@/lib/sites";
 import { forgetMySite } from "@/components/studio/use-my-site";
+import { SiteDesignPanel } from "@/components/studio/site-design-panel";
+import { listAuthors } from "@/lib/studio";
+import { CheckCircle2, Circle } from "lucide-react";
+import type { Author } from "@/lib/types";
 
 const EMPTY = { publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", email: "", hero_book: "", socials: [] as { label: string; url: string }[] };
 
@@ -19,6 +23,7 @@ export default function SiteSettingsPage() {
   const [rec, setRec] = useState<SiteSettings | null>(null);
   const [form, setForm] = useState(EMPTY);
   const [books, setBooks] = useState<Book[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [subs, setSubs] = useState<{ email: string; created: string }[]>([]);
   const [msg, setMsg] = useState("");
 
@@ -28,6 +33,7 @@ export default function SiteSettingsPage() {
       if (s) setForm({ publisher_name: s.publisher_name, tagline: s.tagline, intro: s.intro, about: s.about, email: s.email, hero_book: s.hero_book, socials: s.socials ?? [] });
     });
     listBooks().then(setBooks);
+    listAuthors().then(setAuthors).catch(() => undefined);
     pb()
       .collection("subscribers")
       .getFullList<{ email: string; created: string }>({ sort: "-created" })
@@ -57,7 +63,9 @@ export default function SiteSettingsPage() {
             Open the site <ExternalLink className="size-3.5" />
           </Link>
         </div>
+        {rec && !rec.home && <ReadyList site={rec} books={books} authors={authors} about={form.about} />}
         {rec && <AddressPanel site={rec} onChange={(s) => setRec(s)} />}
+        {rec && !rec.home && <SiteDesignPanel site={rec} books={books.filter((b) => b.published)} onSaved={setRec} />}
         <form onSubmit={save}>
           <Panel title="Identity" description="Shown in the header, the footer and search results.">
             <Field id="s-name" label={rec?.home ? "Publisher name" : "Site name"} hint={rec?.home ? undefined : "Your author or pen name, as readers know you."}>
@@ -193,6 +201,8 @@ function AddressPanel({ site, onChange }: { site: SiteSettings; onChange: (s: Si
           </Button>
         </div>
       </Field>
+      {hasPro(site) ? (
+        <>
       <Field id="a-domain" label="Your own domain" hint="Optional. Use a domain you bought from any registrar, such as Namecheap, GoDaddy or Cloudflare.">
         <div className="flex gap-2">
           <Input id="a-domain" placeholder="yourname.com" value={domain} onChange={(e) => setDomain(e.target.value)} />
@@ -238,9 +248,47 @@ function AddressPanel({ site, onChange }: { site: SiteSettings; onChange: (s: Si
           <p className="mt-2 text-soft">If your domain is on Cloudflare, set both records to “DNS only” (grey cloud). Changes can take up to an hour to reach everyone.</p>
         </div>
       )}
+        </>
+      ) : (
+        <div className="grid gap-1.5 rounded-md bg-muted p-4 text-sm">
+          <p className="font-medium">Your own domain, such as yourname.com</p>
+          <p className="text-soft">Comes with Author Site Pro, $10 a month or $96 a year, alongside newsletters, selling ebooks direct and visitor numbers. Coming soon; your free {root} address stays yours either way.</p>
+        </div>
+      )}
       <p className="text-sm text-soft" role="status">
         {msg}
       </p>
+    </Panel>
+  );
+}
+
+/** The steps that make a site worth sharing, ticked off from what is already in the studio. */
+function ReadyList({ site, books, authors, about }: { site: SiteSettings; books: Book[]; authors: Author[]; about: string }) {
+  const live = books.filter((b) => b.published);
+  const steps: { done: boolean; label: string; href?: string }[] = [
+    { done: live.length > 0, label: "Publish a book to your site (Publish tab of any book, or Add a published book)", href: "/studio" },
+    { done: live.length > 0 && live.every((b) => b.cover), label: "Give every published book a cover", href: "/studio" },
+    { done: authors.some((a) => a.bio || a.photo), label: "Add a bio or photo to your pen name", href: "/studio/authors" },
+    { done: about.trim().length > 0, label: "Write a few lines to readers in About, below" },
+    { done: !!site.design?.palette, label: "Pick your colours and fonts in Design, below" },
+  ];
+  const left = steps.filter((s) => !s.done).length;
+  return (
+    <Panel title="Get your site ready" description={left ? `${left} of ${steps.length} steps left. Your site is already online at ${siteLabel(site)}.` : `All done. Share ${siteLabel(site)} with your readers.`}>
+      <ul className="grid gap-2">
+        {steps.map((s) => (
+          <li key={s.label} className="flex items-start gap-2 text-sm">
+            {s.done ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" /> : <Circle className="mt-0.5 size-4 shrink-0 text-soft" />}
+            {s.href && !s.done ? (
+              <Link href={s.href} className="underline-offset-4 hover:underline">
+                {s.label}
+              </Link>
+            ) : (
+              <span className={s.done ? "text-soft line-through" : undefined}>{s.label}</span>
+            )}
+          </li>
+        ))}
+      </ul>
     </Panel>
   );
 }

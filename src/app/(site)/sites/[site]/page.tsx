@@ -14,6 +14,8 @@ import { Tilt } from "@/components/site/tilt";
 import { isUpcoming, toStageBook, year } from "@/lib/site-data";
 import { fileUrl } from "@/lib/pb";
 import { rootDomain } from "@/lib/sites";
+import { patternOf, type SiteDesign } from "@/lib/site-design";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 
 export const revalidate = 60;
 
@@ -34,10 +36,23 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
  * An author's home page at <subdomain>.jollofpages.com, filled in from their studio:
  * the lead book, every published book, the pen names behind them, their letter and their reader list.
  */
-export default async function AuthorHome({ params }: { params: Params }) {
+/** ?preview=<base64url JSON> shows a design from the studio before it is saved. */
+function previewDesign(raw: string | string[] | undefined): SiteDesign | null {
+  if (typeof raw !== "string" || raw.length > 3000) return null;
+  try {
+    return JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as SiteDesign;
+  } catch {
+    return null;
+  }
+}
+
+export default async function AuthorHome({ params, searchParams }: { params: Params; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sub = (await params).site;
   const site = await resolveSite(sub);
   if (!site) notFound();
+  const design = previewDesign((await searchParams).preview) ?? site.design;
+  const heroPattern = patternOf(design, "adire");
+  const bandPattern = patternOf(design, "wax");
   const [books, authors] = await Promise.all([getPublishedBooks(site.owner), getAuthors(site.owner)]);
   const name = site.publisher_name || sub;
   const lead = books.find((b) => b.id === site.hero_book) ?? books.find((b) => b.featured) ?? books[0];
@@ -46,10 +61,11 @@ export default async function AuthorHome({ params }: { params: Params }) {
 
   return (
     <>
+      <SiteDesignStyle design={design} />
       <SiteHeader name={name} overHero author />
 
       <section aria-labelledby="author-title" className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
-        <Pattern id="p-author" kind="adire" color="var(--char)" opacity={0.18} />
+        {heroPattern && <Pattern id="p-author" kind={heroPattern} color="var(--char)" opacity={0.18} />}
         <div className="relative mx-auto grid max-w-[1400px] items-center gap-10 px-4 pt-14 pb-24 sm:px-8 sm:pt-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:pb-32">
           <div>
             <h1 id="author-title" className="t-display wide font-bold">
@@ -163,7 +179,7 @@ export default async function AuthorHome({ params }: { params: Params }) {
         )}
 
         <section id="join" aria-labelledby="join-title" className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(4rem,9vw,7rem)] text-cream">
-          <Pattern id="p-join" kind="wax" color="var(--char-2)" />
+          {bandPattern && <Pattern id="p-join" kind={bandPattern} color="var(--char-2)" />}
           <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
             <h2 id="join-title" className="wide text-[clamp(2rem,4vw,3.25rem)] font-bold tracking-[-0.03em]">
               Join the reader list

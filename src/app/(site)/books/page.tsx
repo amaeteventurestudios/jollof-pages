@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getPublishedBooks, resolveSite } from "@/lib/pb-server";
 import { notFound } from "next/navigation";
 import { rootDomain } from "@/lib/sites";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { BookCover } from "@/components/book-cover";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -24,6 +25,7 @@ export default async function BooksPage({ params }: { params?: Promise<{ site?: 
   const name = site?.publisher_name || "Jollof Pages";
   return (
     <>
+      {sub && <SiteDesignStyle design={site?.design} />}
       <SiteHeader name={name} overHero={books.length === 0} author={!!sub} />
       {books.length > 0 && (
         <div className="pt-[72px]" style={{ ["--cs-height" as string]: "calc(100svh - 72px)" }}>

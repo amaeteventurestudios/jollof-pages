@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
 import { rootDomain } from "@/lib/sites";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { BookObject } from "@/components/site/book-object";
 import { Tilt } from "@/components/site/tilt";
 import { Pattern } from "@/components/site/patterns";
@@ -103,6 +104,7 @@ export default async function BookPage({ params }: { params: Params }) {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
+      {sub && <SiteDesignStyle design={site?.design} />}
       <SiteHeader name={name} overHero author={!!sub} />
       <div className={cn("relative pt-[72px]", dark ? "text-cream" : "text-char")} style={{ background: sb.accent }}>
         <Pattern id="p-book" kind="adire" color={dark ? "#000" : "var(--char)"} opacity={dark ? 0.14 : 0.08} drift={false} />

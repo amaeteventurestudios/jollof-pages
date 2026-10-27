@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { bearer } from "@/lib/server/load-book";
 import { adminPb, caller } from "@/lib/server/credits";
 import { subdomainAvailability } from "@/lib/server/accounts";
-import { domainProblem, normalizeDomain, rootDomain } from "@/lib/sites";
+import { domainProblem, hasPro, normalizeDomain, rootDomain } from "@/lib/sites";
 import type { SiteSettings } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     if (typeof body.custom_domain === "string") {
       const domain = normalizeDomain(body.custom_domain);
       if (!domain) return NextResponse.json({ site: await pb.collection("site_settings").update(site.id, { custom_domain: "" }) });
+      if (!hasPro(site)) return NextResponse.json({ error: "Your own domain comes with Author Site Pro." }, { status: 402 });
       const problem = domainProblem(domain);
       if (problem) return NextResponse.json({ error: problem }, { status: 400 });
       const clash = await pb

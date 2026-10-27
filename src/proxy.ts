@@ -14,7 +14,8 @@ export function proxy(req: NextRequest) {
   if (!sub) {
     // on the root domain, /sites/ada is only reachable at ada.jollofpages.com (or the author's own domain)
     const m = pathname.match(/^\/sites\/([^/]+)(\/.*)?$/);
-    if (m && process.env.NODE_ENV === "production") {
+    // the studio's design preview loads /sites/ada?preview=… in a frame on the root domain
+    if (m && process.env.NODE_ENV === "production" && !req.nextUrl.searchParams.has("preview")) {
       const key = decodeURIComponent(m[1]).toLowerCase();
       return NextResponse.redirect(`https://${key.includes(".") ? key : `${key}.${rootDomain()}`}${m[2] ?? "/"}${search}`);
     }

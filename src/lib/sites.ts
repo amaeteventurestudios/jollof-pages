@@ -113,3 +113,11 @@ export function siteUrl(site: { subdomain?: string; home?: boolean; custom_domai
 export function siteLabel(site: { subdomain?: string; home?: boolean; custom_domain?: string } | null | undefined): string {
   return siteUrl(site).replace(/^https?:\/\//, "");
 }
+
+/** Author Site Pro: a connected domain and the extras that come later. */
+export function hasPro(site: { home?: boolean; pro_until?: string } | null | undefined, now = Date.now()): boolean {
+  if (!site) return false;
+  if (site.home) return true;
+  const until = site.pro_until ? Date.parse(site.pro_until.replace(" ", "T")) : NaN;
+  return Number.isFinite(until) && until > now;
+}

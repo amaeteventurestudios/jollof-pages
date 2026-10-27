@@ -2,6 +2,7 @@ import "server-only";
 import PocketBase from "pocketbase";
 import type { Author, Book, Chapter, SiteSettings } from "./types";
 import { PB_URL } from "./pb";
+import { hasPro } from "./sites";
 
 /** Server-side reads for the public site. PocketBase rules decide what is public. */
 export function serverPb(token?: string): PocketBase {
@@ -43,9 +44,11 @@ export async function getSiteBySubdomain(sub: string): Promise<SiteSettings | nu
 /** An author's site by the domain they connected (adaokafor.com). */
 export async function getSiteByDomain(domain: string): Promise<SiteSettings | null> {
   try {
-    return await serverPb()
+    const site = await serverPb()
       .collection("site_settings")
       .getFirstListItem<SiteSettings>(serverPb().filter("custom_domain = {:d}", { d: domain.toLowerCase() }));
+    // an own domain answers only while Author Site Pro is paid up
+    return hasPro(site) ? site : null;
   } catch {
     return null;
   }

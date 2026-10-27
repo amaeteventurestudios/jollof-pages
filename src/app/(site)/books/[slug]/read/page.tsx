@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
 import { rootDomain } from "@/lib/sites";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { Pattern } from "@/components/site/patterns";
@@ -42,6 +43,7 @@ export default async function ReadSample({ params }: { params: Params }) {
     <>
       <link rel="stylesheet" href={THEME_FONTS_HREF} />
       <style>{themeCss(theme, { scope: ".reader", dropCaps: f.dropCaps, lineHeight: 1.6 })}</style>
+      {sub && <SiteDesignStyle design={site?.design} />}
       <SiteHeader name={name} author={!!sub} />
       <main className="relative overflow-hidden bg-ground-2 px-4 pt-[72px] pb-24 sm:px-8">
         <Pattern id="p-read" kind="rice" color="var(--ground)" drift={false} />

@@ -12,7 +12,8 @@
  */
 const PAID = "(@request.auth.access = 'paid' || @request.auth.access = 'comp')";
 const GATED = ["authors", "books", "chapters", "assets", "writing_log"];
-const SERVER_ONLY_SITE = "@request.body.subdomain:isset = false && @request.body.home:isset = false && @request.body.custom_domain:isset = false";
+const SERVER_ONLY_SITE =
+  "@request.body.subdomain:isset = false && @request.body.home:isset = false && @request.body.custom_domain:isset = false && @request.body.pro_until:isset = false";
 
 migrate(
   (app) => {
@@ -52,6 +53,10 @@ migrate(
     site.fields.add(new Field({ name: "subdomain", type: "text", max: 40, pattern: "^$|^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$" }));
     site.fields.add(new Field({ name: "home", type: "bool" }));
     site.fields.add(new Field({ name: "custom_domain", type: "text", max: 253 }));
+    // Author Site Pro (own domain and more): until when it is paid for; server-only
+    site.fields.add(new Field({ name: "pro_until", type: "date" }));
+    // colours, fonts and pattern of an author site (src/lib/site-design.ts)
+    site.fields.add(new Field({ name: "design", type: "json", maxSize: 4000 }));
     site.addIndex("idx_site_subdomain", true, "subdomain", "subdomain != ''");
     site.addIndex("idx_site_domain", true, "custom_domain", "custom_domain != ''");
     site.addIndex("idx_site_owner", false, "owner", "");
@@ -103,7 +108,7 @@ migrate(
     site.removeIndex("idx_site_subdomain");
     site.removeIndex("idx_site_owner");
     site.removeIndex("idx_site_domain");
-    for (const f of ["subdomain", "home", "custom_domain"]) site.fields.removeByName(f);
+    for (const f of ["subdomain", "home", "custom_domain", "pro_until", "design"]) site.fields.removeByName(f);
     site.createRule = AUTH + " && @request.body.owner = @request.auth.id";
     site.updateRule = AUTH + " && owner = @request.auth.id && (@request.body.owner:isset = false || @request.body.owner = owner)";
     app.save(site);
