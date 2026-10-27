@@ -8,6 +8,7 @@ import { SubscribeForm } from "@/components/site/subscribe-form";
 import { Pattern, Rim } from "@/components/site/patterns";
 import { Marquee } from "@/components/site/marquee";
 import { Intro } from "@/components/site/intro";
+import { InstallButton } from "@/components/pwa";
 import { ScrollFx } from "@/components/marketing/scroll-fx";
 import { Arrow, SectionHead, Shot, Star } from "@/components/marketing/parts";
 import "@/components/marketing/marketing.css";
@@ -108,19 +109,41 @@ const SAFE = [
   { k: "Saved as you type", v: "Every keystroke is stored. You never press save." },
   { k: "Private by default", v: "Nothing is public until you choose to publish it." },
   { k: "Yours to take", v: "Download a full backup or a Word file any time." },
-  { k: "Any screen", v: "Desktop, laptop, tablet or phone, in any modern browser." },
+  { k: "Any screen", v: "Desktop, laptop, tablet or phone, installed like an app." },
 ];
 
-const COMPARE: { row: string; us: string; them: string }[] = [
-  { row: "Writing and formatting", us: "One place", them: "Three or four apps" },
-  { row: "KDP gutter by page count", us: "Automatic", them: "Look it up, set it by hand" },
-  { row: "Spine width and cover size", us: "Worked out for you", them: "Calculator and guesswork" },
-  { row: "Ebook and paperback", us: "From the same text", them: "Two files to keep in step" },
-  { row: "EPUB validation", us: "Built in", them: "Separate tool" },
-  { row: "Kindle, phone and print preview", us: "As you type", them: "Export and check" },
-  { row: "Writing goals and streaks", us: "Included", them: "Spreadsheet" },
-  { row: "Pen names", us: "Unlimited", them: "Separate accounts" },
+/** Atticus's column comes from its own published table on atticus.io (October 2026). */
+const COMPARE: { row: string; us: string | boolean; them: string | boolean | null }[] = [
+  { row: "Platforms", us: "Windows, Mac, Linux, Chromebook", them: "Windows, Mac, Linux, Chromebook" },
+  { row: "Importing", us: "Word and Markdown", them: "Word" },
+  { row: "Exporting", us: "EPUB, PDF, DOCX", them: "EPUB, PDF, DOCX" },
+  { row: "Parts and chapters", us: true, them: true },
+  { row: "Footnotes", us: true, them: true },
+  { row: "Callout boxes", us: true, them: true },
+  { row: "Large print", us: true, them: true },
+  { row: "Cloud storage and backups", us: true, them: true },
+  { row: "Paperback cover wrap designer", us: true, them: null },
+  { row: "KDP cover check before upload", us: true, them: null },
+  { row: "Spine width worked out for you", us: true, them: null },
+  { row: "Book pages on your own site", us: true, them: null },
+  { row: "Reader list sign-ups", us: true, them: null },
+  { row: "Price, one time", us: "$119", them: "$147" },
 ];
+
+/** Where "Buy" goes once Stripe is set up. Empty: the button joins early access instead. */
+const CHECKOUT_URL = "";
+
+const PLATFORMS = [
+  { name: "Windows", how: "In Chrome or Edge, press Install in the address bar." },
+  { name: "Mac", how: "In Safari choose File, then Add to Dock. Chrome works too." },
+  { name: "Linux", how: "In Chrome or Chromium, press Install in the address bar." },
+  { name: "Chromebook", how: "Press Install in the address bar and pin it to the shelf." },
+  { name: "iPad", how: "In Safari tap Share, then Add to Home Screen." },
+  { name: "Android", how: "In Chrome open the menu and tap Install app." },
+];
+
+/** Real words from real authors only. The section stays hidden until there are some. */
+const TESTIMONIALS: { title: string; quote: string; name: string; role: string }[] = [];
 
 const KINDS = [
   { name: "Novels", body: "Parts, scene breaks and classic chapter openings." },
@@ -132,7 +155,8 @@ const KINDS = [
 ]
 
 const PLAN = [
-  "Unlimited books and pen names",
+  "Write, format and export unlimited books",
+  "Unlimited pen names",
   "Print PDF, EPUB 3, Word and cover wrap exports",
   "Every interior theme and KDP trim size",
   "Cover designer and KDP cover check",
@@ -143,11 +167,11 @@ const PLAN = [
 const FAQ = [
   {
     q: "Do I need to be good with computers?",
-    a: "No. If you can write an email you can make a book here. You type, pick a look from the menu and press export. There is nothing to install.",
+    a: "No. If you can write an email you can make a book here. You type, pick a look from the menu and press export. There is no software to download: it installs straight from your browser.",
   },
   {
     q: "Does it work on a Mac, a PC or a tablet?",
-    a: "Yes. Jollof Pages runs in the browser, so it works on Windows, Mac, Linux, Chromebooks, iPads and Android tablets. You can even check a chapter on your phone.",
+    a: "Yes. Jollof Pages installs like an app from your browser on Windows, Mac, Linux, Chromebooks, iPads and Android tablets, and opens in its own window. You can even check a chapter on your phone.",
   },
   {
     q: "Can I write fiction with it?",
@@ -168,6 +192,10 @@ const FAQ = [
   {
     q: "Does Jollof Pages upload the book to Amazon for me?",
     a: "Not yet. You download the interior PDF, the EPUB and the cover, then upload them in your own KDP account. It takes a few minutes and keeps your account in your hands.",
+  },
+  {
+    q: "Is it a subscription?",
+    a: "No. Jollof Pages is one payment of $119, with every future update included. AI cover credits, when they arrive, are optional and pay as you go.",
   },
   {
     q: "Is there a limit on books or pen names?",
@@ -484,14 +512,38 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ---------- why: the studio against doing it by hand ---------- */}
+        {/* ---------- anywhere: install it like an app ---------- */}
+        <section id="anywhere" aria-labelledby="anywhere-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char">
+          <Pattern id="p-anywhere" kind="weave" color="var(--jollof)" opacity={0.12} drift={false} />
+          <div className="relative px-4 sm:px-8">
+            <SectionHead id="anywhere-title" title="Works on any computer" sub="Install it like an app on desktop or tablet." />
+          </div>
+          <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1200px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.6fr]">
+            <div className="flex flex-col items-center gap-6 text-center" data-reveal>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/icon-512.png" alt="The Jollof Pages app icon" width={160} height={160} className="size-[clamp(7rem,12vw,10rem)] shadow-[12px_12px_0_var(--char)]" loading="lazy" />
+              <p className="max-w-[30ch] text-[1.125rem]">It opens in its own window with its own icon, and your books stay safe in the cloud.</p>
+              <InstallButton className="btn" label="Install the studio" />
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {PLATFORMS.map((p, i) => (
+                <li key={p.name} className="bg-char p-6 text-cream" data-reveal style={{ ["--i" as string]: i % 3 }}>
+                  <p className="wide text-[1.5rem] font-bold text-bonnet">{p.name}</p>
+                  <p className="mt-2 text-cream/90">{p.how}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ---------- why: side by side with Atticus ---------- */}
         <section id="why" aria-labelledby="why-title" className="relative scroll-mt-16 bg-ground py-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">
-            <SectionHead id="why-title" title="Jollof Pages vs the old way" sub="Word, a template, a calculator and a long weekend." />
+            <SectionHead id="why-title" title="Why choose Jollof Pages" sub="Side by side with Atticus, row by row." />
           </div>
           <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1100px] px-4 sm:px-8" data-reveal>
             <table className="compare w-full text-left">
-              <caption className="sr-only">Jollof Pages compared with formatting a book by hand</caption>
+              <caption className="sr-only">Jollof Pages compared with Atticus</caption>
               <thead>
                 <tr className="bg-char text-cream">
                   <th scope="col" className="p-3 sm:p-5">
@@ -501,7 +553,7 @@ export default async function Home() {
                     Jollof Pages
                   </th>
                   <th scope="col" className="p-3 font-semibold sm:p-5">
-                    By hand
+                    Atticus
                   </th>
                 </tr>
               </thead>
@@ -512,16 +564,16 @@ export default async function Home() {
                       {c.row}
                     </th>
                     <td className="compare-us p-3 font-semibold sm:p-5">
-                      <span className="flex items-center gap-2">
-                        <Check className="max-sm:hidden" />
-                        {c.us}
-                      </span>
+                      <Cell v={c.us} />
                     </td>
-                    <td className="p-3 sm:p-5">{c.them}</td>
+                    <td className="p-3 sm:p-5">
+                      <Cell v={c.them} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <p className="t-small mt-4 text-center text-char/75">Atticus details are taken from the comparison table on atticus.io in October 2026. A dash means the feature is not listed there.</p>
           </div>
         </section>
 
@@ -544,18 +596,19 @@ export default async function Home() {
         {/* ---------- price ---------- */}
         <section id="pricing" aria-labelledby="pricing-title" className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">
-            <SectionHead id="pricing-title" title="One studio, every book" sub="No limits on books, pen names or exports." />
+            <SectionHead id="pricing-title" title="Pay once, own it" sub="One price, every book, every update." />
           </div>
-          <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1100px] px-4 sm:px-8">
+          <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1100px] gap-4 px-4 sm:px-8">
             <div className="plan grid overflow-hidden bg-char text-cream lg:grid-cols-[1fr_1.1fr]" data-reveal>
               <div className="relative overflow-hidden bg-jollof p-8 sm:p-12">
                 <Pattern id="p-plan" kind="adire" color="var(--char)" opacity={0.18} drift={false} />
                 <div className="relative">
-                  <p className="text-[1.25rem] font-semibold">For founding authors</p>
-                  <p className="wide mt-3 text-[clamp(2.75rem,2rem+3.4vw,5rem)] leading-[0.9] font-bold tracking-[-0.05em]">Early access</p>
-                  <p className="mt-5 max-w-[34ch] text-cream/95">The first authors in get the founding price and keep it for as long as they stay. We announce it to the early-access list first.</p>
-                  <a href="#early-access" className="btn mt-8">
-                    Join early access
+                  <p className="text-[1.25rem] font-semibold">Jollof Pages Studio</p>
+                  <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">$119</p>
+                  <p className="mt-4 text-[1.125rem] font-semibold">One-time payment. No monthly fees.</p>
+                  <p className="mt-3 max-w-[34ch] text-cream/95">Buy it once and write as many books as you like, with every update we ship included.</p>
+                  <a href={CHECKOUT_URL || "#early-access"} className="btn mt-8">
+                    {CHECKOUT_URL ? "Buy Jollof Pages" : "Join early access"}
                     <Arrow />
                   </a>
                 </div>
@@ -569,8 +622,34 @@ export default async function Home() {
                 ))}
               </ul>
             </div>
+            <div className="flex flex-col items-start justify-between gap-4 bg-bonnet p-6 text-char sm:flex-row sm:items-center sm:p-8" data-reveal>
+              <div>
+                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, coming soon</p>
+                <p className="wide mt-1 text-[1.5rem] font-bold">AI cover credits</p>
+                <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. Pay as you go from $10, only when you want it.</p>
+              </div>
+              <Star className="size-12 shrink-0 text-jollof" />
+            </div>
           </div>
         </section>
+
+        {TESTIMONIALS.length > 0 && (
+          <section id="authors" aria-labelledby="authors-title" className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream">
+            <div className="relative px-4 sm:px-8">
+              <SectionHead id="authors-title" title="Authors love it" sub="In their own words." />
+            </div>
+            <ul className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1200px] gap-4 px-4 sm:grid-cols-2 sm:px-8 lg:grid-cols-3">
+              {TESTIMONIALS.map((t, i) => (
+                <li key={t.name} className="flex flex-col bg-char-2 p-7" data-reveal style={{ ["--i" as string]: i % 3 }}>
+                  <p className="text-[1.25rem] font-bold text-bonnet">{t.title}</p>
+                  <blockquote className="mt-3 flex-1 text-cream/90">&ldquo;{t.quote}&rdquo;</blockquote>
+                  <p className="mt-6 font-semibold">{t.name}</p>
+                  <p className="t-small text-cream/70">{t.role}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* ---------- questions ---------- */}
         <section id="faq" aria-labelledby="faq-title" className="relative scroll-mt-16 bg-ground-2 py-[clamp(5rem,11vw,9rem)]">
@@ -623,6 +702,24 @@ export default async function Home() {
       <SiteFooter name="Jollof Pages" email={site?.email} />
     </>
   );
+}
+
+function Cell({ v }: { v: string | boolean | null }) {
+  if (v === true)
+    return (
+      <>
+        <Check />
+        <span className="sr-only">Yes</span>
+      </>
+    );
+  if (v === null || v === false)
+    return (
+      <>
+        <span aria-hidden>—</span>
+        <span className="sr-only">Not listed</span>
+      </>
+    );
+  return <>{v}</>;
 }
 
 function Check({ className }: { className?: string }) {

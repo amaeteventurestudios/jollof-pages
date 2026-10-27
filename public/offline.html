@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline · Jollof Pages</title>
+    <style>
+      html, body { margin: 0; height: 100%; }
+      body { display: grid; place-items: center; background: #ad3a17; color: #f7ecdf; font: 18px/1.5 system-ui, sans-serif; text-align: center; padding: 24px; box-sizing: border-box; }
+      h1 { font-size: clamp(28px, 6vw, 48px); line-height: 1; margin: 0 0 12px; letter-spacing: -0.03em; }
+      button { margin-top: 24px; min-height: 48px; padding: 0 28px; border: 0; background: #f2b632; color: #3a140a; font: 600 16px system-ui, sans-serif; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" width="72" height="72" />
+      <h1>You are offline</h1>
+      <p>Your books are safe on the server. Reconnect and carry on writing.</p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

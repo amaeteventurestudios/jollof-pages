@@ -6,6 +6,7 @@ import { BookOpen, ExternalLink, Feather, Flame, LogOut, Settings2 } from "lucid
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { InstallButton } from "@/components/pwa";
 
 const LINKS = [
   { href: "/studio", label: "Books", icon: BookOpen, exact: true },
@@ -41,6 +42,7 @@ export function StudioNav() {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-1">
+          <InstallButton className="h-8 rounded px-2.5 text-sm text-ink-2 hover:bg-muted" />
           <ThemeToggle className="h-8 rounded px-2.5 text-ink-2 hover:bg-muted [&_svg]:size-4" />
           <Link href="/" target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4">
             <ExternalLink aria-hidden />
