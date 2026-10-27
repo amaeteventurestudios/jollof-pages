@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBookBySlug, getSampleChapter, getSite } from "@/lib/pb-server";
+import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
+import { rootDomain } from "@/lib/sites";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { Pattern } from "@/components/site/patterns";
@@ -13,14 +15,18 @@ import { bookFormat } from "@/lib/types";
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const book = await getBookBySlug((await params).slug);
+// also serves author sites through /sites/[site]/books/[slug]/read
+type Params = Promise<{ slug: string; site?: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug, site: sub } = await params;
+  const { book } = await getSiteBook(slug, sub);
   return { title: book ? `Read a sample of ${book.title}` : "Sample not found" };
 }
 
-export default async function ReadSample({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [site, book] = await Promise.all([getSite(), getBookBySlug(slug)]);
+export default async function ReadSample({ params }: { params: Params }) {
+  const { slug, site: sub } = await params;
+  const { site, book } = await getSiteBook(slug, sub);
   if (!book) notFound();
   const chapter = await getSampleChapter(book.id);
   const name = site?.publisher_name || "Jollof Pages";
@@ -37,7 +43,8 @@ export default async function ReadSample({ params }: { params: Promise<{ slug: s
     <>
       <link rel="stylesheet" href={THEME_FONTS_HREF} />
       <style>{themeCss(theme, { scope: ".reader", dropCaps: f.dropCaps, lineHeight: 1.6 })}</style>
-      <SiteHeader name={name} />
+      {sub && <SiteDesignStyle design={site?.design} />}
+      <SiteHeader name={name} author={!!sub} />
       <main className="relative overflow-hidden bg-ground-2 px-4 pt-[72px] pb-24 sm:px-8">
         <Pattern id="p-read" kind="rice" color="var(--ground)" drift={false} />
         <div className="relative">
@@ -64,7 +71,7 @@ export default async function ReadSample({ params }: { params: Promise<{ slug: s
         </div>
         </div>
       </main>
-      <SiteFooter name={name} email={site?.email} />
+      <SiteFooter name={name} email={site?.email} {...(sub ? { blurb: site?.intro || undefined, studioUrl: `https://${rootDomain()}` } : {})} />
     </>
   );
 }

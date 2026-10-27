@@ -7,17 +7,19 @@ import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { InstallButton } from "@/components/pwa";
+import { forgetMySite, useMySite } from "./use-my-site";
 
 const LINKS = [
   { href: "/studio", label: "Books", icon: BookOpen, exact: true },
   { href: "/studio/authors", label: "Pen names", icon: Feather },
   { href: "/studio/progress", label: "Progress", icon: Flame },
-  { href: "/studio/site", label: "Publisher site", icon: Settings2 },
+  { href: "/studio/site", label: "Website", icon: Settings2 },
 ];
 
 export function StudioNav() {
   const path = usePathname();
   const router = useRouter();
+  const { url } = useMySite();
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/95">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
@@ -44,7 +46,7 @@ export function StudioNav() {
         <div className="ml-auto flex items-center gap-1">
           <InstallButton className="h-8 rounded px-2.5 text-sm text-ink-2 hover:bg-muted" />
           <ThemeToggle className="h-8 rounded px-2.5 text-ink-2 hover:bg-muted [&_svg]:size-4" />
-          <Link href="/" target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4">
+          <Link href={url} target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4">
             <ExternalLink aria-hidden />
             <span className="hidden md:inline">View site</span>
           </Link>
@@ -52,6 +54,7 @@ export function StudioNav() {
             type="button"
             onClick={() => {
               pb().authStore.clear();
+              forgetMySite();
               router.replace("/login");
             }}
             className="inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4"

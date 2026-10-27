@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileUp, Plus } from "lucide-react";
+import { BookPlus, FileUp, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
+import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,7 @@ export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
   const [logs, setLogs] = useState<WritingLog[]>([]);
   const [error, setError] = useState("");
-  const [dialog, setDialog] = useState<null | "new" | "import">(null);
+  const [dialog, setDialog] = useState<null | "new" | "import" | "isbn">(null);
 
   const load = useCallback(() => {
     Promise.all([listBooks(), loadLogs(60)])
@@ -47,7 +48,10 @@ export default function StudioHome() {
             <h1 className="text-[clamp(1.75rem,3vw,2.5rem)] leading-tight tracking-[-0.02em]">Your books</h1>
             <p className="mt-1 text-soft">Draft, format and publish from one place.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setDialog("isbn")}>
+              <BookPlus /> Add a published book
+            </Button>
             <Button variant="outline" onClick={() => setDialog("import")}>
               <FileUp /> Import Word or Markdown
             </Button>
@@ -121,6 +125,7 @@ export default function StudioHome() {
       </main>
       <NewBookDialog open={dialog === "new"} onClose={() => setDialog(null)} />
       <ImportDialog open={dialog === "import"} onClose={() => setDialog(null)} />
+      <IsbnDialog open={dialog === "isbn"} onClose={() => setDialog(null)} />
     </>
   );
 }

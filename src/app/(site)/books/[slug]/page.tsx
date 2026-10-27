@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { getBookBySlug, getSampleChapter, getSite } from "@/lib/pb-server";
+import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
+import { rootDomain } from "@/lib/sites";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { BookObject } from "@/components/site/book-object";
 import { Tilt } from "@/components/site/tilt";
 import { Pattern } from "@/components/site/patterns";
@@ -17,8 +19,12 @@ import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const book = await getBookBySlug((await params).slug);
+// also serves author sites: /sites/[site]/books/[slug] (ada.jollofpages.com/books/…) re-exports this page
+type Params = Promise<{ slug: string; site?: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug, site: sub } = await params;
+  const { book } = await getSiteBook(slug, sub);
   if (!book) return { title: "Book not found" };
   return {
     title: book.title,
@@ -36,9 +42,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
  * while the right column carries everything about it: what it is, where to buy it and at what price,
  * the author, praise, reviews and the printed details.
  */
-export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [site, book] = await Promise.all([getSite(), getBookBySlug(slug)]);
+export default async function BookPage({ params }: { params: Params }) {
+  const { slug, site: sub } = await params;
+  const { site, book } = await getSiteBook(slug, sub);
   if (!book) notFound();
   const sample = await getSampleChapter(book.id);
   const name = site?.publisher_name || "Jollof Pages";
@@ -98,7 +104,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <SiteHeader name={name} overHero />
+      {sub && <SiteDesignStyle design={site?.design} />}
+      <SiteHeader name={name} overHero author={!!sub} />
       <div className={cn("relative pt-[72px]", dark ? "text-cream" : "text-char")} style={{ background: sb.accent }}>
         <Pattern id="p-book" kind="adire" color={dark ? "#000" : "var(--char)"} opacity={dark ? 0.14 : 0.08} drift={false} />
         <div className="relative mx-auto grid max-w-[1700px] gap-x-16 px-4 sm:px-8 lg:grid-cols-[1fr_minmax(0,40rem)] 2xl:grid-cols-[1fr_minmax(0,46rem)]">
@@ -222,13 +229,13 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 <h2 id="notify-title" className="wide text-[1.75rem] font-bold tracking-[-0.03em]">
                   {upcoming ? "Tell me when it is out" : "Hear about the next one"}
                 </h2>
-                <SubscribeForm source={`book:${book.slug}`} tone="dark" />
+                <SubscribeForm source={`book:${book.slug}`} site={sub} tone="dark" />
               </div>
             </section>
           </main>
         </div>
       </div>
-      <SiteFooter name={name} email={site?.email} />
+      <SiteFooter name={name} email={site?.email} {...(sub ? { blurb: site?.intro || undefined, studioUrl: `https://${rootDomain()}` } : {})} />
     </>
   );
 }

@@ -13,6 +13,7 @@ import { coverGeometry, maxPages, MIN_PAGES, getTrim } from "@/lib/kdp";
 import { bookFormat, type BuyLink, type Quote } from "@/lib/types";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
+import { useMySite } from "../use-my-site";
 
 const STORES = ["Amazon", "Apple Books", "Kobo", "Barnes & Noble", "Google Play Books", "Bookshop.org", "Okadabooks", "Selar"];
 
@@ -22,6 +23,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
   const [slug, setSlug] = useState(book.slug);
   const [msg, setMsg] = useState("");
   const samples = ws.chapters.filter((c) => c.is_sample);
+  const { url: siteBase } = useMySite();
 
   async function saveLinks(next: BuyLink[]) {
     setLinks(next);
@@ -38,7 +40,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
             <span className="block text-sm text-soft">{book.published ? "Live now." : "Hidden. Only you can see it."}</span>
           </span>
           {book.published && (
-            <Link href={`/books/${book.slug}`} target="_blank" className="ml-auto inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
+            <Link href={`${siteBase.replace(/\/$/, "")}/books/${book.slug}`} target="_blank" className="ml-auto inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
               View page <ExternalLink className="size-3.5" />
             </Link>
           )}
@@ -50,7 +52,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
             <span className="block text-sm text-soft">The featured book leads the home page.</span>
           </span>
         </label>
-        <Field id="p-slug" label="Web address" hint={`jollofpages.com/books/${slug}`}>
+        <Field id="p-slug" label="Web address" hint={`${siteBase.replace(/^https?:\/\//, "").replace(/\/$/, "")}/books/${slug}`}>
           <div className="flex gap-2">
             <Input id="p-slug" value={slug} onChange={(e) => setSlug(slugify(e.target.value))} />
             <Button

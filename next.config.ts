@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // the usual guesses for the studio sign-in all land on it
   async redirects() {
-    return ["/signin", "/sign-in", "/admin", "/dashboard", "/author", "/write"].map((source) => ({ source, destination: "/login", permanent: false }));
+    return [
+      ...["/signin", "/sign-in", "/admin", "/dashboard", "/author", "/write"].map((source) => ({ source, destination: "/login", permanent: false })),
+      ...["/sign-up", "/register", "/start"].map((source) => ({ source, destination: "/signup", permanent: false })),
+    ];
   },
   images: {
     remotePatterns: [
