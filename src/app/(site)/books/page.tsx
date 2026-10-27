@@ -36,12 +36,10 @@ export default async function BooksPage() {
         </div>
         <Rim color="var(--cream)" />
       </section>
-      <main className="relative overflow-hidden bg-cream pt-12 pb-[clamp(5rem,10vw,9rem)]">
-        <Pattern id="p-books-rice" kind="rice" color="var(--cream-2)" />
+      <main className="relative overflow-hidden bg-ground pt-12 pb-[clamp(5rem,10vw,9rem)]">
+        <Pattern id="p-books-rice" kind="rice" color="var(--ground-2)" />
         <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
-          {books.length > 0 && (
-            <h2 className="wide mb-10 text-[clamp(1.75rem,3vw,2.5rem)] font-bold tracking-[-0.03em]">Every book</h2>
-          )}
+          {books.length > 0 && <h2 className="wide mb-10 text-[clamp(1.75rem,3vw,2.5rem)] font-bold tracking-[-0.03em]">Every book</h2>}
           {books.length === 0 ? (
             <p className="t-lead max-w-[40ch]">The first books are in the pot. Join the reader list on the home page to hear the day they are ready.</p>
           ) : (
@@ -53,7 +51,7 @@ export default async function BooksPage() {
                       <BookCover book={b} thumb="480x0" sizes="(min-width: 1024px) 25vw, 50vw" />
                     </div>
                     <h2 className="wide mt-5 text-[1.375rem] leading-tight font-bold tracking-[-0.03em] transition-colors group-hover:text-jollof">{b.title}</h2>
-                    {b.subtitle && <p className="mt-1 text-char/75">{b.subtitle}</p>}
+                    {b.subtitle && <p className="mt-1 text-on-ground/75">{b.subtitle}</p>}
                     <p className="mt-2 font-semibold text-jollof">{isUpcoming(b) ? `Coming ${year(b.publication_date)}` : b.expand?.author?.name}</p>
                   </Link>
                 </li>

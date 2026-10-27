@@ -65,7 +65,12 @@ const browseTarget = new THREE.Vector3(0, 1.28, 0.15);
 const pageColor = new THREE.Color("#e9dfca");
 const shelfColor = new THREE.Color("#5a4132");
 // Jollof Pages: a warm near-white room so the books sit in open space.
-const wallColor = "#f7f3ec";
+/** the room: a white gallery by day, a dark one by night */
+const ROOMS = {
+  light: { wall: "#f7f3ec", floor: "#efe9df", air: "#f7f3ec", exposure: 0.94 },
+  dark: { wall: "#2a1a13", floor: "#1c0f0a", air: "#140805", exposure: 1.0 },
+} as const;
+export type ShelfRoom = keyof typeof ROOMS;
 const clamp = THREE.MathUtils.clamp;
 const focusInDuration = 0.46;
 const focusOutDuration = 0.34;
@@ -196,12 +201,15 @@ export class ShelfEngine {
   private lastTimestamp = 0;
   private lastDiagnosticsAt = 0;
   private isDisposed = false;
+  private room: (typeof ROOMS)[ShelfRoom];
 
   constructor(
     canvas: HTMLCanvasElement,
     books: CatalogBook[],
     callbacks: ShelfCallbacks,
+    room: ShelfRoom = "light",
   ) {
+    this.room = ROOMS[room];
     this.canvas = canvas;
     this.booksData = books;
     this.callbacks = callbacks;
@@ -216,7 +224,7 @@ export class ShelfEngine {
     });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.94;
+    this.renderer.toneMappingExposure = this.room.exposure;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
@@ -264,8 +272,8 @@ export class ShelfEngine {
   }
 
   private setupScene() {
-    this.scene.background = new THREE.Color(wallColor);
-    this.scene.fog = new THREE.Fog(wallColor, 10, 26);
+    this.scene.background = new THREE.Color(this.room.air);
+    this.scene.fog = new THREE.Fog(this.room.air, 10, 26);
 
     // Jollof Pages: a soft studio reflection so the laminated paperback covers read as gloss.
     const pmrem = new THREE.PMREMGenerator(this.renderer);
@@ -304,7 +312,7 @@ export class ShelfEngine {
     const wall = new THREE.Mesh(
       new THREE.PlaneGeometry(34, 18),
       new THREE.MeshStandardMaterial({
-        color: wallColor,
+        color: this.room.wall,
         roughness: 1,
         metalness: 0,
       }),
@@ -316,7 +324,7 @@ export class ShelfEngine {
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(36, 18),
       new THREE.MeshStandardMaterial({
-        color: "#efe9df",
+        color: this.room.floor,
         roughness: 0.94,
         metalness: 0,
       }),

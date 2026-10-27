@@ -53,7 +53,7 @@ export default function ProgressPage() {
               {year.map((d) => {
                 const w = Math.max(byDay.get(d) ?? 0, 0);
                 const level = w === 0 ? 0 : Math.ceil((w / max) * 4);
-                const bg = ["#e7e1de", "#f0c7ad", "#e0915f", "#c65a2a", "#8a2c10"][level];
+                const bg = ["var(--paper-3)", "#f0c7ad", "#e0915f", "#c65a2a", "#8a2c10"][level];
                 return <span key={d} title={`${d}: ${fmt(w)} words`} className="size-3 rounded-[2px]" style={{ background: bg }} />;
               })}
             </div>

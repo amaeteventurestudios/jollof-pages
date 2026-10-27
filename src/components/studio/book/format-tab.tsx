@@ -162,7 +162,7 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           <dd>{cover.spineTextAllowed ? "Allowed" : "Not until 79 pages"}</dd>
         </dl>
         {(pages < MIN_PAGES || pages > max) && (
-          <p className="mt-4 rounded bg-[#fbeedd] p-3 text-[13px] text-[#7a4210]">
+          <p className="mt-4 rounded bg-[#fbeedd] p-3 text-[13px] text-[#7a4210] dark:bg-[#3a2a12] dark:text-[#f0c27a]">
             KDP prints {MIN_PAGES} to {max} pages for this trim and paper. This book is at {pages}.
           </p>
         )}
@@ -183,12 +183,12 @@ function PageDiagram({ width, height, m }: { width: number; height: number; m: {
         const right = i === 0 ? m.inside : m.outside;
         return (
           <g key={i}>
-            <rect x={x} y={0} width={W} height={H} fill="#f4f1ef" />
-            <rect x={x + left * s} y={m.top * s} width={W - (left + right) * s} height={H - (m.top + m.bottom) * s} fill="#d6cdc9" />
+            <rect x={x} y={0} width={W} height={H} fill="var(--paper)" />
+            <rect x={x + left * s} y={m.top * s} width={W - (left + right) * s} height={H - (m.top + m.bottom) * s} fill="var(--paper-3)" />
           </g>
         );
       })}
-      <rect x={W} y={0} width={6} height={H} fill="#2b2622" opacity={0.15} />
+      <rect x={W} y={0} width={6} height={H} fill="var(--ink)" opacity={0.15} />
     </svg>
   );
 }

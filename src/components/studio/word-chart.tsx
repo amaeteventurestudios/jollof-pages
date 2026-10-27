@@ -16,17 +16,17 @@ export function WordChart({ byDay, days, goal }: { byDay: Map<string, number>; d
       <svg viewBox={`0 0 ${W} ${H + 22}`} className="w-full" role="img" aria-label={`Words written per day over the last ${days} days`}>
         {values.map((v, i) => (
           <g key={dates[i]}>
-            <rect x={i * bw + 2} y={y(v)} width={bw - 4} height={H - y(v)} rx={2} fill={goal && v >= goal ? "#ad3a17" : "#a99e98"}>
+            <rect x={i * bw + 2} y={y(v)} width={bw - 4} height={H - y(v)} rx={2} fill={goal && v >= goal ? "var(--primary)" : "var(--paper-3)"}>
               <title>{`${dates[i]}: ${fmt(v)} words`}</title>
             </rect>
             {(i === 0 || i === days - 1 || i % 7 === 0) && (
-              <text x={i * bw + bw / 2} y={H + 16} textAnchor="middle" fontSize="11" fill="#5f5652">
+              <text x={i * bw + bw / 2} y={H + 16} textAnchor="middle" fontSize="11" fill="var(--soft)">
                 {dates[i].slice(5).replace("-", "/")}
               </text>
             )}
           </g>
         ))}
-        {goal ? <line x1={0} x2={W} y1={y(goal)} y2={y(goal)} stroke="#2b2622" strokeDasharray="4 4" strokeWidth={1} /> : null}
+        {goal ? <line x1={0} x2={W} y1={y(goal)} y2={y(goal)} stroke="var(--ink)" strokeDasharray="4 4" strokeWidth={1} /> : null}
       </svg>
       <figcaption className="mt-2 text-[13px] text-soft">Jollof-red bars met the daily habit{goal ? ` of ${fmt(goal)} words` : ""}. Net words: deleting text counts against the day.</figcaption>
     </figure>

@@ -58,15 +58,15 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <main className="grid min-h-screen bg-paper md:grid-cols-2">
-      <section className="flex flex-col justify-between bg-ink p-8 text-paper md:p-12">
+      <section className="flex flex-col justify-between bg-[#2b2622] p-8 text-[#ebe5e3] md:p-12">
         <Link href="/" className="text-lg font-semibold tracking-tight">
           Jollof Pages
         </Link>
         <div className="max-w-md py-16">
           <p className="text-[clamp(2rem,4vw,3.25rem)] leading-[1.02] tracking-[-0.02em]">Write it here. Publish it everywhere.</p>
-          <p className="mt-6 text-lg text-paper/80">The private studio where Jollof Pages books are drafted, formatted for print and ebook, and sent to readers.</p>
+          <p className="mt-6 text-lg text-[#ebe5e3]/80">The private studio where Jollof Pages books are drafted, formatted for print and ebook, and sent to readers.</p>
         </div>
-        <p className="text-sm text-paper/70">Accounts are created by the publisher. There is no public sign-up.</p>
+        <p className="text-sm text-[#ebe5e3]/70">Accounts are created by the publisher. There is no public sign-up.</p>
       </section>
       <section className="flex items-center justify-center p-8">
         <div className="w-full max-w-sm">

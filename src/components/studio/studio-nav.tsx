@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { BookOpen, ExternalLink, Feather, Flame, LogOut, Settings2 } from "lucide-react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const LINKS = [
   { href: "/studio", label: "Books", icon: BookOpen, exact: true },
@@ -31,10 +32,7 @@ export function StudioNav() {
                 key={l.href}
                 href={l.href}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm whitespace-nowrap text-ink-2 hover:bg-muted [&_svg]:size-4",
-                  active && "bg-primary-soft text-primary",
-                )}
+                className={cn("inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm whitespace-nowrap text-ink-2 hover:bg-muted [&_svg]:size-4", active && "bg-primary-soft text-primary")}
               >
                 <l.icon aria-hidden />
                 <span className="hidden sm:inline">{l.label}</span>
@@ -43,6 +41,7 @@ export function StudioNav() {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle className="h-8 rounded px-2.5 text-ink-2 hover:bg-muted [&_svg]:size-4" />
           <Link href="/" target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4">
             <ExternalLink aria-hidden />
             <span className="hidden md:inline">View site</span>

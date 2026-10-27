@@ -26,14 +26,18 @@ export function BookRows({ rows, start = 1 }: { rows: BookRow[]; start?: number 
 
   return (
     <>
-      <ul className="border-t-2 border-char" onPointerMove={move} onPointerLeave={() => setActive(null)}>
+      <ul className="border-t-2 border-on-ground" onPointerMove={move} onPointerLeave={() => setActive(null)}>
         {rows.map((b, i) => (
-          <li key={b.id} className="border-b-2 border-char" data-reveal style={{ ["--i" as string]: i }}>
-            <Link href={`/books/${b.slug}`} className="row group grid grid-cols-[2.5rem_1fr_auto] items-center gap-x-4 px-2 py-6 sm:grid-cols-[4rem_1fr_auto_auto] sm:gap-x-8 sm:px-4 sm:py-8" onPointerEnter={(e) => e.pointerType === "mouse" && setActive(b)}>
+          <li key={b.id} className="border-b-2 border-on-ground" data-reveal style={{ ["--i" as string]: i }}>
+            <Link
+              href={`/books/${b.slug}`}
+              className="row group grid grid-cols-[2.5rem_1fr_auto] items-center gap-x-4 px-2 py-6 sm:grid-cols-[4rem_1fr_auto_auto] sm:gap-x-8 sm:px-4 sm:py-8"
+              onPointerEnter={(e) => e.pointerType === "mouse" && setActive(b)}
+            >
               <span className="tabular text-[0.95rem] font-semibold">{String(i + start).padStart(2, "0")}</span>
               <span>
                 <span className="wide block text-[clamp(1.5rem,1rem+2.4vw,3.25rem)] leading-[0.98] font-bold tracking-[-0.04em]">{b.title}</span>
-                {b.subtitle && <span className="row-soft mt-2 block text-[1rem] text-char/70 transition-colors">{b.subtitle}</span>}
+                {b.subtitle && <span className="row-soft mt-2 block text-[1rem] text-on-ground/70 transition-colors">{b.subtitle}</span>}
               </span>
               <span className="tabular hidden text-right sm:block">{b.meta}</span>
               <svg viewBox="0 0 24 24" className="row-arrow size-7 sm:size-9" aria-hidden>

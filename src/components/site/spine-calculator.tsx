@@ -75,8 +75,8 @@ export function SpineCalculator({ book: from }: { book: StageBook | null }) {
         </dl>
         <p className="t-small mt-4 text-cream/75">{pages < 79 ? "Too thin for spine text on KDP." : "Room for the title on the spine."}</p>
       </div>
-      <div className="relative flex min-h-[340px] items-center justify-center overflow-hidden bg-cream p-10">
-        <Pattern id="p-calc" kind="rice" color="var(--cream-2)" />
+      <div className="relative flex min-h-[340px] items-center justify-center overflow-hidden bg-ground p-10">
+        <Pattern id="p-calc" kind="rice" color="var(--ground-2)" />
         {book && <BookObject book={book} scale={30} pages={pages} className="book-turn relative" />}
       </div>
     </div>

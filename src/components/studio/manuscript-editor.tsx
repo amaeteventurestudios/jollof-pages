@@ -62,7 +62,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {editor && <Toolbar editor={editor} bookId={bookId} />}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[#faf8f7]" id="manuscript-scroll">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-[#faf8f7] dark:bg-background" id="manuscript-scroll">
         <div className="manuscript mx-auto max-w-[44rem] px-6 py-10 text-[1.1875rem] leading-[1.7] text-ink sm:px-10" style={{ fontFamily }}>
           <EditorContent editor={editor} />
         </div>

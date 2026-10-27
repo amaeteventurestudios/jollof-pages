@@ -70,7 +70,7 @@ export default function StudioHome() {
           ))}
         </dl>
 
-        {error && <p className="mt-6 rounded bg-[#fdecea] p-3 text-sm text-destructive">Could not load your books: {error}</p>}
+        {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load your books: {error}</p>}
 
         {books === null && !error ? (
           <p className="mt-10 text-soft" role="status">

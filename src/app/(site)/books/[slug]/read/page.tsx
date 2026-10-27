@@ -38,8 +38,8 @@ export default async function ReadSample({ params }: { params: Promise<{ slug: s
       <link rel="stylesheet" href={THEME_FONTS_HREF} />
       <style>{themeCss(theme, { scope: ".reader", dropCaps: f.dropCaps, lineHeight: 1.6 })}</style>
       <SiteHeader name={name} />
-      <main className="relative overflow-hidden bg-cream-2 px-4 pt-[72px] pb-24 sm:px-8">
-        <Pattern id="p-read" kind="rice" color="var(--cream)" drift={false} />
+      <main className="relative overflow-hidden bg-ground-2 px-4 pt-[72px] pb-24 sm:px-8">
+        <Pattern id="p-read" kind="rice" color="var(--ground)" drift={false} />
         <div className="relative">
         <p className="mx-auto max-w-[38rem] pt-12 font-medium">
           A free sample of{" "}

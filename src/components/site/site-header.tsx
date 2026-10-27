@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Pattern } from "./patterns";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const LINKS = [
   { href: "/books", label: "Books" },
@@ -63,10 +64,12 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
             <Link href="/login" className="link font-medium">
               Sign in
             </Link>
+            <ThemeToggle className="link size-11 justify-center" />
             <Link href="/#reader-list" className="btn btn-ink !min-h-11 !px-5 text-[0.95rem]">
               Join the reader list
             </Link>
           </nav>
+          <ThemeToggle className="relative z-[60] ml-auto size-11 justify-center md:hidden" />
           <button
             type="button"
             className="relative z-[60] flex size-11 items-center justify-center md:hidden"

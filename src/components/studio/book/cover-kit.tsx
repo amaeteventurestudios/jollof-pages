@@ -133,7 +133,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 const ICON = { ok: Check, warn: AlertTriangle, fail: X };
-const TONE = { ok: "text-[#1f7a3a]", warn: "text-[#9a6200]", fail: "text-destructive" };
+const TONE = { ok: "text-ok", warn: "text-caution", fail: "text-destructive" };
 
 /** Everything needed to make cover art in ChatGPT or Nano Banana that KDP accepts, and a check before export. */
 export function CoverKit({

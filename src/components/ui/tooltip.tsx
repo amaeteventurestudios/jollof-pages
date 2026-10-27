@@ -11,7 +11,7 @@ function TooltipContent({ className, sideOffset = 4, children, ...props }: React
     <TP.Portal>
       <TP.Content
         sideOffset={sideOffset}
-        className={cn("z-50 max-w-xs rounded-md bg-ink px-2.5 py-1.5 text-xs leading-relaxed text-white shadow-md data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0", className)}
+        className={cn("z-50 max-w-xs rounded-md bg-ink px-2.5 py-1.5 text-xs leading-relaxed text-paper shadow-md data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0", className)}
         {...props}
       >
         {children}

@@ -137,14 +137,14 @@ export default async function Home() {
 
         {/* the list, on a scatter of rice */}
         {(books.length === 0 || rest.length > 0) && (
-          <section id="list" aria-labelledby="list-title" className="relative scroll-mt-16 overflow-hidden bg-cream py-[clamp(5rem,12vw,10rem)]">
-            <Pattern id="p-rice" kind="rice" color="var(--cream-2)" />
+          <section id="list" aria-labelledby="list-title" className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,12vw,10rem)]">
+            <Pattern id="p-rice" kind="rice" color="var(--ground-2)" />
             <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
               <div className="flex flex-wrap items-end justify-between gap-6">
                 <h2 id="list-title" className="t-head wide font-bold" data-reveal>
                   The list
                 </h2>
-                <p className="max-w-[30ch] text-char/80" data-reveal style={{ ["--i" as string]: 1 }}>
+                <p className="max-w-[30ch] text-on-ground/80" data-reveal style={{ ["--i" as string]: 1 }}>
                   Practical non-fiction in paperback and ebook. Every title is also on Amazon.
                 </p>
               </div>
@@ -172,7 +172,7 @@ export default async function Home() {
         )}
 
         {/* the studio, on a woven strip */}
-        <section id="studio" aria-labelledby="studio-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,12vw,10rem)]">
+        <section id="studio" aria-labelledby="studio-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,12vw,10rem)] text-char">
           <Pattern id="p-weave" kind="weave" color="var(--jollof)" opacity={0.16} />
           <div className="relative mx-auto max-w-[1400px] px-4 sm:px-8">
             <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-end">
@@ -205,7 +205,7 @@ export default async function Home() {
         </section>
 
         {/* the letter, on pepper seeds */}
-        <section id="about" aria-label="A letter from the publisher" className="relative scroll-mt-16 overflow-hidden bg-cream py-[clamp(5rem,12vw,10rem)]">
+        <section id="about" aria-label="A letter from the publisher" className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,12vw,10rem)]">
           <Pattern id="p-pepper" kind="pepper" color="var(--jollof)" opacity={0.14} drift={false} />
           <div className="relative mx-auto grid max-w-[1400px] gap-12 px-4 sm:px-8 lg:grid-cols-[1fr_1.1fr]">
             <blockquote className="wide text-[clamp(1.5rem,1.1rem+1.6vw,2.25rem)] leading-[1.1] font-bold tracking-[-0.03em] text-jollof lg:sticky lg:top-28 lg:self-start" data-reveal>
@@ -222,7 +222,7 @@ export default async function Home() {
                 ))}
               </div>
               <p className="wide mt-10 text-[1.5rem] font-bold">{name}</p>
-              <p className="text-char/70">The publisher</p>
+              <p className="text-on-ground/70">The publisher</p>
             </div>
           </div>
         </section>

@@ -41,7 +41,47 @@
   --secondary: #ffffff;
   --secondary-foreground: var(--ink);
   --destructive: #b42318;
+  --callout: #f7e9e1;
+  --hit: #ffe28a;
+  --ok: #1f7a3a;
+  --caution: #9a6200;
+  --danger-soft: #fdecea;
+  color-scheme: light;
 }
+
+/*
+ * Night: the same paper and ink turned over, a warm brown-black ground with cream-grey ink, and
+ * the red lifted a touch so it holds 4.5:1 for white button text and as text on the ground.
+ */
+:root[data-theme="dark"] {
+  --paper: #1d1917;
+  --paper-2: #26211e;
+  --paper-3: #3a332f;
+  --ink: #efe8e4;
+  --ink-2: #d3c9c4;
+  --soft: #aaa09a;
+  --background: #141110;
+  --card: #1f1b19;
+  --popover: #262120;
+  --muted: #2a2522;
+  --accent: #2a2522;
+  --border: #3a3330;
+  --input: #50473f;
+  --ring: #e0632a;
+  --primary: #cc4c1e;
+  --primary-hover: #b4421a;
+  --primary-soft: #3b1e13;
+  --secondary: #2a2522;
+  --destructive: #f0806f;
+  --callout: #33221a;
+  --hit: #6b5512;
+  --ok: #6fcf8e;
+  --caution: #e7b14a;
+  --danger-soft: #3d1a16;
+  color-scheme: dark;
+}
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -64,6 +104,9 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-destructive: var(--destructive);
+  --color-ok: var(--ok);
+  --color-caution: var(--caution);
+  --color-danger-soft: var(--danger-soft);
   --color-jollof: var(--jollof);
   --color-jollof-2: var(--jollof-2);
   --color-pepper: var(--pepper);
@@ -72,6 +115,9 @@
   --color-bonnet: var(--bonnet);
   --color-cream: var(--cream);
   --color-cream-2: var(--cream-2);
+  --color-ground: var(--ground);
+  --color-ground-2: var(--ground-2);
+  --color-on-ground: var(--on-ground);
   --color-paper: var(--paper);
   --color-paper-2: var(--paper-2);
   --color-paper-3: var(--paper-3);
@@ -105,8 +151,7 @@
     outline-offset: 2px;
   }
   ::selection {
-    background: #f2c6ad;
-    color: var(--ink);
+    background: color-mix(in srgb, var(--primary) 35%, transparent);
   }
 }
 
@@ -141,7 +186,7 @@
   color: var(--ink-2);
 }
 .manuscript .ProseMirror .callout {
-  background: #f7e9e1;
+  background: var(--callout);
   border-radius: 6px;
   padding: 0.9em 1.1em;
 }
@@ -153,7 +198,7 @@
 }
 .manuscript .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #8f8580;
+  color: var(--soft);
   float: left;
   height: 0;
   pointer-events: none;
@@ -194,7 +239,7 @@
   content: "[note]";
 }
 .manuscript .search-hit {
-  background: #ffe28a;
+  background: var(--hit);
 }
 
 @media (prefers-reduced-motion: reduce) {

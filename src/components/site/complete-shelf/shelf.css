@@ -3,6 +3,20 @@
  * (github.com/mintdotgg/mint-playground, experiences/complete-shelf), MIT licence, see LICENSE.
  * Every rule is scoped under .cs-root so it cannot reach the rest of the site.
  */
+/* the night gallery: same layout, the room and its type turned over */
+[data-theme="dark"] .cs-root {
+  --paper: #140805;
+  --paper-deep: #1f0e08;
+  --paper-light: #241109;
+  --ink: #f7ecdf;
+  --ink-soft: rgba(247, 236, 223, 0.66);
+  --hairline: rgba(247, 236, 223, 0.2);
+  --accent: #e0632a;
+  --veil: 20, 8, 5;
+  --ink-rgb: 247, 236, 223;
+}
+[data-theme="dark"] .cs-root .press-experience::after { mix-blend-mode: screen; opacity: 0.08; }
+
 .cs-root {
   --paper: #f7f3ec;
   --paper-deep: #ece5d8;
@@ -11,6 +25,8 @@
   --ink-soft: rgba(42, 26, 18, 0.64);
   --hairline: rgba(42, 26, 18, 0.19);
   --accent: #ad3a17;
+  --veil: 238, 232, 219;
+  --ink-rgb: 37, 35, 31;
   --serif: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
   --sans: var(--font-archivo), Helvetica, Arial, sans-serif;
   color: var(--ink);
@@ -138,9 +154,9 @@
     content: "";
     background: linear-gradient(
       90deg,
-      rgba(238, 232, 219, 0.96) 0%,
-      rgba(238, 232, 219, 0.82) 58%,
-      rgba(238, 232, 219, 0) 100%
+      rgba(var(--veil), 0.96) 0%,
+      rgba(var(--veil), 0.82) 58%,
+      rgba(var(--veil), 0) 100%
     );
     pointer-events: none;
   }
@@ -223,7 +239,7 @@
     place-items: center;
     border: 1px solid var(--hairline);
     border-radius: 0;
-    background: rgba(238, 232, 219, 0.68);
+    background: rgba(var(--veil), 0.68);
     cursor: pointer;
     backdrop-filter: blur(10px);
     transition:
@@ -233,7 +249,7 @@
   }
 
   .shelf-arrow:hover:not(:disabled) {
-    background: rgba(246, 241, 231, 0.92);
+    background: rgba(var(--veil), 0.92);
     transform: scale(1.06);
   }
 
@@ -417,7 +433,7 @@
     inset: 0;
     content: "";
     background:
-      linear-gradient(90deg, rgba(238, 232, 219, 0), rgba(238, 232, 219, 0.82) 10%, var(--paper) 24%),
+      linear-gradient(90deg, rgba(var(--veil), 0), rgba(var(--veil), 0.82) 10%, var(--paper) 24%),
       var(--paper);
   }
 
@@ -432,7 +448,7 @@
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     height: 100%;
     padding: 27px clamp(28px, 4vw, 68px) 30px clamp(52px, 6vw, 98px);
-    border-left: 1px solid rgba(37, 35, 31, 0.08);
+    border-left: 1px solid rgba(var(--ink-rgb), 0.08);
   }
 
   .back-button {
@@ -727,7 +743,7 @@
     bottom: 72px;
     max-width: 260px;
     margin: 0;
-    color: rgba(37, 35, 31, 0.46);
+    color: rgba(var(--ink-rgb), 0.46);
     text-align: right;
     font-family: var(--serif);
     font-size: 10px;
@@ -800,8 +816,8 @@
       padding: 52px 20px 19px;
       background: linear-gradient(
         180deg,
-        rgba(238, 232, 219, 0),
-        rgba(238, 232, 219, 0.96) 45px,
+        rgba(var(--veil), 0),
+        rgba(var(--veil), 0.96) 45px,
         var(--paper) 64px
       );
     }
@@ -879,7 +895,7 @@
     .book-details::before {
       top: -55px;
       background:
-        linear-gradient(180deg, rgba(238, 232, 219, 0), rgba(238, 232, 219, 0.94) 54px, var(--paper) 55px),
+        linear-gradient(180deg, rgba(var(--veil), 0), rgba(var(--veil), 0.94) 54px, var(--paper) 55px),
         var(--paper);
     }
 
@@ -892,7 +908,7 @@
       grid-template-columns: 1fr auto;
       grid-template-rows: auto minmax(0, 1fr) auto;
       padding: 9px 20px max(14px, env(safe-area-inset-bottom));
-      border-top: 1px solid rgba(37, 35, 31, 0.08);
+      border-top: 1px solid rgba(var(--ink-rgb), 0.08);
       border-left: 0;
     }
 

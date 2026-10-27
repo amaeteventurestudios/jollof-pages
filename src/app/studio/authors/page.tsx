@@ -54,7 +54,7 @@ export default function AuthorsPage() {
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-10">
         <h1 className="text-[clamp(1.75rem,3vw,2.5rem)] leading-tight tracking-[-0.02em]">Pen names</h1>
         <p className="mt-1 text-soft">Every book is published under one of these names. The bio and photo appear on the book&apos;s page and in its About the author page.</p>
-        {error && <p className="mt-6 bg-[#fdecea] p-3 text-sm text-destructive">Could not load: {error}</p>}
+        {error && <p className="mt-6 bg-danger-soft p-3 text-sm text-destructive">Could not load: {error}</p>}
 
         <form onSubmit={addNames}>
           <Panel title="Add pen names" description="Paste your list, one name per line. Names already here are skipped.">

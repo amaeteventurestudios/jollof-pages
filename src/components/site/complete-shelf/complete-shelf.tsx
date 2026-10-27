@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Newsreader } from "next/font/google";
 import type { CatalogBook } from "./catalog";
-import { ShelfEngine, type ShelfMode } from "./ShelfEngine";
+import { ShelfEngine, type ShelfMode, type ShelfRoom } from "./ShelfEngine";
 import { shelfConfig } from "./config";
 import "./shelf.css";
 
@@ -33,6 +33,19 @@ function webglAvailable() {
   }
 }
 
+/** Follows the site's day and night setting; the shelf is rebuilt in the other room when it changes. */
+function useRoom(): ShelfRoom | null {
+  const [room, setRoom] = useState<ShelfRoom | null>(null);
+  useEffect(() => {
+    const read = () => setRoom(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+  return room;
+}
+
 export function CompleteShelf({ books }: { books: CatalogBook[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<ShelfEngine | null>(null);
@@ -42,6 +55,7 @@ export function CompleteShelf({ books }: { books: CatalogBook[] }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [status, setStatus] = useState("Setting out the books");
+  const room = useRoom();
 
   const activeBook = books[activeIndex];
   const selectedBook = useMemo(() => (selectedIndex === null ? null : books[selectedIndex]), [selectedIndex, books]);
@@ -52,7 +66,7 @@ export function CompleteShelf({ books }: { books: CatalogBook[] }) {
     let engine: ShelfEngine | null = null;
 
     async function start() {
-      if (!canvasRef.current) return;
+      if (!canvasRef.current || !room) return;
       if (!webglAvailable()) {
         setFailed(true);
         return;
@@ -68,7 +82,7 @@ export function CompleteShelf({ books }: { books: CatalogBook[] }) {
           },
           onStatus: setStatus,
           onReady: () => setReady(true),
-        });
+        }, room);
         engineRef.current = engine;
       } catch {
         setFailed(true);
@@ -81,7 +95,7 @@ export function CompleteShelf({ books }: { books: CatalogBook[] }) {
       engine?.dispose();
       engineRef.current = null;
     };
-  }, [books]);
+  }, [books, room]);
 
   if (failed || !activeBook) return null;
 
