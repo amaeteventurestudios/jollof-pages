@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Download, ImagePlus, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CoverStage, COVER_FONTS, COVER_FONTS_HREF, TEMPLATES, U, defaultDesign, type CoverDesign } from "./cover-designer";
+import { CoverStage, COVER_FONTS, COVER_FONTS_HREF, TEMPLATES, U, defaultDesign, useImage, type CoverDesign } from "./cover-designer";
+import { CoverKit } from "./cover-kit";
+import { artSpec, preflight } from "@/lib/cover-kit";
 import { BookCover } from "@/components/book-cover";
 import { coverGeometry, inches } from "@/lib/kdp";
 import { bookFormat } from "@/lib/types";
@@ -27,7 +29,7 @@ function dataUrlToBlob(url: string): Blob {
 export function CoverTab({ ws }: { ws: Workspace }) {
   const { book } = ws;
   const f = bookFormat(book);
-  const { pages } = usePageCount(ws);
+  const { pages, estimated } = usePageCount(ws);
   const g = coverGeometry(f.trim, pages, f.paper);
   const [mode, setMode] = useState<"ebook" | "print">("ebook");
   const [design, setDesign] = useState<CoverDesign>(() => ({ ...defaultDesign(), ...((book.cover_design as Partial<CoverDesign>) ?? {}) }));
@@ -66,6 +68,21 @@ export function CoverTab({ ws }: { ws: Workspace }) {
   const panelH = mode === "ebook" ? 10 : g.height;
   const zoom = Math.min((boxWidth - 8) / (panelW * U), (mode === "ebook" ? 640 : 560) / (panelH * U));
   const authorName = book.expand?.author?.name || "Author name";
+  const spec = artSpec(g);
+  const frontImg = useImage(design.imageUrl);
+  const backImg = useImage(design.backImageUrl);
+  const checks = preflight({
+    g,
+    pagesEstimated: estimated,
+    front: frontImg && { width: frontImg.naturalWidth, height: frontImg.naturalHeight },
+    back: backImg && { width: backImg.naturalWidth, height: backImg.naturalHeight },
+    frontText: design.frontText,
+    title: design.title,
+    author: design.author,
+    centered: design.template === "framed",
+    blurb: design.showBlurb,
+    description: book.description,
+  });
 
   async function withoutGuides<T>(fn: (stage: Konva.Stage) => T): Promise<T> {
     const stage = stageRef.current!;
@@ -121,11 +138,14 @@ export function CoverTab({ ws }: { ws: Workspace }) {
     }
   }
 
-  async function uploadImage(file: File) {
-    setBusy("image");
+  async function uploadImage(file: File, side: "front" | "back" = "front") {
+    setBusy(side === "front" ? "image" : "back");
     try {
-      const rec = await pb().collection("assets").create({ owner: userId(), book: book.id, file, alt: "Cover image" });
-      update({ imageUrl: fileUrl(rec, rec.file), template: design.template === "framed" ? "photo" : design.template });
+      const rec = await pb()
+        .collection("assets")
+        .create({ owner: userId(), book: book.id, file, alt: side === "front" ? "Cover image" : "Back cover image" });
+      const url = fileUrl(rec, rec.file);
+      update(side === "back" ? { backImageUrl: url } : { imageUrl: url, template: design.template === "framed" ? "art" : design.template });
     } catch (e) {
       setMsg(`Upload failed: ${errorMessage(e)}`);
     } finally {
@@ -136,7 +156,11 @@ export function CoverTab({ ws }: { ws: Workspace }) {
   async function uploadOwn(field: "cover" | "cover_full", file: File) {
     setBusy(field);
     try {
-      const updated = await ws.track(pb().collection("books").update(book.id, { [field]: file }));
+      const updated = await ws.track(
+        pb()
+          .collection("books")
+          .update(book.id, { [field]: file }),
+      );
       ws.setBook((b) => (b ? { ...b, [field]: updated[field] } : b));
       setMsg(field === "cover" ? "Ebook cover uploaded." : "Paperback cover uploaded.");
     } catch (e) {
@@ -152,7 +176,14 @@ export function CoverTab({ ws }: { ws: Workspace }) {
       <aside className="grid h-fit gap-6">
         <div role="tablist" aria-label="Cover type" className="grid grid-cols-2 gap-1 rounded-md bg-paper-2 p-1">
           {(["ebook", "print"] as const).map((m) => (
-            <button key={m} role="tab" type="button" aria-selected={mode === m} onClick={() => setMode(m)} className={cn("rounded px-3 py-1.5 text-sm", mode === m ? "bg-card font-medium" : "text-ink-2")}>
+            <button
+              key={m}
+              role="tab"
+              type="button"
+              aria-selected={mode === m}
+              onClick={() => setMode(m)}
+              className={cn("rounded px-3 py-1.5 text-sm", mode === m ? "bg-card font-medium" : "text-ink-2")}
+            >
               {m === "ebook" ? "Ebook" : "Paperback wrap"}
             </button>
           ))}
@@ -162,7 +193,12 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           <legend className="text-sm font-medium">Layout</legend>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {TEMPLATES.map((t) => (
-              <button key={t.id} type="button" onClick={() => update({ ...t.design, template: t.id })} className={cn("rounded-md bg-card px-3 py-2 text-left text-sm ring-2 ring-transparent", design.template === t.id && "ring-primary")}>
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => update({ ...t.design, template: t.id })}
+                className={cn("rounded-md bg-card px-3 py-2 text-left text-sm ring-2 ring-transparent", design.template === t.id && "ring-primary")}
+              >
                 {t.label}
               </button>
             ))}
@@ -198,7 +234,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
         </label>
 
         <div className="grid gap-2 text-sm">
-          <span className="font-medium">Picture</span>
+          <span className="font-medium">{mode === "print" ? "Front artwork" : "Picture"}</span>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 py-2 hover:bg-muted">
             {busy === "image" ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
             {design.imageUrl ? "Replace picture" : "Add a picture"}
@@ -209,7 +245,12 @@ export function CoverTab({ ws }: { ws: Workspace }) {
               Remove picture
             </button>
           )}
-          <p className="text-[13px] text-soft">Use a picture at least 1600 x 2560 px. Only use images you have the rights to.</p>
+          <p className="text-[13px] text-soft">
+            {mode === "print" ? `At least ${spec.front.px.width} x ${spec.front.px.height} px.` : "At least 1600 x 2560 px."} Only use images you have the rights to.
+          </p>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={!design.frontText} onChange={(e) => update({ frontText: !e.target.checked })} /> My artwork already has the title on it
+          </label>
         </div>
 
         {mode === "print" && (
@@ -220,10 +261,32 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={guides} onChange={(e) => setGuides(e.target.checked)} /> Show trim, safe area and barcode guides
             </label>
-            <label className="grid gap-1">
-              <span>Back cover colour</span>
-              <input type="color" value={design.backBg || design.bg} onChange={(e) => update({ backBg: e.target.value })} className="h-9 w-20 rounded border border-input bg-card" />
+            <span className="mt-2 font-medium">Back artwork</span>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 py-2 hover:bg-muted">
+              {busy === "back" ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+              {design.backImageUrl ? "Replace back artwork" : "Add back artwork"}
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], "back")} />
             </label>
+            {design.backImageUrl && (
+              <button type="button" className="text-left text-soft underline" onClick={() => update({ backImageUrl: "" })}>
+                Remove back artwork
+              </button>
+            )}
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <label className="grid gap-1">
+                <span>Back colour</span>
+                <input type="color" value={design.backBg || design.bg} onChange={(e) => update({ backBg: e.target.value })} className="h-9 w-full rounded border border-input bg-card" />
+              </label>
+              <label className="grid gap-1">
+                <span>Spine colour</span>
+                <input
+                  type="color"
+                  value={design.spineBg || (design.template === "split" ? design.accent : design.bg)}
+                  onChange={(e) => update({ spineBg: e.target.value })}
+                  className="h-9 w-full rounded border border-input bg-card"
+                />
+              </label>
+            </div>
           </div>
         )}
 
@@ -258,7 +321,9 @@ export function CoverTab({ ws }: { ws: Workspace }) {
       <section className="min-w-0">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-sm">
           <p className="text-ink-2">
-            {mode === "ebook" ? "Front cover, 1600 x 2560 px. Drag the title and author to move them." : `Full wrap ${inches(g.width)} x ${inches(g.height)}: back, ${inches(g.spine, 4)} spine, front. Bleed included.`}
+            {mode === "ebook"
+              ? "Front cover, 1600 x 2560 px. Drag the title and author to move them."
+              : `Full wrap ${inches(g.width)} x ${inches(g.height)}: back, ${inches(g.spine, 4)} spine, front. Bleed included.`}
           </p>
           {mode === "print" && !g.spineTextAllowed && <p className="text-soft">Spine text appears from 79 pages.</p>}
         </div>
@@ -275,6 +340,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             onMove={(key, pos) => update({ [key]: pos })}
           />
         </div>
+        {mode === "print" && <CoverKit g={g} slug={slugify(book.title)} book={{ title: book.title, subtitle: book.subtitle, author: authorName }} lettering={!design.frontText} checks={checks} />}
         {book.cover && (
           <div className="mt-6 flex items-center gap-4">
             <div className="w-20">
