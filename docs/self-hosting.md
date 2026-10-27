@@ -74,6 +74,15 @@ The PocketBase dashboard is at `https://pb.jollofpages.com/_/` for backups and s
 
 ## Updating
 
+The server can update itself. Run this once and it checks GitHub every two minutes, pulls new
+commits on the branch it is on and rebuilds:
+
+```bash
+sudo bash deploy/install-autodeploy.sh
+```
+
+`journalctl -u jollof-autodeploy -n 50` shows what it did. To update by hand instead:
+
 ```bash
 git pull && docker compose up -d --build
 ```
