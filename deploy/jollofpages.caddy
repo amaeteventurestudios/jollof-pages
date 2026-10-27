@@ -1,0 +1,15 @@
+# Jollof Pages on the shared server. Copy to /etc/caddy/sites/jollofpages.caddy, then
+# `systemctl reload caddy`. Ports match docker-compose.yml (localhost only).
+jollofpages.com, www.jollofpages.com {
+	@www host www.jollofpages.com
+	redir @www https://jollofpages.com{uri} permanent
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3100
+}
+
+pb.jollofpages.com {
+	request_body {
+		max_size 200MB
+	}
+	reverse_proxy 127.0.0.1:8096
+}
