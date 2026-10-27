@@ -39,7 +39,7 @@ export function SubscribeForm({ source = "website", tone = "light" }: { source?:
           onChange={(e) => setEmail(e.target.value)}
           className="h-12 min-w-0 flex-1 bg-transparent px-5 text-char placeholder:text-char/50 focus-visible:outline-offset-0"
         />
-        <button type="submit" className="btn btn-ink shrink-0" disabled={state === "busy"}>
+        <button type="submit" className={cn("btn shrink-0", tone !== "dark" && "btn-ink")} disabled={state === "busy"}>
           {state === "busy" ? "Joining…" : "Join"}
         </button>
       </div>

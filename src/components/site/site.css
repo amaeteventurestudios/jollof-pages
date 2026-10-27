@@ -308,3 +308,9 @@
   .site .book3d-face::after { animation: jp-sheen 7s var(--ease-in-out) infinite; }
 }
 @keyframes jp-sheen { 0%, 55% { background-position: 0 0, 100% 0; } 100% { background-position: 0 0, -60% 0; } }
+
+/* ---------- hero display: a pool of light behind the books, the side books turned in ---------- */
+.site .hero-light { background: radial-gradient(46% 60% at 50% 70%, rgba(255, 190, 130, 0.30), rgba(224, 99, 42, 0.12) 50%, transparent 78%); }
+.site .book-turn-left .book3d-inner { transform: rotateY(30deg) rotateX(2deg); }
+.site .book-front .book3d-inner { transform: rotateY(16deg) rotateX(2deg); }
+.site .book-turn-right .book3d-inner { transform: rotateY(-22deg) rotateX(2deg); }

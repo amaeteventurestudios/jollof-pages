@@ -9,7 +9,9 @@ import { BookRows, type BookRow } from "@/components/site/book-rows";
 import { Pattern, Rim } from "@/components/site/patterns";
 import { Lines } from "@/components/site/lines";
 import { Marquee } from "@/components/site/marquee";
-import { Shelf } from "@/components/site/shelf";
+import { Tilt } from "@/components/site/tilt";
+import { BookObject } from "@/components/site/book-object";
+import type { StageBook } from "@/lib/site-data";
 import { Intro } from "@/components/site/intro";
 import { BookCover } from "@/components/book-cover";
 import { fileUrl } from "@/lib/pb";
@@ -92,16 +94,21 @@ export default async function Home() {
       <Intro name={name} />
       <SiteHeader name={name} overHero />
 
-      {/* hero: the pot itself, red with adire circles */}
-      <section aria-labelledby="hero-title" className="relative overflow-hidden bg-jollof pt-[72px] text-cream">
-        <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.22} />
-        <div className="hero-box relative mx-auto flex max-w-[1600px] flex-col gap-12 px-4 pt-[clamp(3rem,10vh,8rem)] pb-16 sm:px-8 lg:gap-16 lg:pb-20">
+      {/* hero: the red pot with the headline, and a dark display window where the books stand in the light */}
+      <section aria-labelledby="hero-title" className="relative flex min-h-[min(100svh,980px)] flex-col overflow-hidden bg-jollof pt-[72px] text-cream">
+        <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.16} />
+        <div className="hero-box relative mx-auto w-full max-w-[1600px] px-4 pt-[clamp(2rem,6vh,5rem)] pb-[clamp(1.5rem,4vh,3rem)] sm:px-8">
           <h1 id="hero-title" className="hero-line wide font-bold">
             <Lines lines={[site?.tagline || "Useful books, slowly cooked."]} />
           </h1>
-          <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,34rem)_1fr]">
-            <div>
-              <p className="t-lead max-w-[38ch] text-cream" data-rise style={{ ["--i" as string]: 2 }}>
+        </div>
+        <div className="relative mx-auto flex w-full max-w-[1600px] flex-1 px-4 pb-10 sm:px-8 lg:pb-12">
+          <div className="hero-window relative grid w-full overflow-hidden bg-char lg:grid-cols-[minmax(0,33rem)_1fr]">
+            <Pattern id="p-window" kind="wax" color="var(--char-2)" opacity={0.7} drift={false} />
+            {/* the ledge the books stand on */}
+            <div className="absolute inset-x-0 bottom-0 h-[18px] bg-[#1f0a05] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] max-lg:hidden" aria-hidden />
+            <div className="relative flex flex-col justify-end p-6 pb-8 sm:p-10 lg:pb-14">
+              <p className="t-lead max-w-[36ch] text-cream" data-rise style={{ ["--i" as string]: 2 }}>
                 {site?.intro || DEFAULT_INTRO}
               </p>
               <div className="mt-8 flex flex-wrap gap-3" data-rise style={{ ["--i" as string]: 3 }}>
@@ -116,12 +123,7 @@ export default async function Home() {
                 )}
               </div>
             </div>
-            {stageBooks.length > 0 && (
-              <div className="relative min-w-0 lg:justify-self-end">
-                <Shelf books={stageBooks} unit={54} />
-                <div className="h-3 bg-char" aria-hidden />
-              </div>
-            )}
+            {leadStage && <HeroDisplay lead={leadStage} others={stageBooks.filter((b) => b.title !== leadStage.title).slice(0, 3)} />}
           </div>
         </div>
         <Rim color="var(--char)" />
@@ -230,7 +232,7 @@ export default async function Home() {
         {/* every cover at once, with the reader list on top */}
         <section id="reader-list" aria-labelledby="rl-title" className="relative scroll-mt-16 overflow-hidden bg-char">
           {covers.length > 0 && (
-            <div className="scroll-grow grid grid-cols-3 overflow-hidden sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
+            <div className="scroll-grow relative grid grid-cols-3 overflow-hidden sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
               {mosaic(covers).map((b, i) => (
                 <div key={i} className="relative aspect-[2/3] overflow-hidden">
                   {b ? (
@@ -244,6 +246,8 @@ export default async function Home() {
                   )}
                 </div>
               ))}
+              {/* dim the covers so the sign-up card reads first */}
+              <div className="pointer-events-none absolute inset-0 bg-[#1f0a05]/55" />
             </div>
           )}
           <div
@@ -251,8 +255,7 @@ export default async function Home() {
               covers.length ? "relative -mt-24 px-4 pb-6 sm:absolute sm:top-1/2 sm:left-1/2 sm:mt-0 sm:w-[min(560px,90vw)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-0" : "relative px-4 py-24"
             }
           >
-            <div className="relative overflow-hidden bg-jollof p-8 text-cream sm:p-12">
-              <Pattern id="p-rl" kind="adire" color="var(--char)" opacity={0.2} />
+            <div className="relative overflow-hidden border-t-8 border-bonnet bg-[#1f0a05] p-8 text-cream shadow-[0_40px_90px_-20px_rgba(0,0,0,0.75)] sm:p-12">
               <div className="relative">
                 <h2 id="rl-title" className="wide text-[clamp(2rem,1.4rem+2vw,3rem)] leading-none font-bold tracking-[-0.04em]">
                   The reader list
@@ -310,6 +313,38 @@ const TILE_TONES = [
     color: "var(--char)",
   },
 ];
+
+const LEAN = [-5, 0, 4, -3];
+
+/**
+ * The books as they would stand in a shop window: the lead title in the middle and a little larger,
+ * the others leaning beside it on a ledge under a pool of light. Scaled as one piece, so the
+ * arrangement holds at every width.
+ */
+function HeroDisplay({ lead, others }: { lead: StageBook; others: StageBook[] }) {
+  const row = [others[0], lead, ...others.slice(1)].filter(Boolean) as StageBook[];
+  return (
+    <div className="relative h-[300px] min-w-0 sm:h-[400px] lg:h-auto lg:min-h-[500px] xl:min-h-[540px]" data-rise style={{ ["--i" as string]: 1 }}>
+      <div className="hero-light absolute inset-0" aria-hidden />
+      <div className="absolute bottom-[18px] left-1/2 flex origin-bottom -translate-x-1/2 scale-[0.52] items-end sm:scale-[0.72] lg:scale-[0.86] xl:scale-100 min-[1800px]:scale-[1.15]">
+        {row.map((b, i) => {
+          const isLead = b === lead;
+          return (
+            <div key={b.title} className={i ? "-ml-[56px]" : ""} style={{ transform: `rotate(${isLead ? 0 : LEAN[i]}deg)`, transformOrigin: "bottom center", zIndex: isLead ? 3 : 2 - Math.abs(i - 1) }}>
+              {isLead ? (
+                <Tilt className="float" max={8}>
+                  <BookObject book={b} scale={52} className="book-front" />
+                </Tilt>
+              ) : (
+                <BookObject book={b} scale={44} className={i < row.indexOf(lead) ? "book-turn-left" : "book-turn-right"} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function Arrow() {
   return (
