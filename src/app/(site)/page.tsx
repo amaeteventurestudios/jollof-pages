@@ -44,7 +44,7 @@ const PILLARS = [
     id: "publish",
     name: "Publish",
     line: "Files Amazon accepts, and a page for every book.",
-    body: "Export the print PDF, EPUB and cover wrap, upload them to KDP, then put the book on your own site with a free chapter.",
+    body: "Export the print PDF, EPUB and cover wrap, upload them to KDP, then put the book on your free author website with a sample chapter.",
     shot: { src: "bookpage", w: 2200, h: 1375, alt: "A published book page with the 3D cover, description and buy links" },
     tone: "bg-bonnet text-char",
     pattern: { kind: "animals", color: "var(--jollof)", opacity: 0.13 },
@@ -128,8 +128,10 @@ const COMPARE: { row: string; us: string | boolean; them: string | boolean | nul
   { row: "Paperback cover wrap designer", us: true, them: null },
   { row: "KDP cover check before upload", us: true, them: null },
   { row: "Spine width worked out for you", us: true, them: null },
-  { row: "Book pages on your own site", us: true, them: null },
+  { row: "Free author website (you.jollofpages.com)", us: true, them: null },
+  { row: "A page for every book, with a free sample", us: true, them: null },
   { row: "Reader list sign-ups", us: true, them: null },
+  { row: "Site design from your cover colours", us: true, them: null },
   { row: "Price, one time", us: "$119", them: "$147" },
 ];
 
@@ -163,7 +165,8 @@ const PLAN = [
   "Print PDF, EPUB 3, Word and cover wrap exports",
   "Every interior theme and KDP trim size",
   "Cover designer and KDP cover check",
-  "Your own book pages and reader list",
+  "Free author website at you.jollofpages.com",
+  "A page for every book, and a reader list",
   "Every update we ship, included",
 ];
 
@@ -199,6 +202,10 @@ const FAQ = [
   {
     q: "Is it a subscription?",
     a: "No. Jollof Pages is one payment of $119, with every future update included. AI cover credits are optional and pay as you go: $10 buys 100 credits, enough for about 25 print-ready covers, and credits never expire.",
+  },
+  {
+    q: "What is the free author website?",
+    a: "Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. Connecting your own domain, like yourname.com, will be part of Author Site Pro, coming soon at $10 a month or $96 a year with a free .com for the first year.",
   },
   {
     q: "Is there a limit on books or pen names?",
@@ -461,7 +468,7 @@ export default async function Home() {
         <section id="site" aria-labelledby="site-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char">
           <Pattern id="p-weave" kind="weave" color="var(--jollof)" opacity={0.14} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead id="site-title" title="A home for every book" sub="Book pages, pen names and a reader list." />
+            <SectionHead id="site-title" title="A home for every book" sub="A free author website comes with every studio." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             <div className="duo relative">
@@ -474,9 +481,9 @@ export default async function Home() {
             </div>
             <ul className="mt-[clamp(2rem,5vw,4rem)] grid gap-4 text-center sm:grid-cols-3">
               {[
-                ["Book pages", "Cover, description, praise, buy buttons and a free chapter to read."],
+                ["Your own website", "Every studio comes with a free site at you.jollofpages.com, styled from your cover colours."],
                 ["Pen names", "Publish under as many names as you like. Your own stays private."],
-                ["Reader list", "Readers sign up on the page. Export the list whenever you need it."],
+                ["Reader list", "Readers sign up on your book pages. Export the list whenever you need it."],
               ].map(([k, v], i) => (
                 <li key={k} className="bg-cream p-6" data-reveal style={{ ["--i" as string]: i }}>
                   <span className="wide block text-[1.375rem] font-bold tracking-[-0.03em]">{k}</span>
@@ -631,6 +638,14 @@ export default async function Home() {
                 <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, coming soon</p>
                 <p className="wide mt-1 text-[1.5rem] font-bold">AI cover credits</p>
                 <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. $10 buys 100 credits: about 50 drafts or 25 print-ready covers. Credits never expire.</p>
+              </div>
+              <Star className="size-12 shrink-0 text-jollof" />
+            </div>
+            <div className="flex flex-col items-start justify-between gap-4 border-2 border-char/15 bg-cream p-6 text-char sm:flex-row sm:items-center sm:p-8" data-reveal>
+              <div>
+                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Upgrade, coming soon</p>
+                <p className="wide mt-1 text-[1.5rem] font-bold">Author Site Pro</p>
+                <p className="mt-1 max-w-[52ch]">Put your author website on your own domain, like yourname.com. $10 a month, or $96 a year with a free .com for the first year.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
