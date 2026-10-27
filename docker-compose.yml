@@ -32,6 +32,10 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       COVER_AI_FREE_EMAILS: ${COVER_AI_FREE_EMAILS:-}
+      # author accounts and sites (docs/author-sites.md)
+      STUDIO_SIGNUP: ${STUDIO_SIGNUP:-}
+      STUDIO_PRICE_CENTS: ${STUDIO_PRICE_CENTS:-}
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-}
     ports:
       - "127.0.0.1:3100:3000"
     depends_on:

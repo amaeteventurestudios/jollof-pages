@@ -64,9 +64,14 @@ export default function LoginPage() {
         </Link>
         <div className="max-w-md py-16">
           <p className="text-[clamp(2rem,4vw,3.25rem)] leading-[1.02] tracking-[-0.02em]">Write it here. Publish it everywhere.</p>
-          <p className="mt-6 text-lg text-[#ebe5e3]/80">The private studio where Jollof Pages books are drafted, formatted for print and ebook, and sent to readers.</p>
+          <p className="mt-6 text-lg text-[#ebe5e3]/80">Your private studio for drafting, formatting for print and ebook, and publishing to your own author site.</p>
         </div>
-        <p className="text-sm text-[#ebe5e3]/70">Accounts are created by the publisher. There is no public sign-up.</p>
+        <p className="text-sm text-[#ebe5e3]/70">
+          New here?{" "}
+          <Link href="/signup" className="font-medium text-[#ebe5e3] underline underline-offset-4">
+            Create your studio
+          </Link>
+        </p>
       </section>
       <section className="flex items-center justify-center p-8">
         <div className="w-full max-w-sm">

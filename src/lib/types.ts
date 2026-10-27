@@ -157,6 +157,11 @@ export interface SiteSettings {
   logo: string;
   socials: { label: string; url: string }[] | null;
   hero_book: string;
+  /** <subdomain>.jollofpages.com; empty for the publisher's own site */
+  subdomain?: string;
+  /** the site served at the root domain (jollofpages.com) */
+  home?: boolean;
+  custom_domain?: string;
 }
 
 export function bookFormat(b: Pick<Book, "format">): BookFormat {

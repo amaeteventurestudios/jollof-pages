@@ -70,3 +70,28 @@ export function verifyWebhook(payload: string, header: string | null, secret: st
     return got.length === expected.length && timingSafeEqual(got, expected);
   });
 }
+
+/** The studio itself: one payment, a lifetime account. STUDIO_PRICE_CENTS defaults to $119. */
+export function studioPriceCents(): number {
+  return Number(process.env.STUDIO_PRICE_CENTS) || 11900;
+}
+
+export function createStudioCheckout(p: { userId: string; email: string; successUrl: string; cancelUrl: string }) {
+  return stripe<CheckoutSession>("checkout/sessions", {
+    method: "POST",
+    form: {
+      mode: "payment",
+      success_url: p.successUrl,
+      cancel_url: p.cancelUrl,
+      client_reference_id: p.userId,
+      ...(p.email ? { customer_email: p.email } : {}),
+      "line_items[0][quantity]": "1",
+      "line_items[0][price_data][currency]": "usd",
+      "line_items[0][price_data][unit_amount]": String(studioPriceCents()),
+      "line_items[0][price_data][product_data][name]": "Jollof Pages studio",
+      "line_items[0][price_data][product_data][description]": "One-time payment. Your writing studio and your own author website, for life.",
+      "metadata[user]": p.userId,
+      "metadata[kind]": "studio",
+    },
+  });
+}

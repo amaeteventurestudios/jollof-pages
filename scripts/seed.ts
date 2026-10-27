@@ -1,6 +1,6 @@
 /**
  * Sets up a Jollof Pages PocketBase:
- *   - the owner account (the only studio login; public sign-up is closed)
+ *   - the owner account (free studio access; its site is the publisher site at the root domain)
  *   - the publisher site settings (pen names are added in the studio, so the owner's own name
  *     never appears on the public site)
  *   - with --demo, four clearly marked sample books with covers, for trying the app out
@@ -158,13 +158,13 @@ async function main() {
     .getFirstListItem(pb.filter("email = {:e}", { e: email }))
     .catch(() => null);
   const owner = existing
-    ? await pb.collection("users").update(existing.id, { password, passwordConfirm: password, name, verified: true })
-    : await pb.collection("users").create({ email, password, passwordConfirm: password, name, verified: true, emailVisibility: false });
+    ? await pb.collection("users").update(existing.id, { password, passwordConfirm: password, name, verified: true, access: "comp" })
+    : await pb.collection("users").create({ email, password, passwordConfirm: password, name, verified: true, emailVisibility: false, access: "comp" });
   console.log(`Owner: ${email}`);
 
   const sites = await pb.collection("site_settings").getFullList();
   if (!sites.length) {
-    await pb.collection("site_settings").create({ owner: owner.id, publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", socials: [] });
+    await pb.collection("site_settings").create({ owner: owner.id, publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", socials: [], home: true });
     console.log("Site settings created");
   }
 

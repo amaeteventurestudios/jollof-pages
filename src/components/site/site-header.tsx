@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Pattern } from "./patterns";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const LINKS = [
+const STUDIO_LINKS = [
   { href: "/#write", label: "Features" },
   { href: "/#how", label: "How it works" },
   { href: "/#pricing", label: "Pricing" },
@@ -13,11 +13,19 @@ const LINKS = [
   { href: "/login", label: "Sign in" },
 ];
 
+// an author's own site: their books, their letter and their reader list, nothing about the studio
+const AUTHOR_LINKS = [
+  { href: "/#books", label: "Books" },
+  { href: "/#about", label: "About" },
+];
+
 /**
  * Fixed masthead. Over the red hero it is clear with cream type; once the page scrolls it turns
  * to frosted cream, tucks away while reading down and comes back on the way up.
  */
-export function SiteHeader({ name, overHero = false }: { name: string; overHero?: boolean }) {
+export function SiteHeader({ name, overHero = false, author = false }: { name: string; overHero?: boolean; author?: boolean }) {
+  const LINKS = author ? AUTHOR_LINKS : STUDIO_LINKS;
+  const cta = author ? { href: "/#join", label: "Join the reader list" } : { href: "/#early-access", label: "Get early access" };
   const [solid, setSolid] = useState(!overHero);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
@@ -56,17 +64,14 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
             {name}
           </Link>
           <nav aria-label="Site" className="hidden items-center gap-7 lg:flex">
-            {LINKS.slice(0, 4).map((l) => (
+            {LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="link font-medium">
                 {l.label}
               </Link>
             ))}
-            <Link href="/login" className="link font-medium">
-              Sign in
-            </Link>
             <ThemeToggle className="link size-11 justify-center" />
-            <Link href="/#early-access" className="btn btn-ink !min-h-11 !px-5 text-[0.95rem]">
-              Get early access
+            <Link href={cta.href} className="btn btn-ink !min-h-11 !px-5 text-[0.95rem]">
+              {cta.label}
             </Link>
           </nav>
           <ThemeToggle className="relative z-[60] ml-auto size-11 justify-center lg:hidden" />
@@ -89,7 +94,7 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
       <div id="site-menu" className="menu-sheet fixed inset-0 z-40 flex flex-col justify-end bg-jollof p-6 pb-10 text-cream lg:hidden" data-open={open} aria-hidden={!open}>
         <Pattern id="p-menu" kind="adire" color="var(--char)" opacity={0.28} />
         <nav aria-label="Menu" className="relative grid gap-2">
-          {[...LINKS, { href: "/#early-access", label: "Get early access" }].map((l, i) => (
+          {[...LINKS, cta].map((l, i) => (
             <Link key={l.href} href={l.href} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} className="wide text-[2.75rem] leading-[1.05] font-bold tracking-[-0.04em]" style={{ ["--i" as string]: i }}>
               {l.label}
             </Link>

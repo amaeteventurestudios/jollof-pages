@@ -36,7 +36,8 @@ export async function uniqueSlug(collection: string, base: string, exceptId?: st
   for (let i = 2; i < 50; i++) {
     const hits = await pb()
       .collection(collection)
-      .getList(1, 1, { filter: pb().filter("slug = {:s}" + (exceptId ? " && id != {:id}" : ""), { s: slug, id: exceptId ?? "" }) })
+      // addresses are unique per account: other authors may use the same one on their own sites
+      .getList(1, 1, { filter: pb().filter("owner = {:u} && slug = {:s}" + (exceptId ? " && id != {:id}" : ""), { u: userId(), s: slug, id: exceptId ?? "" }) })
       .catch(() => ({ totalItems: 0 }));
     if (!hits.totalItems) return slug;
     slug = `${base}-${i}`;
@@ -45,7 +46,8 @@ export async function uniqueSlug(collection: string, base: string, exceptId?: st
 }
 
 export async function getSiteSettings(): Promise<SiteSettings | null> {
-  const list = await pb().collection("site_settings").getList<SiteSettings>(1, 1, { sort: "created" });
+  // every author's site settings are public, so ask for this account's own
+  const list = await pb().collection("site_settings").getList<SiteSettings>(1, 1, { filter: pb().filter("owner = {:u}", { u: userId() }), sort: "created" });
   return list.items[0] ?? null;
 }
 

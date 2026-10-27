@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPublishedBooks, getSite } from "@/lib/pb-server";
+import { getPublishedBooks, resolveSite } from "@/lib/pb-server";
+import { notFound } from "next/navigation";
+import { rootDomain } from "@/lib/sites";
 import { BookCover } from "@/components/book-cover";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -13,12 +15,16 @@ import { toShelfBook } from "@/lib/shelf-catalog";
 export const revalidate = 60;
 export const metadata: Metadata = { title: "Books", description: "Every Jollof Pages title, in paperback and ebook." };
 
-export default async function BooksPage() {
-  const [site, books] = await Promise.all([getSite(), getPublishedBooks()]);
+// also serves an author's /books through /sites/[site]/books
+export default async function BooksPage({ params }: { params?: Promise<{ site?: string }> }) {
+  const sub = (await params)?.site;
+  const site = await resolveSite(sub);
+  if (sub && !site) notFound();
+  const books = await getPublishedBooks(site?.owner);
   const name = site?.publisher_name || "Jollof Pages";
   return (
     <>
-      <SiteHeader name={name} overHero={books.length === 0} />
+      <SiteHeader name={name} overHero={books.length === 0} author={!!sub} />
       {books.length > 0 && (
         <div className="pt-[72px]" style={{ ["--cs-height" as string]: "calc(100svh - 72px)" }}>
           <CompleteShelf books={books.map(toShelfBook)} />
@@ -31,7 +37,7 @@ export default async function BooksPage() {
             <Lines lines={["The books"]} />
           </h1>
           <p className="t-lead mt-6 max-w-[36ch]" data-rise style={{ ["--i" as string]: 2 }}>
-            Practical non-fiction, in paperback and ebook. Open one to read the first pages free.
+            {sub ? "In paperback and ebook." : "Practical non-fiction, in paperback and ebook."} Open one to read the first pages free.
           </p>
         </div>
         <Rim color="var(--cream)" />
@@ -47,7 +53,7 @@ export default async function BooksPage() {
               {books.map((b, i) => (
                 <li key={b.id} className="shelf-item" data-reveal style={{ ["--i" as string]: i % 4 }}>
                   <Link href={`/books/${b.slug}`} className="group block">
-                    <div className="shelf-cover shadow-[0_24px_40px_-24px_rgba(58,20,10,0.55)]">
+                    <div className="shadow-[0_24px_40px_-24px_rgba(58,20,10,0.55)] transition-transform duration-500 group-hover:-translate-y-2 group-hover:-rotate-[1.5deg]">
                       <BookCover book={b} thumb="480x0" sizes="(min-width: 1024px) 25vw, 50vw" />
                     </div>
                     <h2 className="wide mt-5 text-[1.375rem] leading-tight font-bold tracking-[-0.03em] transition-colors group-hover:text-jollof">{b.title}</h2>
@@ -60,7 +66,7 @@ export default async function BooksPage() {
           )}
         </div>
       </main>
-      <SiteFooter name={name} email={site?.email} />
+      <SiteFooter name={name} email={site?.email} {...(sub ? { blurb: site?.intro || undefined, studioUrl: `https://${rootDomain()}` } : {})} />
     </>
   );
 }

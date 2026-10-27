@@ -1,16 +1,18 @@
 "use client";
 
 import { useId, useState } from "react";
-import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 
 export function SubscribeForm({
   source = "website",
+  site,
   tone = "light",
   button = "Join",
   done = "You are on the list. The next book will reach you first.",
 }: {
   source?: string;
+  /** the author site the reader is joining (its subdomain or domain); empty for the publisher's own list */
+  site?: string;
   tone?: "light" | "dark";
   button?: string;
   done?: string;
@@ -26,12 +28,10 @@ export function SubscribeForm({
         e.preventDefault();
         setState("busy");
         try {
-          await pb().collection("subscribers").create({ email, source });
-          setState("done");
-        } catch (err) {
-          // already subscribed is still a success for the reader
-          const status = (err as { status?: number }).status;
-          setState(status === 400 ? "done" : "error");
+          const res = await fetch("/api/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, source, site }) });
+          setState(res.ok ? "done" : "error");
+        } catch {
+          setState("error");
         }
       }}
     >
