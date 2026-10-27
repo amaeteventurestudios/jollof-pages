@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/#studio", label: "The studio" },
   { href: "/#about", label: "About" },
   { href: "/#reader-list", label: "Reader list" },
+  { href: "/login", label: "Sign in" },
 ];
 
 /**
@@ -59,6 +60,9 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
                 {l.label}
               </Link>
             ))}
+            <Link href="/login" className="link font-medium">
+              Sign in
+            </Link>
             <Link href="/#reader-list" className="btn btn-ink !min-h-11 !px-5 text-[0.95rem]">
               Join the reader list
             </Link>
