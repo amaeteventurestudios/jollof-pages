@@ -18,6 +18,10 @@ export function BookObject({ book, scale, pages, className }: { book: StageBook;
             </span>
           )}
         </div>
+        {/* the page block and back board, so the book reads as a solid object as it turns */}
+        <div className="book3d-pages" style={{ width: spine, left: w, background: book.paper === "white" ? "#fbfaf6" : "#f3e9d2" }} />
+        <div className="book3d-pages book3d-top" style={{ height: spine, top: -spine, width: w, background: book.paper === "white" ? "#fbfaf6" : "#f3e9d2" }} />
+        <div className="book3d-back" style={{ background: book.accent, transform: `translateZ(${-spine}px) rotateY(180deg)` }} />
         <div className="book3d-face shadow-[0_40px_70px_-30px_rgba(0,0,0,0.65)]" style={{ background: book.accent }}>
           {book.cover ? (
             // eslint-disable-next-line @next/next/no-img-element

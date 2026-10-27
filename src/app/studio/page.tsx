@@ -16,6 +16,7 @@ import { BOOK_STATUSES, bookGoal, type Author, type Book, type Section, type Wri
 import { fmt, lastDays, streak, wordsByDay } from "@/lib/progress";
 import { today } from "@/lib/slug";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
+import { IMPORT_ACCEPT, IMPORT_EXT } from "@/lib/import/formats";
 
 export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
@@ -215,18 +216,16 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
             setBusy(true);
             try {
               setStatus("Creating the book…");
-              const book = await createBook({ title: title.trim() || file.name.replace(/\.(docx|md|markdown|txt)$/i, ""), withStarter: false });
+              const book = await createBook({ title: title.trim() || file.name.replace(IMPORT_EXT, ""), withStarter: false });
               setStatus("Reading the manuscript…");
-              const elements = /\.(md|markdown|txt)$/i.test(file.name)
-                ? (await import("@/lib/import/markdown")).markdownToElements(await file.text())
-                : await (
-                    await import("@/lib/import/docx")
-                  ).docxToElements(await file.arrayBuffer(), async (blob, type) => {
-                    const rec = await pb()
-                      .collection("assets")
-                      .create({ owner: userId(), book: book.id, file: new File([blob], `image.${type.split("/")[1] || "png"}`, { type }) });
-                    return fileUrl(rec, rec.file);
-                  });
+              const elements = await (
+                await import("@/lib/import/formats")
+              ).fileToElements(file, async (blob, type) => {
+                const rec = await pb()
+                  .collection("assets")
+                  .create({ owner: userId(), book: book.id, file: new File([blob], `image.${type.split("/")[1]?.replace("+xml", "") || "png"}`, { type }) });
+                return fileUrl(rec, rec.file);
+              });
               const counters: Record<Section, number> = { front: 0, body: 0, back: 0 };
               await createChapter(book, { kind: "title_page", title: "Title page", order: counters.front++ });
               await createChapter(book, { kind: "copyright", title: "Copyright", order: counters.front++ });
@@ -244,20 +243,21 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
         >
           <DialogTitle>Import a manuscript</DialogTitle>
           <DialogDescription>
-            A Word file or a Markdown file, such as one written with ChatGPT. Each top heading (Heading 1, or # in Markdown) becomes its own chapter. Headings below it, bold and italic text, lists,
+            A Word, Markdown (such as one written with ChatGPT), EPUB, RTF, OpenDocument, web page or plain text file, including public-domain books from Project Gutenberg and
+            Standard Ebooks. Each top heading (Heading 1, or # in Markdown) becomes its own chapter. Headings below it, bold and italic text, lists,
             quotes, images and footnotes come across. Sections named Introduction, Acknowledgments and so on are placed in the front or back matter.
           </DialogDescription>
           <div className="grid gap-1.5">
-            <Label htmlFor="imp-file">Manuscript (.docx or .md)</Label>
+            <Label htmlFor="imp-file">Manuscript (.docx, .md, .epub, .rtf, .odt, .html or .txt)</Label>
             <Input
               id="imp-file"
               type="file"
               required
-              accept=".docx,.md,.markdown,.txt,text/markdown,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept={IMPORT_ACCEPT}
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
                 setFile(f);
-                if (f && !title) setTitle(f.name.replace(/\.(docx|md|markdown|txt)$/i, ""));
+                if (f && !title) setTitle(f.name.replace(IMPORT_EXT, ""));
               }}
             />
           </div>

@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SpineCalculator } from "@/components/site/spine-calculator";
 import { SubscribeForm } from "@/components/site/subscribe-form";
-import { Pattern, Rim } from "@/components/site/patterns";
+import { Pattern, Rim, type PatternKind } from "@/components/site/patterns";
 import { Marquee } from "@/components/site/marquee";
 import { Intro } from "@/components/site/intro";
 import { InstallButton } from "@/components/pwa";
@@ -29,14 +29,16 @@ const PILLARS = [
     body: "Front matter, chapters and back matter in one list you reorder by dragging. Goals, sprints and a streak keep the book moving.",
     shot: { src: "editor", w: 2400, h: 1500, alt: "The Jollof Pages editor with the chapter list, a chapter open and a Kindle preview" },
     tone: "bg-jollof text-cream",
+    pattern: { kind: "uli", color: "var(--char)", opacity: 0.17 },
   },
   {
     id: "format",
     name: "Format",
     line: "A real paperback and ebook, not a Word file.",
     body: "Pick an interior theme and a KDP trim size. Margins, gutter and bleed are worked out for you from the page count.",
-    shot: { src: "format-dark", w: 2000, h: 1565, alt: "The Format tab in night mode: five interior themes, KDP trim sizes and the print specification" },
+    shot: { src: "format-dark", w: 2000, h: 1526, alt: "The Format tab in night mode: five interior themes, KDP trim sizes and the print specification" },
     tone: "bg-char text-cream",
+    pattern: { kind: "aso", color: "var(--jollof)", opacity: 0.16 },
   },
   {
     id: "publish",
@@ -45,8 +47,9 @@ const PILLARS = [
     body: "Export the print PDF, EPUB and cover wrap, upload them to KDP, then put the book on your own site with a free chapter.",
     shot: { src: "bookpage", w: 2200, h: 1375, alt: "A published book page with the 3D cover, description and buy links" },
     tone: "bg-bonnet text-char",
+    pattern: { kind: "animals", color: "var(--jollof)", opacity: 0.13 },
   },
-];
+] satisfies { id: string; name: string; line: string; body: string; shot: object; tone: string; pattern: { kind: PatternKind; color: string; opacity: number } }[];
 
 const EDITOR_STEPS = [
   {
@@ -62,7 +65,7 @@ const EDITOR_STEPS = [
   {
     title: "Goals that keep you going",
     body: "Set a target length and a finish date. The studio tells you the words you need each day, and a sprint timer helps you find them.",
-    shot: { src: "progress", w: 2000, h: 1426, alt: "Writing progress: streak, words this year, a year heatmap and the last 30 days" },
+    shot: { src: "progress", w: 2000, h: 1403, alt: "Writing progress: streak, words this year, a year heatmap and the last 30 days" },
   },
   {
     title: "Every book at a glance",
@@ -115,7 +118,7 @@ const SAFE = [
 /** Atticus's column comes from its own published table on atticus.io (October 2026). */
 const COMPARE: { row: string; us: string | boolean; them: string | boolean | null }[] = [
   { row: "Platforms", us: "Windows, Mac, Linux, Chromebook", them: "Windows, Mac, Linux, Chromebook" },
-  { row: "Importing", us: "Word and Markdown", them: "Word" },
+  { row: "Importing", us: "Word, EPUB, RTF, ODT, Markdown, HTML, text", them: "Word" },
   { row: "Exporting", us: "EPUB, PDF, DOCX", them: "EPUB, PDF, DOCX" },
   { row: "Parts and chapters", us: true, them: true },
   { row: "Footnotes", us: true, them: true },
@@ -183,7 +186,7 @@ const FAQ = [
   },
   {
     q: "I wrote my draft in ChatGPT or Word. Can I bring it in?",
-    a: "Yes. Import a Word document or paste Markdown, which is what ChatGPT writes. Headings become chapters, and footnotes and images come across too.",
+    a: "Yes. Import a Word document or Markdown, which is what ChatGPT writes, as well as EPUB, RTF, OpenDocument, web pages and plain text, including public-domain books from Project Gutenberg. Headings become chapters, and footnotes and images come across too.",
   },
   {
     q: "Will Amazon KDP accept the files?",
@@ -287,7 +290,8 @@ export default async function Home() {
           <div className="mt-[clamp(3rem,6vw,5rem)]">
             {PILLARS.map((p, i) => (
               <article key={p.id} id={p.id} className={`pillar ${p.tone}`} style={{ ["--z" as string]: i + 1 }} aria-labelledby={`${p.id}-name`}>
-                <div className="pillar-inner mx-auto grid h-full max-w-[1600px] items-center gap-6 px-4 py-[clamp(3rem,8vh,6rem)] sm:gap-8 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+                <Pattern id={`p-${p.id}`} kind={p.pattern.kind} color={p.pattern.color} opacity={p.pattern.opacity} drift={false} />
+                <div className="pillar-inner relative mx-auto grid h-full max-w-[1600px] items-center gap-6 px-4 py-[clamp(3rem,8vh,6rem)] sm:gap-8 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
                   <div className="head text-center lg:text-left">
                     <h3 id={`${p.id}-name`} className="fit fit-title pillar-name wide font-bold" style={{ ["--n" as string]: p.name.length }} data-reveal>
                       {p.name}
@@ -395,11 +399,11 @@ export default async function Home() {
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             <div className="slit" data-p="enter">
-              <Shot src="cover-wrap" w={2200} h={1537} alt="The paperback wrap designer: back, spine and front with bleed, safe area and barcode guides" />
+              <Shot src="cover-wrap" w={2200} h={1499} alt="The paperback wrap designer: back, spine and front with bleed, safe area and barcode guides" />
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
               <div className="bg-cream" data-reveal>
-                <Shot src="cover" w={2200} h={1366} alt="The ebook cover designer: layouts, colours, typeface and a live 1600 by 2560 cover" />
+                <Shot src="cover" w={2200} h={1095} alt="The ebook cover designer: layouts, colours, typeface and a live 1600 by 2560 cover" />
               </div>
               <ul className="grid content-start gap-5 bg-char-2 p-6 sm:p-8">
                 {[
@@ -514,7 +518,7 @@ export default async function Home() {
 
         {/* ---------- anywhere: install it like an app ---------- */}
         <section id="anywhere" aria-labelledby="anywhere-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char">
-          <Pattern id="p-anywhere" kind="weave" color="var(--jollof)" opacity={0.12} drift={false} />
+          <Pattern id="p-anywhere" kind="nsibidi" color="var(--jollof)" opacity={0.16} drift={false} />
           <div className="relative px-4 sm:px-8">
             <SectionHead id="anywhere-title" title="Works on any computer" sub="Install it like an app on desktop or tablet." />
           </div>
@@ -549,10 +553,10 @@ export default async function Home() {
                   <th scope="col" className="p-3 sm:p-5">
                     <span className="sr-only">Feature</span>
                   </th>
-                  <th scope="col" className="bg-jollof p-3 font-bold sm:p-5">
+                  <th scope="col" className="bg-jollof p-3 text-center font-bold sm:p-5">
                     Jollof Pages
                   </th>
-                  <th scope="col" className="p-3 font-semibold sm:p-5">
+                  <th scope="col" className="p-3 text-center font-semibold sm:p-5">
                     Atticus
                   </th>
                 </tr>
@@ -563,10 +567,10 @@ export default async function Home() {
                     <th scope="row" className="p-3 font-semibold sm:p-5">
                       {c.row}
                     </th>
-                    <td className="compare-us p-3 font-semibold sm:p-5">
+                    <td className="compare-us p-3 text-center font-semibold sm:p-5">
                       <Cell v={c.us} />
                     </td>
-                    <td className="p-3 sm:p-5">
+                    <td className="p-3 text-center sm:p-5">
                       <Cell v={c.them} />
                     </td>
                   </tr>
@@ -708,7 +712,7 @@ function Cell({ v }: { v: string | boolean | null }) {
   if (v === true)
     return (
       <>
-        <Check />
+        <Check className="inline-block align-middle" />
         <span className="sr-only">Yes</span>
       </>
     );
@@ -744,7 +748,7 @@ function StepArt({ kind }: { kind: "import" | "look" | "devices" }) {
     return (
       <div className="absolute inset-0 bg-jollof">
         <div className="step-shot absolute top-[8%] left-[6%] w-[112%]">
-          <Shot src="format" w={2000} h={1565} alt="Five interior themes, Accra, Lagos, Uyo, Dakar and Nairobi, with KDP trim sizes" />
+          <Shot src="format" w={2000} h={1526} alt="Five interior themes, Accra, Lagos, Uyo, Dakar and Nairobi, with KDP trim sizes" />
         </div>
       </div>
     );
