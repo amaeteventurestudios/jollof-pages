@@ -48,7 +48,7 @@ export default function StudioHome() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setDialog("import")}>
-              <FileUp /> Import Word file
+              <FileUp /> Import Word or Markdown
             </Button>
             <Button onClick={() => setDialog("new")}>
               <Plus /> New book
@@ -82,7 +82,7 @@ export default function StudioHome() {
             <p className="mx-auto mt-2 max-w-md text-soft">Create a book with the usual front and back matter already in place, or bring in a manuscript you wrote in Word.</p>
             <div className="mt-6 flex justify-center gap-2">
               <Button variant="outline" onClick={() => setDialog("import")}>
-                <FileUp /> Import Word file
+                <FileUp /> Import Word or Markdown
               </Button>
               <Button onClick={() => setDialog("new")}>
                 <Plus /> New book
@@ -134,7 +134,10 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
   const [authors, setAuthors] = useState<Author[]>([]);
   const [author, setAuthor] = useState("");
   useEffect(() => {
-    if (open) listAuthors().then((a) => setAuthors(a)).catch(() => {});
+    if (open)
+      listAuthors()
+        .then((a) => setAuthors(a))
+        .catch(() => {});
   }, [open]);
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -212,13 +215,18 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
             setBusy(true);
             try {
               setStatus("Creating the book…");
-              const book = await createBook({ title: title.trim() || file.name.replace(/\.docx$/i, ""), withStarter: false });
+              const book = await createBook({ title: title.trim() || file.name.replace(/\.(docx|md|markdown|txt)$/i, ""), withStarter: false });
               setStatus("Reading the manuscript…");
-              const { docxToElements } = await import("@/lib/import/docx");
-              const elements = await docxToElements(await file.arrayBuffer(), async (blob, type) => {
-                const rec = await pb().collection("assets").create({ owner: userId(), book: book.id, file: new File([blob], `image.${type.split("/")[1] || "png"}`, { type }) });
-                return fileUrl(rec, rec.file);
-              });
+              const elements = /\.(md|markdown|txt)$/i.test(file.name)
+                ? (await import("@/lib/import/markdown")).markdownToElements(await file.text())
+                : await (
+                    await import("@/lib/import/docx")
+                  ).docxToElements(await file.arrayBuffer(), async (blob, type) => {
+                    const rec = await pb()
+                      .collection("assets")
+                      .create({ owner: userId(), book: book.id, file: new File([blob], `image.${type.split("/")[1] || "png"}`, { type }) });
+                    return fileUrl(rec, rec.file);
+                  });
               const counters: Record<Section, number> = { front: 0, body: 0, back: 0 };
               await createChapter(book, { kind: "title_page", title: "Title page", order: counters.front++ });
               await createChapter(book, { kind: "copyright", title: "Copyright", order: counters.front++ });
@@ -234,21 +242,22 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
             }
           }}
         >
-          <DialogTitle>Import a Word file</DialogTitle>
+          <DialogTitle>Import a manuscript</DialogTitle>
           <DialogDescription>
-            Each Heading 1 becomes its own chapter. Headings below it, bold and italic text, lists, quotes, images and footnotes come across. Sections named Introduction, Acknowledgments and so on are placed in the front or back matter.
+            A Word file or a Markdown file, such as one written with ChatGPT. Each top heading (Heading 1, or # in Markdown) becomes its own chapter. Headings below it, bold and italic text, lists,
+            quotes, images and footnotes come across. Sections named Introduction, Acknowledgments and so on are placed in the front or back matter.
           </DialogDescription>
           <div className="grid gap-1.5">
-            <Label htmlFor="imp-file">Manuscript (.docx)</Label>
+            <Label htmlFor="imp-file">Manuscript (.docx or .md)</Label>
             <Input
               id="imp-file"
               type="file"
               required
-              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".docx,.md,.markdown,.txt,text/markdown,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
                 setFile(f);
-                if (f && !title) setTitle(f.name.replace(/\.docx$/i, ""));
+                if (f && !title) setTitle(f.name.replace(/\.(docx|md|markdown|txt)$/i, ""));
               }}
             />
           </div>

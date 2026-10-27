@@ -33,6 +33,7 @@
     "konva": "^10.9.0",
     "lucide-react": "^1.61.0",
     "mammoth": "^1.13.0",
+    "marked": "^15.0.12",
     "next": "16.4.3",
     "pdf-lib": "^1.17.1",
     "pocketbase": "^0.28.1",

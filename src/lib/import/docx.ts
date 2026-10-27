@@ -75,7 +75,12 @@ export async function docxToElements(file: ArrayBuffer, uploadImage?: (blob: Blo
   const result = await mammoth.convertToHtml(
     { arrayBuffer: file },
     {
-      styleMap: ["p[style-name='Title'] => h1:fresh", "p[style-name='Subtitle'] => p.subtitle:fresh", "p[style-name='Quote'] => blockquote > p:fresh", "p[style-name='Intense Quote'] => div.callout > p:fresh"],
+      styleMap: [
+        "p[style-name='Title'] => h1:fresh",
+        "p[style-name='Subtitle'] => p.subtitle:fresh",
+        "p[style-name='Quote'] => blockquote > p:fresh",
+        "p[style-name='Intense Quote'] => div.callout > p:fresh",
+      ],
       convertImage: mammoth.images.imgElement(async (image) => {
         const b64 = await image.read("base64");
         if (!uploadImage) return { src: "" };
@@ -85,9 +90,14 @@ export async function docxToElements(file: ArrayBuffer, uploadImage?: (blob: Blo
       }),
     },
   );
-  const dom = new DOMParser().parseFromString(`<div id="root">${result.value}</div>`, "text/html");
+  return htmlToElements(result.value, inlineFootnotes);
+}
+
+/** Split converted HTML into book elements on its chapter headings. Shared by the Word and Markdown imports. */
+export function htmlToElements(html: string, prepare?: (root: HTMLElement) => void): ImportedElement[] {
+  const dom = new DOMParser().parseFromString(`<div id="root">${html}</div>`, "text/html");
   const root = dom.getElementById("root")!;
-  inlineFootnotes(root);
+  prepare?.(root);
   root.querySelectorAll("img").forEach((img) => {
     if (!img.getAttribute("src")) img.remove();
   });
