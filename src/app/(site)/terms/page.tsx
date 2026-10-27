@@ -4,7 +4,7 @@ import { ContactLine, LegalPage } from "@/components/marketing/legal-page";
 
 export const metadata: Metadata = {
   title: "Terms and conditions",
-  description: "The terms for using Jollof Pages, the book studio for non-fiction authors.",
+  description: "The terms for using Jollof Pages, the book studio for authors.",
 };
 
 export default function TermsPage() {

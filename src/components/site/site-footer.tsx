@@ -36,7 +36,7 @@ export function SiteFooter({ name, email }: { name: string; email?: string }) {
       <div className="relative mx-auto max-w-[1600px] px-4 pt-20 pb-14 sm:px-8">
         <div className="grid grid-cols-2 gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="col-span-2 lg:col-span-1">
-            <p className="max-w-[26ch] text-[1.25rem] leading-snug">The book studio for non-fiction authors. Write it, format it, publish it.</p>
+            <p className="max-w-[26ch] text-[1.25rem] leading-snug">The book studio for authors. Print books and ebooks, written, formatted and published in one place.</p>
             {email && (
               <a href={`mailto:${email}`} className="link mt-4 inline-block font-medium">
                 {email}

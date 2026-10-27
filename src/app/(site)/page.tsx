@@ -16,7 +16,7 @@ export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: { absolute: "Jollof Pages · Write, format and publish your book" },
-  description: "The book studio for non-fiction authors. Write your manuscript, format a KDP-ready paperback and ebook, design the cover and export files that pass first time.",
+  description: "The book studio for authors. Write your manuscript, format a KDP-ready paperback and ebook, design the cover and export files that pass first time. Novels, memoir, guides and more.",
 };
 
 /** The three things the studio does, each a panel that slides over the last. */
@@ -54,8 +54,8 @@ const EDITOR_STEPS = [
     shot: { src: "editor", w: 2400, h: 1500, alt: "The editor with a chapter open and the chapter list on the left" },
   },
   {
-    title: "Everything non-fiction needs",
-    body: "Headings, lists, quotes, callout boxes for exercises, footnotes, images, links and scene breaks. Find and replace across the whole book.",
+    title: "Every tool a manuscript needs",
+    body: "Headings, lists, quotes, callout boxes, footnotes, images, links and scene breaks. Find and replace across the whole book.",
     shot: { src: "editor-dark", w: 2400, h: 1500, alt: "The editor in night mode showing a callout box and a footnote" },
   },
   {
@@ -123,13 +123,13 @@ const COMPARE: { row: string; us: string; them: string }[] = [
 ];
 
 const KINDS = [
+  { name: "Novels", body: "Parts, scene breaks and classic chapter openings." },
+  { name: "Memoir and essays", body: "Quiet book faces and generous margins." },
   { name: "How-to guides", body: "Steps, lists and callouts for exercises." },
   { name: "Business books", body: "Frameworks, quotes and clean headings." },
-  { name: "Memoir and essays", body: "Classic book faces and quiet chapter openings." },
   { name: "Workbooks", body: "Room to write, large print and a clear contents." },
-  { name: "Faith and self-help", body: "Scripture quotes, reflections and prompts." },
-  { name: "Recipes and food", body: "Images placed exactly where the words need them." },
-];
+  { name: "Poetry", body: "Every line break kept, on screen and in print." },
+]
 
 const PLAN = [
   "Unlimited books and pen names",
@@ -148,6 +148,10 @@ const FAQ = [
   {
     q: "Does it work on a Mac, a PC or a tablet?",
     a: "Yes. Jollof Pages runs in the browser, so it works on Windows, Mac, Linux, Chromebooks, iPads and Android tablets. You can even check a chapter on your phone.",
+  },
+  {
+    q: "Can I write fiction with it?",
+    a: "Yes. Novels, short stories, memoir and poetry all work. You get parts and chapters, scene breaks, drop caps, chapters that open on the right-hand page and classic book typefaces, the same as for non-fiction.",
   },
   {
     q: "Can I make both a paperback and an ebook?",
@@ -204,8 +208,8 @@ export default async function Home() {
                 <span style={{ ["--i" as string]: 2 }}>Publish.</span>
               </span>
             </h1>
-            <p className="fit fit-sub hero-sub mt-[1.1em]" style={{ ["--n" as string]: 40 }} data-rise>
-              The book studio for non-fiction authors.
+            <p className="fit fit-sub hero-sub mt-[1.1em]" style={{ ["--n" as string]: 44 }} data-rise>
+              Create print books and ebooks in one studio.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3" data-rise style={{ ["--i" as string]: 2 }}>
               <a href="#early-access" className="btn">
@@ -521,11 +525,11 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ---------- non-fiction: rows that fill as the pointer passes ---------- */}
+        {/* ---------- every kind of book: rows that fill as the pointer passes ---------- */}
         <section id="made-for" aria-labelledby="kinds-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
           <Pattern id="p-kinds" kind="adire" color="var(--char)" opacity={0.12} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead id="kinds-title" title="Made for books people use" sub="Guides, memoirs, workbooks and business books." />
+            <SectionHead id="kinds-title" title="Made for every kind of book" sub="Novels, memoir, guides, workbooks and poetry." />
           </div>
           <ul className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             {KINDS.map((k, i) => (
