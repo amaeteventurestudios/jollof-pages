@@ -1,5 +1,6 @@
 import "@/components/site/site.css";
 import { Reveal } from "@/components/site/reveal";
+import { Beacon } from "@/components/site/beacon";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       />
       <div className="site min-h-screen">{children}</div>
       <Reveal />
+      <Beacon />
     </>
   );
 }

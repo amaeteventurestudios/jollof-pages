@@ -13,6 +13,7 @@ import type { Book, SiteSettings } from "@/lib/types";
 import { hasPro, siteLabel, siteUrl } from "@/lib/sites";
 import { forgetMySite } from "@/components/studio/use-my-site";
 import { SiteDesignPanel } from "@/components/studio/site-design-panel";
+import { ProPanel, useProStatus } from "@/components/studio/pro-panel";
 import { listAuthors } from "@/lib/studio";
 import { CheckCircle2, Circle } from "lucide-react";
 import type { Author } from "@/lib/types";
@@ -26,6 +27,12 @@ export default function SiteSettingsPage() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [subs, setSubs] = useState<{ email: string; created: string }[]>([]);
   const [msg, setMsg] = useState("");
+  const pro = useProStatus();
+  // after buying Pro, pick up the site's new paid-up date
+  const proOn = pro.status?.pro;
+  useEffect(() => {
+    if (proOn) getSiteSettings().then((s) => s && setRec(s));
+  }, [proOn]);
 
   useEffect(() => {
     getSiteSettings().then((s) => {
@@ -65,6 +72,7 @@ export default function SiteSettingsPage() {
         </div>
         {rec && !rec.home && <ReadyList site={rec} books={books} authors={authors} about={form.about} />}
         {rec && <AddressPanel site={rec} onChange={(s) => setRec(s)} />}
+        {rec && <ProPanel status={pro.status} reload={pro.reload} home={rec.home} />}
         {rec && !rec.home && <SiteDesignPanel site={rec} books={books.filter((b) => b.published)} onSaved={setRec} />}
         <form onSubmit={save}>
           <Panel title="Identity" description="Shown in the header, the footer and search results.">
@@ -252,7 +260,7 @@ function AddressPanel({ site, onChange }: { site: SiteSettings; onChange: (s: Si
       ) : (
         <div className="grid gap-1.5 rounded-md bg-muted p-4 text-sm">
           <p className="font-medium">Your own domain, such as yourname.com</p>
-          <p className="text-soft">Comes with Author Site Pro, $10 a month or $96 a year, alongside newsletters, selling ebooks direct and visitor numbers. Coming soon; your free {root} address stays yours either way.</p>
+          <p className="text-soft">Comes with Author Site Pro, below. Your free {root} address stays yours either way.</p>
         </div>
       )}
       <p className="text-sm text-soft" role="status">
