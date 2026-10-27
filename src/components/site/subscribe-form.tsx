@@ -4,11 +4,21 @@ import { useId, useState } from "react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 
-export function SubscribeForm({ source = "website", tone = "light" }: { source?: string; tone?: "light" | "dark" }) {
+export function SubscribeForm({
+  source = "website",
+  tone = "light",
+  button = "Join",
+  done = "You are on the list. The next book will reach you first.",
+}: {
+  source?: string;
+  tone?: "light" | "dark";
+  button?: string;
+  done?: string;
+}) {
   const id = useId();
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
-  if (state === "done") return <p className="mt-6 text-[1.125rem] font-semibold">You are on the list. The next book will reach you first.</p>;
+  if (state === "done") return <p className="mt-6 text-[1.125rem] font-semibold">{done}</p>;
   return (
     <form
       className="mt-6"
@@ -40,7 +50,7 @@ export function SubscribeForm({ source = "website", tone = "light" }: { source?:
           className="h-12 min-w-0 flex-1 bg-transparent px-5 text-char placeholder:text-char/50 focus-visible:outline-offset-0"
         />
         <button type="submit" className={cn("btn shrink-0", tone !== "dark" && "btn-ink")} disabled={state === "busy"}>
-          {state === "busy" ? "Joining…" : "Join"}
+          {state === "busy" ? "Joining…" : button}
         </button>
       </div>
       {state === "error" && <p className={cn("t-small mt-2 font-semibold", tone === "dark" ? "text-bonnet" : "text-jollof")}>That did not go through. Please try again.</p>}

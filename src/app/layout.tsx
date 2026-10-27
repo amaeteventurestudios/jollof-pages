@@ -8,7 +8,7 @@ const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: 
 
 export const metadata: Metadata = {
   title: { default: "Jollof Pages", template: "%s · Jollof Pages" },
-  description: "Jollof Pages publishes practical non-fiction, written and made in its own studio.",
+  description: "Jollof Pages is the book studio for non-fiction authors: write, format and publish paperbacks and ebooks ready for Amazon KDP.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
 };
 

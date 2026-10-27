@@ -6,10 +6,10 @@ import { Pattern } from "./patterns";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const LINKS = [
-  { href: "/books", label: "Books" },
-  { href: "/#studio", label: "The studio" },
-  { href: "/#about", label: "About" },
-  { href: "/#reader-list", label: "Reader list" },
+  { href: "/#write", label: "Features" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/#faq", label: "FAQ" },
   { href: "/login", label: "Sign in" },
 ];
 
@@ -55,8 +55,8 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
           <Link href="/" className="wide text-[1.25rem] font-bold whitespace-nowrap tracking-[-0.03em]">
             {name}
           </Link>
-          <nav aria-label="Site" className="hidden items-center gap-8 md:flex">
-            {LINKS.slice(0, 3).map((l) => (
+          <nav aria-label="Site" className="hidden items-center gap-7 lg:flex">
+            {LINKS.slice(0, 4).map((l) => (
               <Link key={l.href} href={l.href} className="link font-medium">
                 {l.label}
               </Link>
@@ -65,14 +65,14 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
               Sign in
             </Link>
             <ThemeToggle className="link size-11 justify-center" />
-            <Link href="/#reader-list" className="btn btn-ink !min-h-11 !px-5 text-[0.95rem]">
-              Join the reader list
+            <Link href="/#early-access" className="btn btn-ink !min-h-11 !px-5 text-[0.95rem]">
+              Get early access
             </Link>
           </nav>
-          <ThemeToggle className="relative z-[60] ml-auto size-11 justify-center md:hidden" />
+          <ThemeToggle className="relative z-[60] ml-auto size-11 justify-center lg:hidden" />
           <button
             type="button"
-            className="relative z-[60] flex size-11 items-center justify-center md:hidden"
+            className="relative z-[60] flex size-11 items-center justify-center lg:hidden"
             aria-expanded={open}
             aria-controls="site-menu"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -86,10 +86,10 @@ export function SiteHeader({ name, overHero = false }: { name: string; overHero?
         </div>
       </header>
 
-      <div id="site-menu" className="menu-sheet fixed inset-0 z-40 flex flex-col justify-end bg-jollof p-6 pb-10 text-cream md:hidden" data-open={open} aria-hidden={!open}>
+      <div id="site-menu" className="menu-sheet fixed inset-0 z-40 flex flex-col justify-end bg-jollof p-6 pb-10 text-cream lg:hidden" data-open={open} aria-hidden={!open}>
         <Pattern id="p-menu" kind="adire" color="var(--char)" opacity={0.28} />
         <nav aria-label="Menu" className="relative grid gap-2">
-          {LINKS.map((l, i) => (
+          {[...LINKS, { href: "/#early-access", label: "Get early access" }].map((l, i) => (
             <Link key={l.href} href={l.href} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} className="wide text-[2.75rem] leading-[1.05] font-bold tracking-[-0.04em]" style={{ ["--i" as string]: i }}>
               {l.label}
             </Link>
