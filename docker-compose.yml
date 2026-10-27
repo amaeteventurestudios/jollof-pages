@@ -22,6 +22,16 @@ services:
     environment:
       POCKETBASE_INTERNAL_URL: http://pocketbase:8090
       NEXT_PUBLIC_POCKETBASE_URL: https://${PB_DOMAIN}
+      SITE_URL: https://${SITE_DOMAIN}
+      # AI cover art (docs/AI_COVERS.md). Left empty, the studio runs it in test mode.
+      PB_SUPERUSER_EMAIL: ${PB_SUPERUSER_EMAIL:-}
+      PB_SUPERUSER_PASSWORD: ${PB_SUPERUSER_PASSWORD:-}
+      FAL_KEY: ${FAL_KEY:-}
+      FAL_IMAGE_MODEL: ${FAL_IMAGE_MODEL:-}
+      FAL_IMAGE_EDIT_MODEL: ${FAL_IMAGE_EDIT_MODEL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      COVER_AI_FREE_EMAILS: ${COVER_AI_FREE_EMAILS:-}
     ports:
       - "127.0.0.1:3100:3000"
     depends_on:

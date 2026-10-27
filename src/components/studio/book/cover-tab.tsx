@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
-import { Download, ImagePlus, Loader2, Upload } from "lucide-react";
+import { Download, ImagePlus, Loader2, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CoverStage, COVER_FONTS, COVER_FONTS_HREF, TEMPLATES, U, defaultDesign, useImage, type CoverDesign } from "./cover-designer";
 import { CoverKit } from "./cover-kit";
+import { AiCoverPanel } from "./ai-cover-panel";
 import { artSpec, preflight } from "@/lib/cover-kit";
 import { BookCover } from "@/components/book-cover";
 import { coverGeometry, inches } from "@/lib/kdp";
@@ -290,6 +291,10 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           </div>
         )}
 
+        <Button variant="outline" onClick={() => document.getElementById("ai-artwork")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+          <Sparkles className="text-primary" /> Make artwork with AI
+        </Button>
+
         <div className="grid gap-2 border-t border-border pt-5">
           {mode === "ebook" ? (
             <Button onClick={saveEbookCover} disabled={!!busy}>
@@ -341,6 +346,23 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           />
         </div>
         {mode === "print" && <CoverKit g={g} slug={slugify(book.title)} book={{ title: book.title, subtitle: book.subtitle, author: authorName }} lettering={!design.frontText} checks={checks} />}
+        <AiCoverPanel
+          bookId={book.id}
+          book={{ title: book.title, subtitle: book.subtitle, author: authorName, description: book.description }}
+          design={design}
+          aspect={spec.front.ratio}
+          edgePercent={spec.front.edgePercent + 1}
+          onUse={(side, url, lettered) => {
+            // full-bleed art reads best on the "Your artwork" layout; keep the photo layout if chosen
+            if (side === "front") update({ imageUrl: url, template: design.template === "photo" ? "photo" : "art", ...(lettered ? { frontText: false } : {}) });
+            else {
+              update({ backImageUrl: url });
+              setMode("print");
+            }
+            setMsg(side === "front" ? "Picture placed on the front. Save or export when you are happy." : "Picture placed on the back of the paperback wrap.");
+            boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
         {book.cover && (
           <div className="mt-6 flex items-center gap-4">
             <div className="w-20">
