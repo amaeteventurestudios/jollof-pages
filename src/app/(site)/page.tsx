@@ -195,7 +195,7 @@ const FAQ = [
   },
   {
     q: "Is it a subscription?",
-    a: "No. Jollof Pages is one payment of $119, with every future update included. AI cover credits, when they arrive, are optional and pay as you go.",
+    a: "No. Jollof Pages is one payment of $119, with every future update included. AI cover credits are optional and pay as you go: $10 buys 100 credits, enough for about 25 print-ready covers, and credits never expire.",
   },
   {
     q: "Is there a limit on books or pen names?",
@@ -626,7 +626,7 @@ export default async function Home() {
               <div>
                 <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, coming soon</p>
                 <p className="wide mt-1 text-[1.5rem] font-bold">AI cover credits</p>
-                <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. Pay as you go from $10, only when you want it.</p>
+                <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. $10 buys 100 credits: about 50 drafts or 25 print-ready covers. Credits never expire.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
