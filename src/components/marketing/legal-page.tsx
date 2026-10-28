@@ -4,15 +4,12 @@ import { Pattern } from "@/components/site/patterns";
 import { SectionHead } from "./parts";
 import "./marketing.css";
 
-/** Where legal questions go. Empty until the address is chosen; the pages then say so plainly. */
-export const LEGAL_EMAIL = "";
+/** Where questions about each policy go. */
+export const LEGAL_EMAILS = { terms: "terms@jollofpages.com", privacy: "privacy@jollofpages.com" } as const;
 
-export function ContactLine() {
-  return LEGAL_EMAIL ? (
-    <a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a>
-  ) : (
-    <span className="bg-bonnet/40 px-1 font-semibold">our contact address, which will be published on this page shortly</span>
-  );
+export function ContactLine({ topic }: { topic: keyof typeof LEGAL_EMAILS }) {
+  const email = LEGAL_EMAILS[topic];
+  return <a href={`mailto:${email}`}>{email}</a>;
 }
 
 export function LegalPage({ title, sub, updated, children }: { title: string; sub: string; updated: string; children: React.ReactNode }) {

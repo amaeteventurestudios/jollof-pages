@@ -17,7 +17,7 @@ export default function TermsPage() {
 
       <h2>Who we are</h2>
       <p>
-        Jollof Pages (&ldquo;we&rdquo;, &ldquo;us&rdquo;) provides an online studio for writing, formatting and preparing books for publication. You can reach us at <ContactLine />.
+        Jollof Pages (&ldquo;we&rdquo;, &ldquo;us&rdquo;) provides an online studio for writing, formatting and preparing books for publication. You can reach us at <ContactLine topic="terms" />.
       </p>
 
       <h2>Your account</h2>
@@ -93,7 +93,7 @@ export default function TermsPage() {
 
       <h2>Questions</h2>
       <p>
-        If anything here is unclear, write to us at <ContactLine />. How we handle personal information is set out in our <Link href="/privacy">privacy policy</Link>.
+        If anything here is unclear, write to us at <ContactLine topic="terms" />. How we handle personal information is set out in our <Link href="/privacy">privacy policy</Link>.
       </p>
     </LegalPage>
   );

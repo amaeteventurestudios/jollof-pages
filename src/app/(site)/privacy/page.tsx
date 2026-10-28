@@ -82,7 +82,7 @@ export default function PrivacyPage() {
         <li>Object to how we use it, or complain to your local data protection authority.</li>
       </ul>
       <p>
-        To use any of these rights, write to us at <ContactLine />. We will answer within 30 days.
+        To use any of these rights, write to us at <ContactLine topic="privacy" />. We will answer within 30 days.
       </p>
 
       <h2>Children</h2>
