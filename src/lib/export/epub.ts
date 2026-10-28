@@ -134,7 +134,7 @@ ${input.alsoBy.length ? input.alsoBy.map((b) => `<p class="first">${escapeHtml(b
         if (e.kind.id === "copyright") body = `<section class="copyright">${html}</section>`;
         else if (e.kind.id === "dedication" || e.kind.id === "epigraph") body = `<section class="centered dedication">${html}</section>`;
         else if (e.kind.id === "part")
-          body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}</h1></header>${html}</section>`;
+          body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>${html}</section>`;
         else
           body = `<section>${chapterHeadHtml(e, e.image ? (imageHref.get(e.image) ?? null) : null)}
 ${html}${notes}</section>`;

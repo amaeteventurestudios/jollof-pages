@@ -41,11 +41,18 @@ export function sortChapters<T extends Pick<Chapter, "section" | "order">>(chapt
 export function orderedElements(chapters: Chapter[], theme: InteriorTheme): BookElement[] {
   let chapterNo = 0;
   let partNo = 0;
+  let volumeNo = 0;
   return sortChapters(chapters).map((c) => {
     const kind = elementKind(c.kind);
     let number: number | null = null;
     let label = "";
-    if (c.kind === "part") {
+    if (c.kind === "part" && chapterOptions(c).volume) {
+      // each book in a box set counts its own chapters and parts
+      number = ++volumeNo;
+      label = `Book ${capitalize(numberWord(number))}`;
+      chapterNo = 0;
+      partNo = 0;
+    } else if (c.kind === "part") {
       number = ++partNo;
       label = `Part ${capitalize(numberWord(number))}`;
     } else if (c.kind === "chapter" && c.numbered) {

@@ -281,6 +281,15 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                       <DropdownMenuSeparator />
                     </>
                   )}
+                  {active.kind === "part" && (
+                    <>
+                      <DropdownMenuLabel>Box set</DropdownMenuLabel>
+                      <DropdownMenuCheckboxItem checked={!!opts.volume} onCheckedChange={(v) => patchOptions({ volume: !!v })}>
+                        Starts a new book (Book One, Two…)
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   {!kind.smart && (
                     <>
                       <DropdownMenuLabel>Print pages</DropdownMenuLabel>

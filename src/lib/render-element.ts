@@ -23,7 +23,7 @@ export function elementHtml(e: BookElement, input: Pick<ExportInput, "book" | "a
   if (e.kind.id === "copyright") return `<section class="copyright">${html}</section>`;
   if (e.kind.id === "dedication" || e.kind.id === "epigraph") return `<section class="centered dedication">${html}</section>`;
   if (e.kind.id === "part")
-    return `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}</h1></header>${html}</section>`;
+    return `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>${html}</section>`;
   return `<section>${chapterHeadHtml(e, e.image)}${html}${notes}</section>`;
 }
 

@@ -117,6 +117,8 @@ export interface Book {
   ebook_file?: string;
   created: string;
   updated: string;
+  /** a box set: the books it was assembled from, in order */
+  box_set?: { books: string[] } | null;
   expand?: { author?: Author };
 }
 
@@ -133,6 +135,8 @@ export interface ChapterOptions {
   smallTitle?: boolean;
   /** white title set over the chapter image */
   invert?: boolean;
+  /** on a part: it opens one book of a box set ("Book One"), and chapter numbers start again */
+  volume?: boolean;
 }
 
 export function chapterOptions(c: Pick<Chapter, "options">): ChapterOptions {

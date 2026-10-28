@@ -310,7 +310,7 @@ ${heading}
 #align(center)[
   #text(font: head-font, size: 1em, tracking: 0.16em, upper(${str(e.label)}))
   #v(0.8em)
-  #text(font: head-font, size: 24pt, weight: ${theme.headingWeight})[#${str(e.title)}]
+  #text(font: head-font, size: 24pt, weight: ${theme.headingWeight})[#${str(e.title)}]${e.subtitle ? `\n  #v(0.6em)\n  #text(size: 1.1em, style: "italic")[#${str(e.subtitle)}]` : ""}
 ]
 ${content()}`;
     case "also_by":

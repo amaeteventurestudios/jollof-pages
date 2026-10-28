@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookPlus, FileUp, GraduationCap, LifeBuoy, Plus } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, BookPlus, FileUp, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { BookCover } from "@/components/book-cover";
@@ -12,19 +12,20 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createBook, createChapter, listAuthors, listBooks, loadLogs, userId } from "@/lib/studio";
+import { createBook, createBoxSet, createChapter, listAuthors, listBooks, loadLogs, userId } from "@/lib/studio";
 import { BOOK_STATUSES, bookGoal, type Author, type Book, type Section, type WritingLog } from "@/lib/types";
 import { fmt, lastDays, streak, wordsByDay } from "@/lib/progress";
 import { today } from "@/lib/slug";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { IMPORT_ACCEPT, IMPORT_EXT } from "@/lib/import/formats";
 import { TUTORIALS, loadDone } from "@/lib/tutorials";
+import { cn } from "@/lib/utils";
 
 export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
   const [logs, setLogs] = useState<WritingLog[]>([]);
   const [error, setError] = useState("");
-  const [dialog, setDialog] = useState<null | "new" | "import" | "isbn">(null);
+  const [dialog, setDialog] = useState<null | "new" | "import" | "isbn" | "boxset">(null);
 
   const load = useCallback(() => {
     Promise.all([listBooks(), loadLogs(60)])
@@ -56,6 +57,11 @@ export default function StudioHome() {
             <Button variant="outline" onClick={() => setDialog("import")}>
               <FileUp /> Import Word or Markdown
             </Button>
+            {(books ?? []).filter((b) => !b.box_set).length >= 2 && (
+              <Button variant="outline" onClick={() => setDialog("boxset")}>
+                <Library /> Box set
+              </Button>
+            )}
             <Button onClick={() => setDialog("new")}>
               <Plus /> New book
             </Button>
@@ -110,6 +116,7 @@ export default function StudioHome() {
                     </div>
                     <div className="mt-3 flex items-start justify-between gap-2">
                       <h2 className="leading-snug font-medium text-ink group-hover:text-primary">{b.title}</h2>
+                      {b.box_set && <Badge>Box set</Badge>}
                       {b.published && <Badge variant="success">Live</Badge>}
                     </div>
                     <p className="mt-0.5 text-sm text-soft">{BOOK_STATUSES.find((s) => s.id === b.status)?.label ?? "Drafting"}</p>
@@ -128,6 +135,7 @@ export default function StudioHome() {
       </main>
       <NewBookDialog open={dialog === "new"} onClose={() => setDialog(null)} />
       <ImportDialog open={dialog === "import"} onClose={() => setDialog(null)} />
+      <BoxSetDialog open={dialog === "boxset"} books={(books ?? []).filter((b) => !b.box_set)} onClose={() => setDialog(null)} />
       <IsbnDialog open={dialog === "isbn"} onClose={() => setDialog(null)} />
     </>
   );
@@ -251,6 +259,127 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
             </Button>
             <Button type="submit" disabled={busy || !title.trim()}>
               {busy ? "Creating…" : "Create book"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Pick two or more books, put them in order, and get one book holding them all. */
+function BoxSetDialog({ open, books, onClose }: { open: boolean; books: Book[]; onClose: () => void }) {
+  const router = useRouter();
+  const [picked, setPicked] = useState<string[]>([]);
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [busy, setBusy] = useState<[number, number] | null>(null);
+  const [error, setError] = useState("");
+  const byId = new Map(books.map((b) => [b.id, b]));
+  const chosen = picked.map((id) => byId.get(id)).filter((b): b is Book => !!b);
+
+  function toggle(id: string) {
+    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  }
+  function move(i: number, d: -1 | 1) {
+    setPicked((p) => {
+      const next = [...p];
+      [next[i], next[i + d]] = [next[i + d], next[i]];
+      return next;
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && !busy && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <form
+          className="grid gap-5"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError("");
+            setBusy([0, 1]);
+            try {
+              const book = await createBoxSet({
+                title: title.trim() || `${chosen[0]?.title} and more`,
+                subtitle: subtitle.trim() || `${chosen.length} books in one`,
+                author: chosen[0]?.author,
+                bookIds: picked,
+                onProgress: (d, t) => setBusy([d, t]),
+              });
+              router.push(`/studio/books/${book.id}`);
+            } catch (err) {
+              setError(errorMessage(err));
+              setBusy(null);
+            }
+          }}
+        >
+          <div>
+            <DialogTitle>Make a box set</DialogTitle>
+            <DialogDescription className="mt-1">
+              One book holding several of yours, each opening with its own &ldquo;Book One&rdquo;, &ldquo;Book Two&rdquo; page and its chapters numbered from one again. The box set gets its own title page, contents and cover; the original books are not changed.
+            </DialogDescription>
+          </div>
+          <fieldset className="grid gap-2">
+            <legend className="mb-2 text-sm font-medium">1. Choose the books</legend>
+            <ul className="grid max-h-56 gap-1 overflow-y-auto border border-border p-1">
+              {books.map((b) => (
+                <li key={b.id}>
+                  <label className={cn("flex cursor-pointer items-center gap-3 px-2 py-1.5 hover:bg-paper", picked.includes(b.id) && "bg-primary-soft")}>
+                    <input type="checkbox" checked={picked.includes(b.id)} onChange={() => toggle(b.id)} className="size-4 accent-[var(--primary)]" />
+                    <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                    <span className="tabular text-sm text-soft">{fmt(b.word_count || 0)} words</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+          {chosen.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium">2. Put them in order</p>
+              <ol className="grid gap-1">
+                {chosen.map((b, i) => (
+                  <li key={b.id} className="flex items-center gap-3 border border-border bg-card px-3 py-2">
+                    <span className="text-[13px] font-medium tracking-[0.08em] text-primary uppercase">Book {i + 1}</span>
+                    <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label={`Move ${b.title} up`} disabled={i === 0} onClick={() => move(i, -1)}>
+                      <ArrowUp />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label={`Move ${b.title} down`} disabled={i === chosen.length - 1} onClick={() => move(i, 1)}>
+                      <ArrowDown />
+                    </Button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          <div className="grid gap-3">
+            <p className="text-sm font-medium">3. Name the box set</p>
+            <div className="grid gap-1.5">
+              <Label htmlFor="bs-title">Title</Label>
+              <Input id="bs-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={chosen[0] ? `${chosen[0].title} and more` : "e.g. The Complete Kitchen Series"} />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="bs-sub">Subtitle</Label>
+              <Input id="bs-sub" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder={chosen.length ? `${chosen.length} books in one` : "e.g. Books 1 to 3"} />
+            </div>
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {busy && (
+            <div role="status" aria-live="polite">
+              <p className="text-sm text-soft">
+                Copying chapters… {busy[0]} of {busy[1]}
+              </p>
+              <div className="mt-1.5 h-1.5 overflow-hidden bg-paper-2">
+                <div className="h-full bg-primary transition-[width]" style={{ width: `${Math.round((busy[0] / busy[1]) * 100)}%` }} />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={!!busy}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!!busy || chosen.length < 2}>
+              {busy ? "Building…" : chosen.length < 2 ? "Choose at least two books" : `Make a box set of ${chosen.length}`}
             </Button>
           </div>
         </form>
