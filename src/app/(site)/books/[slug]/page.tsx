@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
-import { rootDomain } from "@/lib/sites";
+import { hasPro, rootDomain } from "@/lib/sites";
+import { BuyDirect } from "@/components/site/buy-direct";
 import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { BookObject } from "@/components/site/book-object";
 import { Tilt } from "@/components/site/tilt";
@@ -55,6 +56,7 @@ export default async function BookPage({ params }: { params: Params }) {
   const reviews = (book.reviews ?? []).filter((q) => q.quote);
   const author = book.expand?.author;
   const upcoming = isUpcoming(book);
+  const direct = book.sell_direct && book.ebook_file && (book.ebook_price_cents ?? 0) >= 100 && hasPro(site) ? `$${(book.ebook_price_cents! / 100).toFixed(2)}` : "";
   const dark = isDark(sb.accent);
   const details: [string, string][] = [
     ["Format", `Paperback, ${sb.trimLabel}`],
@@ -147,13 +149,15 @@ export default async function BookPage({ params }: { params: Params }) {
               </div>
             )}
 
-            <Block title={links.length ? (upcoming ? "Preorder" : "Purchase") : upcoming ? "Coming soon" : "Purchase"} dark={dark}>
-              {links.length > 0 ? (
+            <Block title={links.length || direct ? (upcoming ? "Preorder" : "Purchase") : upcoming ? "Coming soon" : "Purchase"} dark={dark}>
+              {links.length > 0 || direct ? (
                 <ul className="grid gap-2 sm:grid-cols-2">
+                  {direct && <BuyDirect bookId={book.id} price={direct} dark={dark} />}
                   {links.map((l) => (
                     <li key={l.url}>
                       <a
                         href={l.url}
+                        data-track={l.label || "Amazon"}
                         target="_blank"
                         rel="noreferrer"
                         className={cn("buy-row flex h-16 items-center justify-between gap-4 border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}

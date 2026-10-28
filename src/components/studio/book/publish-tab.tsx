@@ -14,6 +14,7 @@ import { bookFormat, type BuyLink, type Quote } from "@/lib/types";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
 import { useMySite } from "../use-my-site";
+import { SellDirect } from "./sell-direct";
 
 const STORES = ["Amazon", "Apple Books", "Kobo", "Barnes & Noble", "Google Play Books", "Bookshop.org", "Okadabooks", "Selar"];
 
@@ -149,6 +150,8 @@ export function PublishTab({ ws }: { ws: Workspace }) {
           </Button>
         </div>
       </Panel>
+
+      <SellDirect ws={ws} />
 
       <QuotesPanel ws={ws} field="praise" title="Praise" description="Quotes from people about the book, shown under Praise on its page." sourceLabel="Name" roleLabel="Who they are" />
       <QuotesPanel ws={ws} field="reviews" title="Reviews" description="Excerpts from published reviews, shown under Reviews with a link to the full review." sourceLabel="Publication" />

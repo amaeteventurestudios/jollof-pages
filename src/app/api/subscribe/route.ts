@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
 import { resolveSite, serverPb } from "@/lib/pb-server";
+import { adminConfigured, adminPb } from "@/lib/server/credits";
+import { count } from "@/lib/server/stats";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,10 +17,19 @@ export async function POST(req: Request) {
   try {
     await serverPb()
       .collection("subscribers")
-      .create({ email: clean, source: String(source ?? "website").slice(0, 120), owner: site.owner });
+      .create({ email: clean, source: String(source ?? "website").slice(0, 120), owner: site.owner, token: randomBytes(20).toString("hex") });
+    count(site.owner, "signup", String(source ?? "website").slice(0, 120));
   } catch (e) {
-    // already on this list is still a success for the reader
+    // already on this list is still a success for the reader; someone who left and comes back rejoins
     if ((e as { status?: number }).status !== 400) return NextResponse.json({ error: "Could not join right now." }, { status: 502 });
+    if (adminConfigured()) {
+      const pb = await adminPb().catch(() => null);
+      const row = await pb
+        ?.collection("subscribers")
+        .getFirstListItem<{ id: string; unsubscribed: boolean }>(pb.filter("owner = {:o} && email = {:e}", { o: site.owner, e: clean }))
+        .catch(() => null);
+      if (row?.unsubscribed) await pb!.collection("subscribers").update(row.id, { unsubscribed: false });
+    }
   }
   return NextResponse.json({ ok: true });
 }
