@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, ExternalLink, Feather, Flame, LogOut, Settings2 } from "lucide-react";
+import { BarChart3, BookOpen, ExternalLink, Feather, Flame, LogOut, Mail, Settings2 } from "lucide-react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -14,6 +14,8 @@ const LINKS = [
   { href: "/studio/authors", label: "Pen names", icon: Feather },
   { href: "/studio/progress", label: "Progress", icon: Flame },
   { href: "/studio/site", label: "Website", icon: Settings2 },
+  { href: "/studio/readers", label: "Readers", icon: Mail },
+  { href: "/studio/stats", label: "Analytics", icon: BarChart3 },
 ];
 
 export function StudioNav() {

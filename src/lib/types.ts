@@ -101,6 +101,10 @@ export interface Book {
   accent: string;
   word_count: number;
   page_count: number;
+  /** sold straight from the author's site, paid into their own Stripe account (Pro) */
+  sell_direct?: boolean;
+  ebook_price_cents?: number;
+  ebook_file?: string;
   created: string;
   updated: string;
   expand?: { author?: Author };
