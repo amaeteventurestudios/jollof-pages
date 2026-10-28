@@ -1,8 +1,8 @@
 import { authorName, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
-import { pageGeometry } from "../kdp";
+import { pageGeometry, type Binding } from "../kdp";
 import type { DocMark, DocNode } from "../doc/types";
 import { getTheme, sceneBreakGlyph, type InteriorTheme } from "../themes";
-import { bookFormat, type BookFormat } from "../types";
+import { bookFormat, printEdition, type BookFormat } from "../types";
 
 /**
  * Print interior as Typst source. Typst (Apache-2.0) turns this into a press-ready PDF with
@@ -14,6 +14,8 @@ export interface TypstOptions {
   pageCount: number;
   /** image src -> path relative to the .typ file */
   imagePath?: (src: string) => string | null;
+  /** hardcover uses its own trim and a wider gutter; paperback by default */
+  binding?: Binding;
 }
 
 export function typstString(s: string): string {
@@ -148,9 +150,9 @@ function sceneBreak(theme: InteriorTheme): string {
     : `#let scene-break() = block(above: 1.3em, below: 1.3em, width: 100%, align(center, line(length: 18%, stroke: 0.5pt)))`;
 }
 
-function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, pageCount: number): string {
+function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, pageCount: number, binding: Binding): string {
   const { book } = input;
-  const g = pageGeometry(format.trim, pageCount, format.bleed);
+  const g = pageGeometry(format.trim, pageCount, format.bleed, binding);
   const size = format.largePrint ? 16 : format.fontSize;
   const lh = format.largePrint ? Math.max(format.lineHeight, 1.5) : format.lineHeight;
   const bodyFont = `(${str(theme.bodyFont)}, "Libertinus Serif")`;
@@ -308,10 +310,12 @@ ${content(theme.leadIn && format.dropCaps && LEAD_IN_KINDS.has(e.kind.id))}`;
 
 /** Whole-book Typst source. */
 export function buildTypst(input: ExportInput, opts: TypstOptions): string {
-  const format = bookFormat(input.book);
+  const binding = opts.binding ?? "paperback";
+  const base = bookFormat(input.book);
+  const format = { ...base, ...printEdition(base, binding) };
   const theme = getTheme(format.theme);
   const elements = orderedElements(input.chapters, theme).filter((e) => format.printToc || e.kind.id !== "contents");
-  const parts: string[] = [preamble(input, format, theme, opts.pageCount)];
+  const parts: string[] = [preamble(input, format, theme, opts.pageCount, binding)];
   let bodyStarted = false;
   elements.forEach((e, i) => {
     const out: string[] = [];

@@ -59,7 +59,7 @@ export default async function BookPage({ params }: { params: Params }) {
   const direct = book.sell_direct && book.ebook_file && (book.ebook_price_cents ?? 0) >= 100 && hasPro(site) ? `$${(book.ebook_price_cents! / 100).toFixed(2)}` : "";
   const dark = isDark(sb.accent);
   const details: [string, string][] = [
-    ["Format", `Paperback, ${sb.trimLabel}`],
+    ["Format", `${f.hardcover ? "Hardcover and paperback" : "Paperback"}, ${sb.trimLabel}`],
     ["Pages", book.page_count ? String(book.page_count) : ""],
     ["Paper", PAPER_LABELS[f.paper as PaperType] ?? ""],
     ["Spine", book.page_count ? `${spineOf(sb).toFixed(3)} in` : ""],
@@ -74,6 +74,7 @@ export default async function BookPage({ params }: { params: Params }) {
         : "",
     ],
     ["Paperback ISBN", book.isbn_paperback],
+    ["Hardcover ISBN", book.isbn_hardcover ?? ""],
     ["Ebook ISBN", book.isbn_ebook],
     ["Series", book.series ? `${book.series}${book.series_number ? `, book ${book.series_number}` : ""}` : ""],
     ["Imprint", book.imprint],

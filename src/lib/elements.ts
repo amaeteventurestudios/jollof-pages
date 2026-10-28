@@ -55,6 +55,7 @@ export interface TemplateContext {
   imprint: string;
   isbnEbook?: string;
   isbnPaperback?: string;
+  isbnHardcover?: string;
   authorBio?: string;
 }
 
@@ -66,6 +67,7 @@ export function defaultContent(kind: string, ctx: TemplateContext): DocNode {
           `Copyright © ${ctx.year} ${ctx.author}`,
           "All rights reserved. No part of this book may be reproduced in any form or by any electronic or mechanical means, including information storage and retrieval systems, without written permission from the author, except for the use of brief quotations in a book review.",
           ctx.isbnPaperback ? `ISBN ${ctx.isbnPaperback} (paperback)` : "",
+          ctx.isbnHardcover ? `ISBN ${ctx.isbnHardcover} (hardcover)` : "",
           ctx.isbnEbook ? `ISBN ${ctx.isbnEbook} (ebook)` : "",
           `Published by ${ctx.imprint}`,
           "First edition",

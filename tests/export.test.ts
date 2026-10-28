@@ -53,6 +53,19 @@ describe("exports", () => {
     expect(existsSync(path.join(dir, "book.pdf"))).toBe(true);
   });
 
+  it.skipIf(!typst)("compiles a hardcover interior at the hardcover trim with a wider gutter", () => {
+    const input = sampleExportInput();
+    input.book.format = { ...input.book.format, trim: "5x8", hardcover: true };
+    const src = buildTypst(input, { pageCount: 120, binding: "hardcover" });
+    expect(src).toContain("width: 5.5in");
+    expect(src).toContain("inside: 0.75in");
+    expect(buildTypst(input, { pageCount: 120 })).toContain("inside: 0.625in");
+    const dir = mkdtempSync(path.join(tmpdir(), "jp-test-"));
+    writeFileSync(path.join(dir, "book.typ"), src);
+    execFileSync(typst!, ["compile", "--font-path", path.join(root, "fonts"), "--ignore-system-fonts", path.join(dir, "book.typ"), path.join(dir, "book.pdf")], { stdio: "pipe" });
+    expect(existsSync(path.join(dir, "book.pdf"))).toBe(true);
+  });
+
   it("builds a DOCX manuscript", async () => {
     const blob = await buildDocx(sampleExportInput());
     const zip = await JSZip.loadAsync(await blob.arrayBuffer());

@@ -46,6 +46,7 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
     language: book.language || "en",
     isbn_ebook: book.isbn_ebook,
     isbn_paperback: book.isbn_paperback,
+    isbn_hardcover: book.isbn_hardcover ?? "",
     imprint: book.imprint,
     publication_date: book.publication_date?.slice(0, 10) ?? "",
     status: book.status || "drafting",
@@ -124,10 +125,13 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
             <Input id="d-lang" value={d.language} maxLength={12} onChange={(e) => set("language", e.target.value)} className="w-32" />
           </Field>
         </Panel>
-        <Panel title="Publishing" description="ISBNs are optional for KDP; Amazon assigns a free one to paperbacks.">
+        <Panel title="Publishing" description="ISBNs are optional for KDP; Amazon assigns a free one to paperbacks and hardcovers. Each edition needs its own.">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field id="d-isbn-p" label="Paperback ISBN">
               <Input id="d-isbn-p" value={d.isbn_paperback} onChange={(e) => set("isbn_paperback", e.target.value)} />
+            </Field>
+            <Field id="d-isbn-h" label="Hardcover ISBN">
+              <Input id="d-isbn-h" value={d.isbn_hardcover} onChange={(e) => set("isbn_hardcover", e.target.value)} />
             </Field>
             <Field id="d-isbn-e" label="Ebook ISBN">
               <Input id="d-isbn-e" value={d.isbn_ebook} onChange={(e) => set("isbn_ebook", e.target.value)} />

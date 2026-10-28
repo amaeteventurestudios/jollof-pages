@@ -6,8 +6,8 @@ import { PDFDocument } from "pdf-lib";
 import type { ExportInput } from "../book-model";
 import { buildTypst } from "../export/typst";
 import { collectImages } from "../doc/types";
-import { estimatePages, minGutter } from "../kdp";
-import { bookFormat } from "../types";
+import { estimatePages, minGutter, type Binding } from "../kdp";
+import { bookFormat, printEdition } from "../types";
 import { fontPath, run, typstBin } from "./tools";
 
 export interface PdfResult {
@@ -28,7 +28,11 @@ function extFor(type: string): string {
  * Compile the interior. KDP's gutter depends on the page count, so when the first pass lands in a
  * different gutter band than the guess, compile once more with the real count.
  */
-export async function compileInterior(input: ExportInput, fetchImage: (src: string) => Promise<{ bytes: Uint8Array; type: string } | null>): Promise<PdfResult> {
+export async function compileInterior(
+  input: ExportInput,
+  fetchImage: (src: string) => Promise<{ bytes: Uint8Array; type: string } | null>,
+  binding: Binding = "paperback",
+): Promise<PdfResult> {
   const dir = await mkdtemp(path.join(tmpdir(), "jp-typst-"));
   try {
     await mkdir(path.join(dir, "img"));
@@ -42,10 +46,12 @@ export async function compileInterior(input: ExportInput, fetchImage: (src: stri
       paths.set(src, name);
     }
     const f = bookFormat(input.book);
-    let guess = input.book.page_count || estimatePages(input.chapters.reduce((s, c) => s + (c.word_count || 0), 0), f.trim, input.chapters.length, f.fontSize);
+    const { trim } = printEdition(f, binding);
+    const last = binding === "hardcover" ? input.book.hardcover_page_count : input.book.page_count;
+    let guess = last || estimatePages(input.chapters.reduce((s, c) => s + (c.word_count || 0), 0), trim, input.chapters.length, f.fontSize);
     let result: PdfResult | null = null;
     for (let pass = 0; pass < 2; pass++) {
-      const source = buildTypst(input, { pageCount: guess, imagePath: (src) => paths.get(src) ?? null });
+      const source = buildTypst(input, { pageCount: guess, binding, imagePath: (src) => paths.get(src) ?? null });
       await writeFile(path.join(dir, "book.typ"), source);
       await run(typstBin(), ["compile", "--font-path", fontPath(), "--ignore-system-fonts", path.join(dir, "book.typ"), path.join(dir, "book.pdf")], {
         timeout: 120_000,

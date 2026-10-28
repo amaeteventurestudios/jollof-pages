@@ -9,11 +9,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-/** POST { bookId, format?: "pdf" | "typ" } with the PocketBase token as Bearer auth. */
+/** POST { bookId, format?: "pdf" | "typ", binding?: "paperback" | "hardcover" } with the PocketBase token as Bearer auth. */
 export async function POST(req: Request) {
   const token = bearer(req);
   if (!token) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-  const { bookId, format } = (await req.json().catch(() => ({}))) as { bookId?: string; format?: string };
+  const { bookId, format, binding: asked } = (await req.json().catch(() => ({}))) as { bookId?: string; format?: string; binding?: string };
+  const binding = asked === "hardcover" ? "hardcover" : "paperback";
   if (!bookId) return NextResponse.json({ error: "bookId is required" }, { status: 400 });
   const client = serverPb(token);
   let input;
@@ -34,9 +35,12 @@ export async function POST(req: Request) {
       const res = await fetch(url, { headers: { Authorization: token } });
       if (!res.ok) return null;
       return { bytes: new Uint8Array(await res.arrayBuffer()), type: res.headers.get("content-type") || "image/jpeg" };
-    });
-    await client.collection("books").update(bookId, { page_count: result.pages }).catch(() => undefined);
-    const name = slugify(input.book.title);
+    }, binding);
+    await client
+      .collection("books")
+      .update(bookId, binding === "hardcover" ? { hardcover_page_count: result.pages } : { page_count: result.pages })
+      .catch(() => undefined);
+    const name = slugify(input.book.title) + (binding === "hardcover" ? "-hardcover" : "");
     if (format === "typ")
       return new NextResponse(result.source, {
         headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Disposition": `attachment; filename="${name}.typ"`, "X-Page-Count": String(result.pages) },

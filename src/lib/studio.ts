@@ -98,6 +98,7 @@ export async function createChapter(
       imprint: book.imprint || "Jollof Pages",
       isbnEbook: book.isbn_ebook,
       isbnPaperback: book.isbn_paperback,
+      isbnHardcover: book.isbn_hardcover,
       authorBio: o.authorBio ?? book.expand?.author?.bio,
     });
   return pb()

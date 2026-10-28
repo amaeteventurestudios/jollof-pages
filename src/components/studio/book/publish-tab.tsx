@@ -9,8 +9,8 @@ import { Field, Panel } from "./details-tab";
 import { uniqueSlug } from "@/lib/studio";
 import { slugify } from "@/lib/slug";
 import { errorMessage, pb } from "@/lib/pb";
-import { coverGeometry, maxPages, MIN_PAGES, getTrim } from "@/lib/kdp";
-import { bookFormat, type BuyLink, type Quote } from "@/lib/types";
+import { coverGeometry, HARDCOVER, maxPages, MIN_PAGES, getTrim } from "@/lib/kdp";
+import { bookFormat, printEdition, type BuyLink, type Quote } from "@/lib/types";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
 import { useMySite } from "../use-my-site";
@@ -201,6 +201,9 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
   const { pages, estimated } = usePageCount(ws);
   const max = maxPages(getTrim(f.trim), f.paper);
   const cover = coverGeometry(f.trim, pages, f.paper);
+  const hard = usePageCount(ws, "hardcover");
+  const hc = printEdition(f, "hardcover");
+  const hcover = coverGeometry(hc.trim, hard.pages, hc.paper, "hardcover");
   const items: [boolean, string][] = [
     [!!book.title && !!book.expand?.author?.name, "Title and author name"],
     [!!book.description && book.description.length <= 4000, "Description under 4,000 characters"],
@@ -210,6 +213,12 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
     [!estimated && pages >= MIN_PAGES && pages <= max, `Print PDF built, ${MIN_PAGES}–${max} pages`],
     [!!book.cover, "Ebook cover (front only)"],
     [!!book.cover_full, `Paperback cover PDF, ${cover.width.toFixed(3)} x ${cover.height.toFixed(3)} in`],
+    ...(f.hardcover
+      ? ([
+          [!hard.estimated && hard.pages >= HARDCOVER.minPages && hard.pages <= HARDCOVER.maxPages, `Hardcover PDF built, ${HARDCOVER.minPages}–${HARDCOVER.maxPages} pages`],
+          [!!book.cover_hardcover, `Hardcover cover PDF, ${hcover.width.toFixed(3)} x ${hcover.height.toFixed(3)} in`],
+        ] as [boolean, string][])
+      : []),
   ];
   return (
     <Panel title="Amazon KDP checklist" description="KDP uploads stay manual. When everything here is ticked, download the files from the Export tab and upload them at kdp.amazon.com.">

@@ -89,9 +89,16 @@ interface FrontProps {
   img: HTMLImageElement | null;
   editable: boolean;
   onMove?: (key: "title" | "author", pos: { x: number; y: number }) => void;
+  /**
+   * The visible face, when it is smaller than the printed area: a hardcover board inside its wrap.
+   * Lettering and the layout are placed on it; colour and pictures still run to the outer edges.
+   */
+  face?: { x: number; y: number; w: number; h: number };
 }
 
-function Front({ book, d, x, y, w, h, img, editable, onMove }: FrontProps) {
+function Front({ book, d, x: ox, y: oy, w: ow, h: oh, img, editable, onMove, face }: FrontProps) {
+  const { x, y, w, h } = face ?? { x: ox, y: oy, w: ow, h: oh };
+  const bottom = oy + oh;
   const center = d.template === "framed";
   const tw = w * (center ? 0.74 : 0.84);
   const titleFont = d.titleSize * w;
@@ -117,18 +124,19 @@ function Front({ book, d, x, y, w, h, img, editable, onMove }: FrontProps) {
   const tx = (p: { x: number }) => (center ? x + p.x * w - tw / 2 : x + p.x * w);
   return (
     <Group>
-      <Rect x={x} y={y} width={w} height={h} fill={d.bg} />
+      <Rect x={ox} y={oy} width={ow} height={oh} fill={d.bg} />
       {d.template === "art" &&
         (img ? (
-          <CoverImage img={img} x={x} y={y} w={w} h={h} />
+          <CoverImage img={img} x={ox} y={oy} w={ow} h={oh} />
         ) : (
           <Text text={"Add your front artwork"} x={x} y={y + h * 0.47} width={w} align="center" fontFamily="Inter" fontSize={w * 0.05} fill={d.fg} opacity={0.6} />
         ))}
-      {d.template === "photo" && img && <CoverImage img={img} x={x} y={y} w={w} h={h} />}
-      {d.template === "photo" && <Rect x={x} y={y + h * 0.58} width={w} height={h * 0.42} fill="#000" opacity={0.55} />}
-      {d.template === "split" && (img ? <CoverImage img={img} x={x} y={y} w={w} h={h * 0.58} /> : <Rect x={x} y={y} width={w} height={h * 0.58} fill={d.bg} />)}
-      {d.template === "split" && <Rect x={x} y={y + h * 0.58} width={w} height={h * 0.42} fill={d.accent} />}
-      {d.template === "bold" && img && <CoverImage img={img} x={x} y={y + h * 0.45} w={w} h={h * 0.4} />}
+      {d.template === "photo" && img && <CoverImage img={img} x={ox} y={oy} w={ow} h={oh} />}
+      {d.template === "photo" && <Rect x={ox} y={y + h * 0.58} width={ow} height={bottom - (y + h * 0.58)} fill="#000" opacity={0.55} />}
+      {d.template === "split" &&
+        (img ? <CoverImage img={img} x={ox} y={oy} w={ow} h={y + h * 0.58 - oy} /> : <Rect x={ox} y={oy} width={ow} height={y + h * 0.58 - oy} fill={d.bg} />)}
+      {d.template === "split" && <Rect x={ox} y={y + h * 0.58} width={ow} height={bottom - (y + h * 0.58)} fill={d.accent} />}
+      {d.template === "bold" && img && <CoverImage img={img} x={ox} y={y + h * 0.45} w={ow} h={h * 0.4} />}
       {d.template === "framed" && <Rect x={x + w * 0.06} y={y + h * 0.04} width={w * 0.88} height={h * 0.92} stroke={d.accent} strokeWidth={w * 0.008} />}
       {d.template === "framed" && <Rect x={x + w * 0.42} y={y + h * 0.66} width={w * 0.16} height={w * 0.006} fill={d.accent} />}
       {d.frontText !== false && (
@@ -208,8 +216,11 @@ export const CoverStage = forwardRef<Konva.Stage, DesignerProps>(function CoverS
   const fx = g.frontX * U;
   const sx = g.spineX * U;
   const sw = g.spine * U;
-  const pw = g.trim.width * U;
-  const bleed = 0.125 * U;
+  const pw = g.panelWidth * U;
+  // bleed on a paperback; on a hardcover, the margin that folds round the boards
+  const edge = g.edge * U;
+  const blurbX = edge + 0.55 * U;
+  const blurbW = sx - 0.55 * U - blurbX;
   const backBg = design.backBg || design.bg;
   const textColor = design.template === "split" ? design.accent : design.fg;
   const blurb = book.description || "Your book description appears here. Add it on the Book details tab.";
@@ -218,8 +229,19 @@ export const CoverStage = forwardRef<Konva.Stage, DesignerProps>(function CoverS
       <Layer>
         <Rect x={0} y={0} width={W} height={H} fill={backBg} />
         {backImg && <CoverImage img={backImg} x={0} y={0} w={sx} h={H} />}
-        {/* front panel runs into the bleed on the right, top and bottom */}
-        <Front book={book} d={design} x={fx} y={0} w={pw + bleed} h={H} img={img} editable onMove={onMove} />
+        {/* front panel runs into the bleed (or the wrap) on the right, top and bottom */}
+        <Front
+          book={book}
+          d={design}
+          x={fx}
+          y={0}
+          w={pw + edge}
+          h={H}
+          face={g.binding === "hardcover" ? { x: fx, y: edge, w: pw, h: H - 2 * edge } : undefined}
+          img={img}
+          editable
+          onMove={onMove}
+        />
         <Rect x={sx} y={0} width={sw} height={H} fill={design.spineBg || (design.template === "split" ? design.accent : design.bg)} />
         {g.spineTextAllowed && (
           <Group x={sx + sw / 2} y={H / 2} rotation={90}>
@@ -238,17 +260,26 @@ export const CoverStage = forwardRef<Konva.Stage, DesignerProps>(function CoverS
             />
           </Group>
         )}
-        {design.showBlurb && backImg && <BlurbPanel text={blurb} x={bleed + 0.55 * U} y={bleed + 0.8 * U} width={pw - 1.1 * U} font={design.font} fill={backBg} />}
-        {design.showBlurb && <Text text={blurb} x={bleed + 0.55 * U} y={bleed + 0.8 * U} width={pw - 1.1 * U} fontFamily={design.font} fontSize={0.15 * U} lineHeight={1.45} fill={textColor} />}
-        {book.imprint && <Text text={book.imprint} x={bleed + 0.55 * U} y={H - bleed - 0.75 * U} fontFamily={design.font} fontSize={0.12 * U} fill={textColor} opacity={0.85} />}
+        {design.showBlurb && backImg && <BlurbPanel text={blurb} x={blurbX} y={edge + 0.8 * U} width={blurbW} font={design.font} fill={backBg} />}
+        {design.showBlurb && <Text text={blurb} x={blurbX} y={edge + 0.8 * U} width={blurbW} fontFamily={design.font} fontSize={0.15 * U} lineHeight={1.45} fill={textColor} />}
+        {book.imprint && <Text text={book.imprint} x={blurbX} y={H - edge - 0.75 * U} fontFamily={design.font} fontSize={0.12 * U} fill={textColor} opacity={0.85} />}
       </Layer>
       {guides && (
         <Layer listening={false}>
-          {/* trim line */}
-          <Rect x={bleed} y={bleed} width={W - 2 * bleed} height={H - 2 * bleed} stroke="#ff2d55" strokeWidth={1.2 / zoom} dash={[6 / zoom, 4 / zoom]} />
-          {/* safe area: keep text 0.125 in inside the trim */}
-          <Rect x={bleed + 0.125 * U} y={bleed + 0.125 * U} width={pw - 0.25 * U} height={H - 2 * bleed - 0.25 * U} stroke="#00a2ff" strokeWidth={1 / zoom} dash={[3 / zoom, 3 / zoom]} />
-          <Rect x={fx + 0.125 * U} y={bleed + 0.125 * U} width={pw - 0.25 * U} height={H - 2 * bleed - 0.25 * U} stroke="#00a2ff" strokeWidth={1 / zoom} dash={[3 / zoom, 3 / zoom]} />
+          {/* trim line, or the board edge on a hardcover */}
+          <Rect x={edge} y={edge} width={W - 2 * edge} height={H - 2 * edge} stroke="#ff2d55" strokeWidth={1.2 / zoom} dash={[6 / zoom, 4 / zoom]} />
+          {/* safe areas: keep text inside these */}
+          {[g.safeBack, g.safeFront].map((r, i) => (
+            <Rect key={i} x={r.x * U} y={r.y * U} width={r.width * U} height={r.height * U} stroke="#00a2ff" strokeWidth={1 / zoom} dash={[3 / zoom, 3 / zoom]} />
+          ))}
+          {/* a hardcover's wrap folds inside the boards: nothing there shows */}
+          {g.binding === "hardcover" &&
+            [
+              [0, 0, W, edge],
+              [0, H - edge, W, edge],
+              [0, edge, edge, H - 2 * edge],
+              [W - edge, edge, edge, H - 2 * edge],
+            ].map(([x, y, w, h], i) => <Rect key={`wrap-${i}`} x={x} y={y} width={w} height={h} fill="#1c1a17" opacity={0.3} />)}
           <Line points={[sx, 0, sx, H]} stroke="#ff2d55" strokeWidth={1 / zoom} />
           <Line points={[fx, 0, fx, H]} stroke="#ff2d55" strokeWidth={1 / zoom} />
           <Rect x={g.barcode.x * U} y={g.barcode.y * U} width={g.barcode.width * U} height={g.barcode.height * U} fill="#ffffff" stroke="#ff2d55" strokeWidth={1 / zoom} />

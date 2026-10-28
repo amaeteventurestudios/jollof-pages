@@ -1,4 +1,4 @@
-import type { PaperType } from "./kdp";
+import { hardcoverPaper, hardcoverTrim, type Binding, type PaperType } from "./kdp";
 import type { DocNode } from "./doc/types";
 
 export type BookStatus = "idea" | "drafting" | "revising" | "editing" | "ready" | "published";
@@ -30,6 +30,10 @@ export interface BookFormat {
   printToc: boolean;
   /** large-print edition: 16pt body, wider leading */
   largePrint: boolean;
+  /** also publish a case laminate hardcover edition */
+  hardcover: boolean;
+  /** hardcover trim; empty means the paperback trim, or the nearest hardcover size to it */
+  hardcoverTrim: string;
 }
 
 export const DEFAULT_FORMAT: BookFormat = {
@@ -44,6 +48,8 @@ export const DEFAULT_FORMAT: BookFormat = {
   runningHeads: true,
   printToc: true,
   largePrint: false,
+  hardcover: false,
+  hardcoverTrim: "",
 };
 
 export interface BookGoal {
@@ -85,6 +91,7 @@ export interface Book {
   language: string;
   isbn_ebook: string;
   isbn_paperback: string;
+  isbn_hardcover?: string;
   imprint: string;
   publication_date: string;
   status: BookStatus;
@@ -101,6 +108,9 @@ export interface Book {
   accent: string;
   word_count: number;
   page_count: number;
+  /** pages in the hardcover interior, which has its own trim and a wider gutter */
+  hardcover_page_count?: number;
+  cover_hardcover?: string;
   /** sold straight from the author's site, paid into their own Stripe account (Pro) */
   sell_direct?: boolean;
   ebook_price_cents?: number;
@@ -173,6 +183,12 @@ export interface SiteSettings {
 
 export function bookFormat(b: Pick<Book, "format">): BookFormat {
   return { ...DEFAULT_FORMAT, ...(b.format ?? {}) };
+}
+
+/** The trim and paper of one print edition. */
+export function printEdition(f: BookFormat, binding: Binding): { trim: string; paper: PaperType } {
+  if (binding === "paperback") return { trim: f.trim, paper: f.paper };
+  return { trim: hardcoverTrim(f.hardcoverTrim || f.trim).id, paper: hardcoverPaper(f.paper) };
 }
 
 export function bookGoal(b: Pick<Book, "goal">): BookGoal {

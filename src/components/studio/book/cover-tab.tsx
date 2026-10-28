@@ -10,7 +10,7 @@ import { AiCoverPanel } from "./ai-cover-panel";
 import { artSpec, preflight } from "@/lib/cover-kit";
 import { BookCover } from "@/components/book-cover";
 import { coverGeometry, inches } from "@/lib/kdp";
-import { bookFormat } from "@/lib/types";
+import { bookFormat, printEdition } from "@/lib/types";
 import { download, userId } from "@/lib/studio";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { slugify } from "@/lib/slug";
@@ -30,9 +30,14 @@ function dataUrlToBlob(url: string): Blob {
 export function CoverTab({ ws }: { ws: Workspace }) {
   const { book } = ws;
   const f = bookFormat(book);
-  const { pages, estimated } = usePageCount(ws);
-  const g = coverGeometry(f.trim, pages, f.paper);
-  const [mode, setMode] = useState<"ebook" | "print">("ebook");
+  const [mode, setMode] = useState<"ebook" | "print" | "hardcover">("ebook");
+  const binding = mode === "hardcover" ? "hardcover" : "paperback";
+  const wrap = mode !== "ebook";
+  const { pages, estimated } = usePageCount(ws, binding);
+  const edition = printEdition(f, binding);
+  const g = coverGeometry(edition.trim, pages, edition.paper, binding);
+  const modes = f.hardcover || mode === "hardcover" ? (["ebook", "print", "hardcover"] as const) : (["ebook", "print"] as const);
+  const editionName = binding === "hardcover" ? "Hardcover" : "Paperback";
   const [design, setDesign] = useState<CoverDesign>(() => ({ ...defaultDesign(), ...((book.cover_design as Partial<CoverDesign>) ?? {}) }));
   const [guides, setGuides] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -127,11 +132,12 @@ export function CoverTab({ ws }: { ws: Workspace }) {
       const page = pdf.addPage([g.width * 72, g.height * 72]);
       page.drawImage(jpg, { x: 0, y: 0, width: g.width * 72, height: g.height * 72 });
       const bytes = await pdf.save();
-      const file = new File([bytes as BlobPart], `${slugify(book.title)}-paperback-cover.pdf`, { type: "application/pdf" });
-      const updated = await ws.track(pb().collection("books").update(book.id, { cover_full: file, cover_design: design }));
-      ws.setBook((b) => (b ? { ...b, cover_full: updated.cover_full } : b));
+      const field = binding === "hardcover" ? "cover_hardcover" : "cover_full";
+      const file = new File([bytes as BlobPart], `${slugify(book.title)}-${binding}-cover.pdf`, { type: "application/pdf" });
+      const updated = await ws.track(pb().collection("books").update(book.id, { [field]: file, cover_design: design }));
+      ws.setBook((b) => (b ? { ...b, [field]: updated[field] } : b));
       download(bytes, file.name, "application/pdf");
-      setMsg(`Paperback cover PDF saved: ${inches(g.width)} x ${inches(g.height)} at 300 dpi for ${pages} pages on ${f.paper} paper.`);
+      setMsg(`${editionName} cover PDF saved: ${inches(g.width)} x ${inches(g.height)} at 300 dpi for ${pages} pages on ${edition.paper} paper.`);
     } catch (e) {
       setMsg(`Could not export: ${errorMessage(e)}`);
     } finally {
@@ -154,7 +160,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
     }
   }
 
-  async function uploadOwn(field: "cover" | "cover_full", file: File) {
+  async function uploadOwn(field: "cover" | "cover_full" | "cover_hardcover", file: File) {
     setBusy(field);
     try {
       const updated = await ws.track(
@@ -163,7 +169,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           .update(book.id, { [field]: file }),
       );
       ws.setBook((b) => (b ? { ...b, [field]: updated[field] } : b));
-      setMsg(field === "cover" ? "Ebook cover uploaded." : "Paperback cover uploaded.");
+      setMsg(field === "cover" ? "Ebook cover uploaded." : field === "cover_hardcover" ? "Hardcover cover uploaded." : "Paperback cover uploaded.");
     } catch (e) {
       setMsg(`Upload failed: ${errorMessage(e)}`);
     } finally {
@@ -175,8 +181,8 @@ export function CoverTab({ ws }: { ws: Workspace }) {
     <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-6 sm:px-8 lg:grid-cols-[20rem_1fr]">
       <link rel="stylesheet" href={COVER_FONTS_HREF} />
       <aside className="grid h-fit gap-6">
-        <div role="tablist" aria-label="Cover type" className="grid grid-cols-2 gap-1 rounded-md bg-paper-2 p-1">
-          {(["ebook", "print"] as const).map((m) => (
+        <div role="tablist" aria-label="Cover type" className={cn("grid gap-1 rounded-md bg-paper-2 p-1", modes.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+          {modes.map((m) => (
             <button
               key={m}
               role="tab"
@@ -185,7 +191,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
               onClick={() => setMode(m)}
               className={cn("rounded px-3 py-1.5 text-sm", mode === m ? "bg-card font-medium" : "text-ink-2")}
             >
-              {m === "ebook" ? "Ebook" : "Paperback wrap"}
+              {m === "ebook" ? "Ebook" : m === "print" ? "Paperback" : "Hardcover"}
             </button>
           ))}
         </div>
@@ -235,7 +241,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
         </label>
 
         <div className="grid gap-2 text-sm">
-          <span className="font-medium">{mode === "print" ? "Front artwork" : "Picture"}</span>
+          <span className="font-medium">{wrap ? "Front artwork" : "Picture"}</span>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 py-2 hover:bg-muted">
             {busy === "image" ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
             {design.imageUrl ? "Replace picture" : "Add a picture"}
@@ -247,14 +253,14 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             </button>
           )}
           <p className="text-[13px] text-soft">
-            {mode === "print" ? `At least ${spec.front.px.width} x ${spec.front.px.height} px.` : "At least 1600 x 2560 px."} Only use images you have the rights to.
+            {wrap ? `At least ${spec.front.px.width} x ${spec.front.px.height} px.` : "At least 1600 x 2560 px."} Only use images you have the rights to.
           </p>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={!design.frontText} onChange={(e) => update({ frontText: !e.target.checked })} /> My artwork already has the title on it
           </label>
         </div>
 
-        {mode === "print" && (
+        {wrap && (
           <div className="grid gap-2 text-sm">
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={design.showBlurb} onChange={(e) => update({ showBlurb: e.target.checked })} /> Description on the back
@@ -302,7 +308,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             </Button>
           ) : (
             <Button onClick={exportPrintCover} disabled={!!busy}>
-              {busy === "print" ? <Loader2 className="animate-spin" /> : <Download />} Export paperback cover PDF
+              {busy === "print" ? <Loader2 className="animate-spin" /> : <Download />} Export {editionName.toLowerCase()} cover PDF
             </Button>
           )}
           <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-md border border-input bg-card px-3 py-2 text-sm hover:bg-muted">
@@ -312,7 +318,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
               type="file"
               className="sr-only"
               accept={mode === "ebook" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png"}
-              onChange={(e) => e.target.files?.[0] && uploadOwn(mode === "ebook" ? "cover" : "cover_full", e.target.files[0])}
+              onChange={(e) => e.target.files?.[0] && uploadOwn(mode === "ebook" ? "cover" : mode === "hardcover" ? "cover_hardcover" : "cover_full", e.target.files[0])}
             />
           </label>
           {msg && (
@@ -328,15 +334,17 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           <p className="text-ink-2">
             {mode === "ebook"
               ? "Front cover, 1600 x 2560 px. Drag the title and author to move them."
-              : `Full wrap ${inches(g.width)} x ${inches(g.height)}: back, ${inches(g.spine, 4)} spine, front. Bleed included.`}
+              : binding === "hardcover"
+                ? `Hardcover case ${inches(g.width)} x ${inches(g.height)}: back board, ${inches(g.spine, 4)} spine, front board. The shaded ${inches(g.edge)} band folds inside the boards.`
+                : `Full wrap ${inches(g.width)} x ${inches(g.height)}: back, ${inches(g.spine, 4)} spine, front. Bleed included.`}
           </p>
-          {mode === "print" && !g.spineTextAllowed && <p className="text-soft">Spine text appears from 79 pages.</p>}
+          {wrap && !g.spineTextAllowed && <p className="text-soft">Spine text appears from 79 pages.</p>}
         </div>
         <div ref={boxRef} className="flex justify-center rounded-md bg-paper p-1">
           <CoverStage
             key={`${mode}-${fontsReady}`}
             ref={stageRef}
-            mode={mode}
+            mode={wrap ? "print" : "ebook"}
             book={{ title: book.title, subtitle: book.subtitle, description: book.description, imprint: book.imprint, authorName }}
             design={design}
             geometry={g}
@@ -345,7 +353,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             onMove={(key, pos) => update({ [key]: pos })}
           />
         </div>
-        {mode === "print" && <CoverKit g={g} slug={slugify(book.title)} book={{ title: book.title, subtitle: book.subtitle, author: authorName }} lettering={!design.frontText} checks={checks} />}
+        {wrap && <CoverKit g={g} slug={slugify(book.title)} book={{ title: book.title, subtitle: book.subtitle, author: authorName }} lettering={!design.frontText} checks={checks} />}
         <AiCoverPanel
           bookId={book.id}
           book={{ title: book.title, subtitle: book.subtitle, author: authorName, description: book.description }}
@@ -357,9 +365,9 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             if (side === "front") update({ imageUrl: url, template: design.template === "photo" ? "photo" : "art", ...(lettered ? { frontText: false } : {}) });
             else {
               update({ backImageUrl: url });
-              setMode("print");
+              if (!wrap) setMode("print");
             }
-            setMsg(side === "front" ? "Picture placed on the front. Save or export when you are happy." : "Picture placed on the back of the paperback wrap.");
+            setMsg(side === "front" ? "Picture placed on the front. Save or export when you are happy." : `Picture placed on the back of the ${mode === "hardcover" ? "hardcover" : "paperback"} wrap.`);
             boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
           }}
         />
