@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, BookOpen, ChevronDown, Download, ExternalLink, Feather, Flame, GraduationCap, Images, LifeBuoy, LogOut, Mail, Monitor, Moon, Settings2, Sparkles, Sun, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BarChart3, BookOpen, ChevronDown, Download, ExternalLink, Feather, Flame, GraduationCap, Images, LifeBuoy, Lightbulb, LogOut, Mail, Monitor, Moon, Settings2, ShieldCheck, Sparkles, Sun, Users } from "lucide-react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { ThemeToggle, useThemeChoice, type ThemeChoice } from "@/components/theme-toggle";
@@ -91,12 +92,32 @@ export function StudioNav() {
   );
 }
 
+// whether the signed-in account may open the admin, asked once per page load
+let adminCheck: Promise<boolean> | null = null;
+function useIsAdmin(skip: boolean): boolean {
+  const [admin, setAdmin] = useState(false);
+  useEffect(() => {
+    if (skip) return;
+    adminCheck ??= fetch("/api/admin?check=1", { headers: { Authorization: `Bearer ${pb().authStore.token}` } })
+      .then((r) => r.json())
+      .then((j: { admin?: boolean }) => !!j.admin)
+      .catch(() => false);
+    let live = true;
+    void adminCheck.then((a) => live && setAdmin(a));
+    return () => {
+      live = false;
+    };
+  }, [skip]);
+  return admin;
+}
+
 /** Who is signed in, with appearance, help, the assistant, the site and sign out in one place. */
 export function AccountMenu({ guest = isCollaboratorOnly() }: { guest?: boolean }) {
   const router = useRouter();
   const { url } = useMySite();
   const install = useInstallPrompt();
   const [theme, setTheme] = useThemeChoice();
+  const admin = useIsAdmin(guest);
   const me = pb().authStore.record;
   const email = String(me?.email ?? "");
   const name = String(me?.name ?? "").trim() || email.split("@")[0] || "Account";
@@ -127,14 +148,24 @@ export function AccountMenu({ guest = isCollaboratorOnly() }: { guest?: boolean 
           ))}
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
+        {admin && (
+          <DropdownMenuItem onSelect={() => router.push("/studio/admin")}>
+            <ShieldCheck aria-hidden /> Admin
+          </DropdownMenuItem>
+        )}
         {!guest && (
           <DropdownMenuItem onSelect={() => router.push("/studio/assistant")}>
             <Sparkles aria-hidden /> AI assistant
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onSelect={() => router.push("/studio/help")}>
-          <LifeBuoy aria-hidden /> Help and FAQ
+          <LifeBuoy aria-hidden /> Help and support
         </DropdownMenuItem>
+        {!guest && (
+          <DropdownMenuItem onSelect={() => router.push("/studio/ideas")}>
+            <Lightbulb aria-hidden /> Request a feature
+          </DropdownMenuItem>
+        )}
         {!guest && (
           <DropdownMenuItem onSelect={() => router.push("/studio/learn")}>
             <GraduationCap aria-hidden /> Learn
@@ -153,6 +184,7 @@ export function AccountMenu({ guest = isCollaboratorOnly() }: { guest?: boolean 
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
+            adminCheck = null;
             pb().authStore.clear();
             forgetMySite();
             router.replace("/login");

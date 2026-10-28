@@ -11,7 +11,7 @@ export async function handleCheckoutSession(s: CheckoutSession): Promise<void> {
   const kind = s.metadata?.kind;
   const user = s.client_reference_id || s.metadata?.user || "";
   if (kind === "cover-credits" && user) await creditTopup({ sessionId: s.id, userId: user, credits: Number(s.metadata.credits) || 0, cents: s.amount_total ?? 0 });
-  else if (kind === "studio" && user) await markStudioPaid(user);
+  else if (kind === "studio" && user) await markStudioPaid(user, s.amount_total ?? 0);
   else if (kind === "pro" && user && s.subscription) {
     if (s.customer) await saveBilling(user, { stripe_customer: s.customer });
     await syncSubscriptionById(user, s.subscription);
