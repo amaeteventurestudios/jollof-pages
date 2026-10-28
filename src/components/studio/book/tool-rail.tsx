@@ -5,7 +5,7 @@ import { useEditorState, type Editor } from "@tiptap/react";
 import { searchDocument, type SearchOptions } from "@tiptap/extension-find-and-replace";
 import { Fragment, type Node as PMNode, type Schema } from "@tiptap/pm/model";
 import { Transform } from "@tiptap/pm/transform";
-import { ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Type, X } from "lucide-react";
+import { ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Sparkles, Type, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_EDITOR_SETTINGS, EDITOR_FONTS, type EditorSettings } from "@/lib/editor-settings";
@@ -16,9 +16,10 @@ import type { CollabRole } from "@/lib/collab";
 import { listChanges } from "@/components/studio/track-changes";
 import { ChangesPanel } from "./changes-panel";
 import { CommentsPanel, type Comment } from "./comments-panel";
+import { AssistantPanel } from "./assistant-panel";
 import { cn } from "@/lib/utils";
 
-export type RailPanel = "settings" | "find" | "quotes" | "changes" | "comments";
+export type RailPanel = "assistant" | "settings" | "find" | "quotes" | "changes" | "comments";
 
 export interface ChapterEdit {
   id: string;
@@ -48,6 +49,7 @@ interface RailProps {
 }
 
 const TOOLS: { id: RailPanel; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "assistant", label: "Writing assistant", icon: Sparkles },
   { id: "settings", label: "Editor settings", icon: Type },
   { id: "find", label: "Find and replace", icon: Search },
   { id: "quotes", label: "Smart quotes", icon: Quote },
@@ -67,7 +69,13 @@ export function ToolRail(props: RailProps) {
   return (
     <>
       {tool && (
-        <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card max-xl:absolute max-xl:inset-y-0 max-xl:right-12 max-xl:z-20 max-xl:shadow-xl" aria-label={tool.label}>
+        <aside
+          className={cn(
+            "flex shrink-0 flex-col border-l border-border bg-card max-xl:absolute max-xl:inset-y-0 max-xl:right-12 max-xl:z-20 max-xl:shadow-xl",
+            open === "assistant" ? "w-96 max-sm:w-[calc(100vw-3rem)]" : "w-80",
+          )}
+          aria-label={tool.label}
+        >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="font-medium">{tool.label}</h2>
             <Button variant="ghost" size="icon-sm" aria-label={`Close ${tool.label.toLowerCase()}`} onClick={() => onOpen(null)}>
@@ -75,6 +83,7 @@ export function ToolRail(props: RailProps) {
             </Button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            {open === "assistant" && <AssistantPanel editor={editor} bookId={props.bookId} chapterId={activeId} role={role} />}
             {open === "settings" && <SettingsPanel settings={props.settings} onChange={props.onSettings} />}
             {open === "find" && <FindPanel {...props} />}
             {open === "quotes" && <QuotesPanel {...props} />}

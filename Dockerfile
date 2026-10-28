@@ -32,6 +32,8 @@ COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 COPY --from=tools /app/tools ./tools
 COPY --from=tools /app/fonts ./fonts
+# the writing assistant's memory (ASSISTANT_DIR) and its local embedding model (FastEmbed's local_cache)
+RUN mkdir -p /data/assistant /app/local_cache && chown -R node /data /app/local_cache
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

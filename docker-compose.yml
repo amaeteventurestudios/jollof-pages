@@ -49,6 +49,16 @@ services:
       MAIL_FROM_DOMAIN: ${MAIL_FROM_DOMAIN:-}
       EBOOK_FEE_PERCENT: ${EBOOK_FEE_PERCENT:-}
       EBOOK_FEE_FIXED_CENTS: ${EBOOK_FEE_FIXED_CENTS:-}
+      # writing assistant (docs/assistant.md): the publisher's own keys, for COVER_AI_FREE_EMAILS accounts only
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      AI_KEYS_SECRET: ${AI_KEYS_SECRET:-}
+      ASSISTANT_DIR: /data/assistant
+      MEM0_TELEMETRY: "false"
+    volumes:
+      - assistant_data:/data
+      - assistant_models:/app/local_cache
     ports:
       - "127.0.0.1:3100:3000"
     depends_on:
@@ -71,3 +81,5 @@ services:
 
 volumes:
   pb_data:
+  assistant_data:
+  assistant_models:
