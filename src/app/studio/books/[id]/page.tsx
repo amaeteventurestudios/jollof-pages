@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LifeBuoy } from "lucide-react";
 import { WriteTab } from "@/components/studio/book/write-tab";
 import { DetailsTab } from "@/components/studio/book/details-tab";
 import { FormatTab } from "@/components/studio/book/format-tab";
@@ -124,6 +124,9 @@ export default function BookWorkspacePage() {
             </button>
           ))}
         </nav>
+        <Link href="/studio/help" target="_blank" aria-label="Help and support" title="Help and support" className="-ml-2 rounded p-1.5 text-ink-2 hover:bg-muted max-md:absolute max-md:top-2 max-md:right-3">
+          <LifeBuoy className="size-4" />
+        </Link>
       </header>
       <div className="flex min-h-0 flex-1 flex-col">
         {tab === "write" && <WriteTab ws={ws} />}

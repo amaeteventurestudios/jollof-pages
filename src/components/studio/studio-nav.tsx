@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, BookOpen, ExternalLink, Feather, Flame, Images, LogOut, Mail, Settings2 } from "lucide-react";
+import { BarChart3, BookOpen, ExternalLink, Feather, Flame, Images, LifeBuoy, LogOut, Mail, Settings2 } from "lucide-react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -47,6 +47,14 @@ export function StudioNav() {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-1">
+          <Link
+            href="/studio/help"
+            aria-current={path.startsWith("/studio/help") ? "page" : undefined}
+            className={cn("inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4", path.startsWith("/studio/help") && "bg-primary-soft text-primary")}
+          >
+            <LifeBuoy aria-hidden />
+            <span className="hidden md:inline">Help</span>
+          </Link>
           <InstallButton className="h-8 rounded px-2.5 text-sm text-ink-2 hover:bg-muted" />
           <ThemeToggle className="h-8 rounded px-2.5 text-ink-2 hover:bg-muted [&_svg]:size-4" />
           <Link href={url} target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4">

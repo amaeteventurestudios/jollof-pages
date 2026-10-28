@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookPlus, FileUp, Plus } from "lucide-react";
+import { ArrowRight, BookPlus, FileUp, GraduationCap, LifeBuoy, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { BookCover } from "@/components/book-cover";
@@ -18,6 +18,7 @@ import { fmt, lastDays, streak, wordsByDay } from "@/lib/progress";
 import { today } from "@/lib/slug";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { IMPORT_ACCEPT, IMPORT_EXT } from "@/lib/import/formats";
+import { TUTORIALS, loadDone } from "@/lib/tutorials";
 
 export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
@@ -75,6 +76,8 @@ export default function StudioHome() {
           ))}
         </dl>
 
+        <LearnCard />
+
         {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load your books: {error}</p>}
 
         {books === null && !error ? (
@@ -127,6 +130,58 @@ export default function StudioHome() {
       <ImportDialog open={dialog === "import"} onClose={() => setDialog(null)} />
       <IsbnDialog open={dialog === "isbn"} onClose={() => setDialog(null)} />
     </>
+  );
+}
+
+/** Tutorials: where to start, and how far along the author is. Kept quiet once every guide is done. */
+function LearnCard() {
+  const [done] = useState(loadDone);
+  const next = TUTORIALS.find((t) => !done.has(t.id));
+  const pct = Math.round((done.size / TUTORIALS.length) * 100);
+  if (!next)
+    return (
+      <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-soft">
+        <span className="inline-flex items-center gap-1.5">
+          <GraduationCap className="size-4 text-primary" /> You have finished every guide.
+        </span>
+        <Link href="/studio/learn" className="text-primary hover:underline">
+          Revisit the guides
+        </Link>
+        <Link href="/studio/help" className="text-primary hover:underline">
+          Help and support
+        </Link>
+      </p>
+    );
+  return (
+    <section aria-labelledby="learn-h" className="relative mt-4 grid overflow-hidden border border-border bg-card sm:grid-cols-[1fr_auto]">
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-[0.07] [background-image:radial-gradient(var(--primary)_1.2px,transparent_1.6px)] [background-size:16px_16px] max-sm:hidden" />
+      <div className="relative flex gap-4 p-5 sm:p-6">
+        <span className="grid size-12 shrink-0 place-items-center bg-primary text-primary-foreground">
+          <GraduationCap className="size-6" />
+        </span>
+        <div className="min-w-0">
+          <h2 id="learn-h" className="text-lg font-medium">
+            Learn how to use Jollof Pages
+          </h2>
+          <p className="mt-0.5 text-soft">
+            {done.size ? `${done.size} of ${TUTORIALS.length} guides done. Next up: ${next.title}.` : `Ten short guides take you from first chapter to published book. Start with \u201c${next.title}\u201d.`}
+          </p>
+          <div className="mt-3 h-1.5 max-w-sm overflow-hidden bg-paper-2" aria-hidden>
+            <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+      </div>
+      <div className="relative flex flex-wrap items-center gap-2 px-5 pb-5 sm:p-6">
+        <Link href="/studio/help" className="inline-flex h-9 items-center gap-1.5 px-3 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4">
+          <LifeBuoy /> Help
+        </Link>
+        <Button asChild>
+          <Link href="/studio/learn">
+            {done.size ? "Continue" : "Start learning"} <ArrowRight />
+          </Link>
+        </Button>
+      </div>
+    </section>
   );
 }
 
