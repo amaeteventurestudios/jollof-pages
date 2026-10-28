@@ -154,7 +154,9 @@ export function FormatTab({ ws }: { ws: Workspace }) {
                   ))}
                 </div>
                 <p className="text-[13px] text-soft">
-                  {sameTrim ? "Same size as the paperback, so both editions sit together on a shelf." : `KDP does not bind ${getTrimLabel(f.trim)} in hardcover, so the hardcover is ${getTrimLabel(hc.trim)}.`}
+                  {sameTrim
+                    ? "Same size as the paperback, so both editions sit together on a shelf."
+                    : `KDP does not bind ${getTrimLabel(f.trim)} in hardcover, so the hardcover is ${getTrimLabel(hc.trim)}.`}
                   {hc.paper !== f.paper && " Hardcovers print colour only as premium colour, so this edition uses premium colour paper."}
                 </p>
               </>
@@ -163,10 +165,26 @@ export function FormatTab({ ws }: { ws: Workspace }) {
         </section>
 
         <section className="grid gap-3 sm:grid-cols-2">
-          <Toggle checked={f.chaptersOnRight} onChange={(v) => set({ chaptersOnRight: v })} label="Start chapters on a right-hand page" hint="Adds a blank page where needed, as most printed books do." />
-          <Toggle checked={f.dropCaps} onChange={(v) => set({ dropCaps: v })} label="Decorative chapter openings" hint={`Drop cap in the ebook${theme.leadIn ? " and small-caps lead-in in print" : ""}.`} />
+          <Toggle
+            checked={f.chaptersOnRight}
+            onChange={(v) => set({ chaptersOnRight: v })}
+            label="Start chapters on a right-hand page"
+            hint="Adds a blank page where needed, as most printed books do."
+          />
+          <Toggle
+            checked={f.dropCaps}
+            onChange={(v) => set({ dropCaps: v })}
+            label="Decorative chapter openings"
+            hint={`Drop cap in the ebook${theme.leadIn ? " and small-caps lead-in in print" : ""}.`}
+          />
           <Toggle checked={f.runningHeads} onChange={(v) => set({ runningHeads: v })} label="Running heads" hint="Book title on left pages, chapter title on right pages." />
           <Toggle checked={f.printToc} onChange={(v) => set({ printToc: v })} label="Table of contents in print" hint="With page numbers. The ebook always has a linked contents." />
+          <Toggle
+            checked={f.tocSubheads}
+            onChange={(v) => set({ tocSubheads: v })}
+            label="Show sub-chapters in the contents"
+            hint="Lists each chapter's headings under it, in the printed contents and the ebook's contents menu. Make a sub-chapter with Heading in the editor's text style menu."
+          />
           <Toggle checked={f.bleed} onChange={(v) => set({ bleed: v })} label="Bleed" hint="Only if images run to the edge of the page. Adds 0.125 in on three sides." />
           <Toggle checked={f.largePrint} onChange={(v) => set({ largePrint: v })} label="Large print edition" hint="16 pt text with wider spacing, for readers with low vision." />
         </section>
@@ -174,7 +192,9 @@ export function FormatTab({ ws }: { ws: Workspace }) {
 
       <aside className="h-fit rounded-md bg-card p-5 lg:sticky lg:top-6">
         <h2 className="font-medium">Print specification</h2>
-        <p className="mt-1 text-[13px] text-soft">{estimated ? `Pages estimated from ${fmt(ws.book.word_count || 0)} words. Build a PDF on the Export tab for the exact count.` : "Page count from your last PDF."}</p>
+        <p className="mt-1 text-[13px] text-soft">
+          {estimated ? `Pages estimated from ${fmt(ws.book.word_count || 0)} words. Build a PDF on the Export tab for the exact count.` : "Page count from your last PDF."}
+        </p>
         <PageDiagram width={g.pageWidth} height={g.pageHeight} m={g.margins} />
         <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-sm">
           <dt className="text-soft">Pages</dt>
@@ -204,11 +224,17 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           <dt className="text-soft">Spine text</dt>
           <dd>{cover.spineTextAllowed ? "Allowed" : "Not until 79 pages"}</dd>
         </dl>
-        {(pages < minPages() || pages > max) && <Warning>KDP prints paperbacks of {minPages()} to {max} pages for this trim and paper. This book is at {pages}.</Warning>}
+        {(pages < minPages() || pages > max) && (
+          <Warning>
+            KDP prints paperbacks of {minPages()} to {max} pages for this trim and paper. This book is at {pages}.
+          </Warning>
+        )}
         {f.hardcover && (
           <>
             <h2 className="mt-6 border-t border-border pt-5 font-medium">Hardcover</h2>
-            <p className="mt-1 text-[13px] text-soft">{hard.estimated ? "Pages estimated. Build the hardcover PDF on the Export tab for the exact count." : "Page count from your last hardcover PDF."}</p>
+            <p className="mt-1 text-[13px] text-soft">
+              {hard.estimated ? "Pages estimated. Build the hardcover PDF on the Export tab for the exact count." : "Page count from your last hardcover PDF."}
+            </p>
             <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-sm">
               <dt className="text-soft">Pages</dt>
               <dd className="tabular">{fmt(hard.pages)}</dd>

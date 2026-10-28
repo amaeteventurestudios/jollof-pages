@@ -28,6 +28,8 @@ export interface BookFormat {
   runningHeads: boolean;
   /** print the table of contents at the front */
   printToc: boolean;
+  /** list each chapter's headings (sub-chapters) under it in the contents, print and ebook */
+  tocSubheads: boolean;
   /** large-print edition: 16pt body, wider leading */
   largePrint: boolean;
   /** also publish a case laminate hardcover edition */
@@ -47,6 +49,7 @@ export const DEFAULT_FORMAT: BookFormat = {
   dropCaps: true,
   runningHeads: true,
   printToc: true,
+  tocSubheads: false,
   largePrint: false,
   hardcover: false,
   hardcoverTrim: "",

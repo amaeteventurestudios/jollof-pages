@@ -2,6 +2,8 @@ import type { BookElement, ExportInput } from "./book-model";
 import { authorName, tocText } from "./book-model";
 import { docToHtml, escapeHtml } from "./doc/html";
 import { sceneBreakGlyph, type InteriorTheme } from "./themes";
+import { subheads } from "./doc/types";
+import { bookFormat } from "./types";
 
 /** One element as web HTML, for the studio preview and the public sample reader. */
 export function elementHtml(e: BookElement, input: Pick<ExportInput, "book" | "author" | "alsoBy">, all: BookElement[], theme: InteriorTheme): string {
@@ -12,7 +14,10 @@ export function elementHtml(e: BookElement, input: Pick<ExportInput, "book" | "a
     case "contents":
       return `<section class="toc"><header class="chapter-head"><h1>${escapeHtml(e.title)}</h1></header><ol>${all
         .filter((x) => x.inToc)
-        .map((x) => `<li>${escapeHtml(tocText(x))}</li>`)
+        .map((x) => {
+          const subs = bookFormat(book).tocSubheads && x.kind.id !== "part" ? subheads(x.chapter.content) : [];
+          return `<li>${escapeHtml(tocText(x))}${subs.length ? `<ol>${subs.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ol>` : ""}</li>`;
+        })
         .join("")}</ol></section>`;
     case "also_by":
       return `<section><header class="chapter-head"><h1>${escapeHtml(e.title)}</h1></header>${

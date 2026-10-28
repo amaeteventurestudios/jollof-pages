@@ -40,6 +40,52 @@ describe("exports", () => {
     execFileSync("java", ["-jar", epubcheck, file], { stdio: "pipe" });
   });
 
+  describe("sub-chapters in the contents", () => {
+    const withSubs = () => {
+      const input = sampleExportInput();
+      input.book.format = { ...input.book.format, tocSubheads: true };
+      return input;
+    };
+
+    it("links each chapter's headings in the EPUB contents", async () => {
+      const zip = await JSZip.loadAsync(await buildEpub(withSubs()));
+      const nav = await zip.file("OEBPS/nav.xhtml")!.async("string");
+      const ncx = await zip.file("OEBPS/toc.ncx")!.async("string");
+      expect(nav).toMatch(/<ol><li><a href="text\/[^"]+#sub-1">Write the promise down<\/a><\/li>/);
+      expect(ncx).toContain("Write the promise down");
+      expect(ncx).toContain('<meta name="dtb:depth" content="2"/>');
+      // the target exists in the chapter file
+      const files = Object.keys(zip.files).filter((n) => n.startsWith("OEBPS/text/") && !zip.files[n].dir);
+      const texts = await Promise.all(files.map((f) => zip.file(f)!.async("string")));
+      expect(texts.some((t) => t.includes('<h2 id="sub-1"'))).toBe(true);
+    });
+
+    it("leaves them out unless asked", async () => {
+      const zip = await JSZip.loadAsync(await buildEpub(sampleExportInput()));
+      expect(await zip.file("OEBPS/nav.xhtml")!.async("string")).not.toContain("#sub-");
+    });
+
+    it("puts them in the printed outline", () => {
+      const src = buildTypst(withSubs(), { pageCount: 120 });
+      expect(src).toContain("#outline(title: none, depth: 2");
+      expect(src).toMatch(/#heading\(level: 2, outlined: true\)\[#"Write the promise down"\]/);
+    });
+
+    it.skipIf(!hasJava || !existsSync(epubcheck))("passes EPUBCheck with sub-chapters", async () => {
+      const dir = mkdtempSync(path.join(tmpdir(), "jp-test-"));
+      const file = path.join(dir, "subs.epub");
+      writeFileSync(file, await buildEpub(withSubs()));
+      execFileSync("java", ["-jar", epubcheck, file], { stdio: "pipe" });
+    });
+
+    it.skipIf(!typst)("compiles with sub-chapters in the contents", () => {
+      const dir = mkdtempSync(path.join(tmpdir(), "jp-test-"));
+      writeFileSync(path.join(dir, "book.typ"), buildTypst(withSubs(), { pageCount: 120 }));
+      execFileSync(typst!, ["compile", "--font-path", path.join(root, "fonts"), "--ignore-system-fonts", path.join(dir, "book.typ"), path.join(dir, "book.pdf")], { stdio: "pipe" });
+      expect(existsSync(path.join(dir, "book.pdf"))).toBe(true);
+    });
+  });
+
   it("writes Typst with the KDP page setup", () => {
     const src = buildTypst(sampleExportInput(), { pageCount: 120 });
     expect(src).toContain("6in");
@@ -98,7 +144,12 @@ describe("exports", () => {
     it("puts the chapter image in the EPUB", async () => {
       const bytes = await buildEpub(withOptions(), { images: new Map([[IMG, { bytes: png, mediaType: "image/png" }]]) });
       const zip = await JSZip.loadAsync(bytes);
-      const texts = await Promise.all(Object.values(zip.files).filter((f) => !f.dir && f.name.includes("/text/")).map((f) => f.name).map((n) => zip.file(n)!.async("string")));
+      const texts = await Promise.all(
+        Object.values(zip.files)
+          .filter((f) => !f.dir && f.name.includes("/text/"))
+          .map((f) => f.name)
+          .map((n) => zip.file(n)!.async("string")),
+      );
       expect(texts.some((t) => t.includes('class="chapter-head inverted"') && t.includes("../images/img-1.png"))).toBe(true);
       if (hasJava && existsSync(epubcheck)) {
         const file = path.join(mkdtempSync(path.join(tmpdir(), "jp-test-")), "opts.epub");

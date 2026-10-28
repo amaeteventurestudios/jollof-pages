@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { chapterHeadHtml } from "../render-element";
 import { authorName, bookImages, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { docToHtml, escapeHtml } from "../doc/html";
+import { subheads } from "../doc/types";
 import { themeCss } from "../theme-css";
 import { getTheme, sceneBreakGlyph } from "../themes";
 import { bookFormat } from "../types";
@@ -102,7 +103,10 @@ export async function buildEpub(input: ExportInput, assets: EpubAssets = {}): Pr
   }
 
   const files = elements.map((e, i) => epubFileName(e, i));
-  const tocEntries = elements.map((e, i) => ({ e, file: files[i] })).filter(({ e }) => e.inToc);
+  // with sub-chapters on, each chapter lists its headings under it
+  const tocEntries = elements.map((e, i) => ({ e, file: files[i], subs: format.tocSubheads && e.kind.id !== "part" ? subheads(e.chapter.content) : [] })).filter(({ e }) => e.inToc);
+  const subList = (file: string, subs: string[], prefix = "") =>
+    subs.length ? `<ol>${subs.map((t, j) => `<li><a href="${prefix}${file}#sub-${j + 1}">${escapeHtml(t)}</a></li>`).join("")}</ol>` : "";
 
   elements.forEach((e, i) => {
     const c = e.chapter;
@@ -118,7 +122,7 @@ ${book.imprint ? `<p class="tp-imprint">${escapeHtml(book.imprint)}</p>` : ""}
         break;
       case "contents":
         body = `<section class="toc"><h1>${escapeHtml(e.title)}</h1>
-<ol>${tocEntries.map(({ e: t, file }) => `<li><a href="${file}">${escapeHtml(tocText(t))}</a></li>`).join("")}</ol></section>`;
+<ol>${tocEntries.map(({ e: t, file, subs }) => `<li><a href="${file}">${escapeHtml(tocText(t))}</a>${subList(file, subs)}</li>`).join("")}</ol></section>`;
         break;
       case "also_by":
         body = `<section><header class="chapter-head"><h1>${escapeHtml(e.title)}</h1></header>
@@ -172,7 +176,7 @@ ${html}${notes}</section>`;
 <body>
 <nav epub:type="toc" id="toc" class="toc"><h1>Contents</h1>
 <ol>
-${tocEntries.map(({ e, file }) => `<li><a href="text/${file}">${escapeHtml(tocText(e))}</a></li>`).join("\n")}
+${tocEntries.map(({ e, file, subs }) => `<li><a href="text/${file}">${escapeHtml(tocText(e))}</a>${subList(file, subs, "text/")}</li>`).join("\n")}
 </ol>
 </nav>
 <nav epub:type="landmarks" hidden="hidden"><h2>Guide</h2>
@@ -192,10 +196,10 @@ ${firstBody >= 0 ? `<li><a epub:type="bodymatter" href="text/${files[firstBody]}
     "OEBPS/toc.ncx",
     `<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="${lang}">
-<head><meta name="dtb:uid" content="${escapeHtml(uid)}"/><meta name="dtb:depth" content="1"/><meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>
+<head><meta name="dtb:uid" content="${escapeHtml(uid)}"/><meta name="dtb:depth" content="${tocEntries.some((t) => t.subs.length) ? 2 : 1}"/><meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>
 <docTitle><text>${escapeHtml(book.title)}</text></docTitle>
 <navMap>
-${tocEntries.map(({ e, file }, i) => `<navPoint id="np${i + 1}" playOrder="${i + 1}"><navLabel><text>${escapeHtml(tocText(e))}</text></navLabel><content src="text/${file}"/></navPoint>`).join("\n")}
+${ncxPoints(tocEntries)}
 </navMap>
 </ncx>
 `,
@@ -237,4 +241,18 @@ ${tocEntries.map(({ e, file }, i) => `<navPoint id="np${i + 1}" playOrder="${i +
   );
 
   return zip.generateAsync({ type: "uint8array", mimeType: "application/epub+zip", compression: "DEFLATE" });
+}
+
+/** The NCX nav points (older Kindles read these), with sub-chapters nested under their chapter. */
+function ncxPoints(entries: { e: BookElement; file: string; subs: string[] }[]): string {
+  let order = 0;
+  return entries
+    .map(({ e, file, subs }) => {
+      const id = ++order;
+      const kids = subs
+        .map((t, j) => `<navPoint id="np${++order}" playOrder="${order}"><navLabel><text>${escapeHtml(t)}</text></navLabel><content src="text/${file}#sub-${j + 1}"/></navPoint>`)
+        .join("");
+      return `<navPoint id="np${id}" playOrder="${id}"><navLabel><text>${escapeHtml(tocText(e))}</text></navLabel><content src="text/${file}"/>${kids}</navPoint>`;
+    })
+    .join("\n");
 }

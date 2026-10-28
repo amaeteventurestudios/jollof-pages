@@ -26,10 +26,7 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add("p", theme.indent ? "margin: 0; text-indent: 1.5em; text-align: justify; hyphens: auto;" : "margin: 0 0 0.8em; text-indent: 0; text-align: left;");
   add("p.first, h2 + p, h3 + p, h4 + p, .scene-break + p, hr + p, blockquote + p, .callout + p, figure + p, ul + p, ol + p", "text-indent: 0;");
   add("p.blank", "text-indent: 0;");
-  add(
-    ".chapter-head",
-    `text-align: ${theme.headingAlign}; margin: 3em 0 2.5em; font-family: ${theme.headingCss};`,
-  );
+  add(".chapter-head", `text-align: ${theme.headingAlign}; margin: 3em 0 2.5em; font-family: ${theme.headingCss};`);
   add(
     ".chapter-label",
     theme.labelStyle === "large"
@@ -50,10 +47,7 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".chapter-head.small .chapter-label", theme.labelStyle === "large" ? "font-size: 1.8em;" : "font-size: 0.85em;");
   add(".chapter-head.inverted", "position: relative; margin-top: 0; color: #fff;");
   add(".chapter-head.inverted img", "width: 100%; height: 16em; object-fit: cover; display: block;");
-  add(
-    ".chapter-head-text",
-    "position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 1em 1.4em; background: rgba(0,0,0,0.38);",
-  );
+  add(".chapter-head-text", "position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 1em 1.4em; background: rgba(0,0,0,0.38);");
   add(".chapter-head.inverted h1, .chapter-head.inverted .chapter-label", "color: #fff;");
   add(".chapter-subtitle", "display: block; font-style: italic; font-size: 1.1em; margin-top: 0.6em; font-weight: 400;");
   add("h2", `font-family: ${theme.headingCss}; font-size: 1.3em; line-height: 1.25; margin: 1.8em 0 0.6em; font-weight: 700; hyphens: none;`);
@@ -85,12 +79,11 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".toc ol", "list-style: none; margin: 0; padding: 0;");
   add(".toc li", "margin: 0 0 0.5em;");
   add(".toc a", "text-decoration: none; color: inherit;");
+  add(".toc ol ol", "margin: 0.35em 0 0 1.2em; font-size: 0.92em;");
+  add(".toc ol ol li", "margin: 0 0 0.3em;");
   add(".part-page", "text-align: center; margin-top: 30%;");
   if (o.dropCaps) {
-    add(
-      "p.first::first-letter",
-      `float: left; font-family: ${theme.headingCss}; font-size: 3.4em; line-height: 0.85; padding: 0.06em 0.08em 0 0; color: ${theme.accent};`,
-    );
+    add("p.first::first-letter", `float: left; font-family: ${theme.headingCss}; font-size: 3.4em; line-height: 0.85; padding: 0.06em 0.08em 0 0; color: ${theme.accent};`);
   }
   return rules.join("\n");
 }
