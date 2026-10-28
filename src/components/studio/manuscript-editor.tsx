@@ -17,13 +17,13 @@ import {
   NotebookPen,
   Quote,
   Redo2,
-  Search,
   Strikethrough,
   Underline,
   Undo2,
 } from "lucide-react";
+import FindAndReplace from "@tiptap/extension-find-and-replace";
 import { manuscriptExtensions } from "./editor-extensions";
-import { FindReplace } from "./find-replace";
+import { editorFontCss, type EditorSettings } from "@/lib/editor-settings";
 import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
 import { pb, fileUrl, errorMessage } from "@/lib/pb";
@@ -37,16 +37,21 @@ interface Props {
   onChange: (doc: DocNode, words: number) => void;
   /** CSS applied to the writing surface so it matches the chosen interior theme */
   fontFamily: string;
+  settings: EditorSettings;
+  /** the live editor, for the tool rail's find, replace and smart quotes */
+  onEditor?: (editor: Editor | null) => void;
+  /** Ctrl/Cmd+F */
+  onFind?: () => void;
 }
 
-export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily }: Props) {
+export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind }: Props) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
   const editor = useEditor(
     {
-      extensions: manuscriptExtensions(),
+      extensions: [...manuscriptExtensions(), FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 120 })],
       content: initial ?? { type: "doc", content: [{ type: "paragraph" }] },
       immediatelyRender: false,
       editorProps: {
@@ -58,12 +63,30 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
     },
     [chapterId],
   );
+  useEffect(() => {
+    onEditor?.(editor);
+    return () => onEditor?.(null);
+  }, [editor, onEditor]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {editor && <Toolbar editor={editor} bookId={bookId} />}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[#faf8f7] dark:bg-background" id="manuscript-scroll">
-        <div className="manuscript mx-auto max-w-[44rem] px-6 py-10 text-[1.1875rem] leading-[1.7] text-ink sm:px-10" style={{ fontFamily }}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto bg-[#faf8f7] dark:bg-background"
+        id="manuscript-scroll"
+        onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f" && onFind) {
+            e.preventDefault();
+            onFind();
+          }
+        }}
+      >
+        <div
+          className="manuscript mx-auto max-w-[44rem] px-6 py-10 text-ink sm:px-10"
+          data-para={settings.paragraphs}
+          data-justify={settings.justified}
+          style={{ fontFamily: editorFontCss(settings, fontFamily), fontSize: settings.size, lineHeight: settings.lineHeight }}
+        >
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -114,7 +137,6 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
     }),
   });
   const [prompt, setPrompt] = useState<null | "link" | "footnote">(null);
-  const [find, setFind] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const style = s.h2 ? "h2" : s.h3 ? "h3" : s.h4 ? "h4" : "p";
@@ -226,11 +248,7 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
         <ToolButton label="Redo" disabled={!s.canRedo} on={() => editor.chain().focus().redo().run()}>
           <Redo2 />
         </ToolButton>
-        <ToolButton label="Find and replace" active={find} on={() => setFind((v) => !v)}>
-          <Search />
-        </ToolButton>
       </div>
-      {find && <FindReplace editor={editor} onClose={() => setFind(false)} />}
       <PromptDialog
         open={prompt === "link"}
         title="Add a link"

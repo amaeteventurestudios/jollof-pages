@@ -18,6 +18,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@tiptap/extension-character-count": "^3.32.0",
+    "@tiptap/extension-find-and-replace": "^3.32.0",
     "@tiptap/extension-image": "^3.32.0",
     "@tiptap/extension-placeholder": "^3.32.0",
     "@tiptap/extension-text-align": "^3.32.0",

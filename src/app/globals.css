@@ -252,3 +252,20 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* writer's own editor settings (Write tab → Editor settings) */
+.manuscript[data-para="indented"] .ProseMirror > p + p {
+  margin-top: 0;
+  text-indent: 1.5em;
+}
+.manuscript[data-justify="true"] .ProseMirror p:not([style*="text-align"]) {
+  text-align: justify;
+  hyphens: auto;
+}
+.manuscript .ProseMirror .find-and-replace-result {
+  background: color-mix(in srgb, #f5c542 55%, transparent);
+  border-radius: 2px;
+}
+.manuscript .ProseMirror .find-and-replace-result-current {
+  background: color-mix(in srgb, var(--primary) 45%, transparent);
+}

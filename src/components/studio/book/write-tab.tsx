@@ -5,6 +5,9 @@ import { Eye, EyeOff, MoreHorizontal, PanelLeft, Timer } from "lucide-react";
 import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
 import { ChapterSidebar } from "./chapter-sidebar";
 import { Preview } from "./preview";
+import { ToolRail, type ChapterEdit, type RailPanel } from "./tool-rail";
+import type { Editor } from "@tiptap/react";
+import { loadEditorSettings, saveEditorSettings, type EditorSettings } from "@/lib/editor-settings";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { createChapter, logWords, refreshBookWordCount, saveChapter } from "@/lib/studio";
@@ -25,6 +28,45 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   const [showPreview, setShowPreview] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const active = chapters.find((c) => c.id === activeId) ?? null;
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [rail, setRail] = useState<RailPanel | null>(null);
+  // this tab only renders in the browser, after the book has loaded, so storage can seed state
+  const [settings, setSettings] = useState<EditorSettings>(loadEditorSettings);
+  const changeSettings = useCallback((s: EditorSettings) => {
+    setSettings(s);
+    saveEditorSettings(s);
+  }, []);
+  const openFind = useCallback(() => setRail("find"), [setRail]);
+  const [previewWidth, setPreviewWidth] = useState(() => {
+    try {
+      return Number(localStorage.getItem("jp-preview-width")) || 440;
+    } catch {
+      return 440;
+    }
+  });
+  const resizePreview = useCallback((w: number) => {
+    const clamped = Math.round(Math.min(Math.max(320, w), Math.max(360, window.innerWidth * 0.7)));
+    setPreviewWidth(clamped);
+    try {
+      localStorage.setItem("jp-preview-width", String(clamped));
+    } catch {
+      // no storage: the width lasts for this visit
+    }
+  }, []);
+  function startResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = previewWidth;
+    const move = (ev: PointerEvent) => resizePreview(startW + (startX - ev.clientX));
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.style.cursor = "";
+    };
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
   const theme = getTheme(bookFormat(book).theme);
 
   // autosave: one pending content save at a time, flushed when switching chapters
@@ -101,6 +143,25 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     } catch (e) {
       alert(`Could not add: ${errorMessage(e)}`);
     }
+  }
+
+  /** sections changed by book-wide replace or smart quotes, saved one by one */
+  async function editChapters(edits: ChapterEdit[]) {
+    await flush();
+    for (const e of edits) {
+      const ch = chaptersRef.current.find((c) => c.id === e.id);
+      if (!ch) continue;
+      await ws.track(saveChapter(ch, { content: e.content, word_count: e.words }));
+      savedWords.current.set(e.id, e.words);
+    }
+    const byId = new Map(edits.map((e) => [e.id, e]));
+    const next = chaptersRef.current.map((c) => {
+      const e = byId.get(c.id);
+      return e ? { ...c, content: e.content, word_count: e.words } : c;
+    });
+    setChapters(next);
+    const total = await refreshBookWordCount(book.id, next);
+    ws.setBook((b) => (b ? { ...b, word_count: total } : b));
   }
 
   async function patch(p: Partial<Chapter>) {
@@ -211,13 +272,52 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             </div>
           </div>
         ) : (
-          <ManuscriptEditor key={active.id} chapterId={active.id} bookId={book.id} initial={active.content} onChange={onChange} fontFamily={theme.bodyCss} />
+          <ManuscriptEditor
+            key={active.id}
+            chapterId={active.id}
+            bookId={book.id}
+            initial={active.content}
+            onChange={onChange}
+            fontFamily={theme.bodyCss}
+            settings={settings}
+            onEditor={setEditor}
+            onFind={openFind}
+          />
         )}
       </section>
 
+      <div className="relative flex shrink-0">
+        <ToolRail
+          open={rail}
+          onOpen={setRail}
+          editor={kind?.smart ? null : editor}
+          chapters={chapters}
+          activeId={activeId}
+          onSelect={select}
+          onEditChapters={editChapters}
+          settings={settings}
+          onSettings={changeSettings}
+        />
+      </div>
+
       {showPreview && (
-        <aside className="hidden w-[400px] shrink-0 border-l border-border bg-card lg:block" aria-label="Preview">
-          <Preview book={book} chapters={chapters} chapterId={activeId} />
+        <aside className="relative hidden shrink-0 border-l border-border bg-card lg:block" style={{ width: previewWidth }} aria-label="Preview">
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Drag to resize the preview"
+            aria-valuenow={previewWidth}
+            tabIndex={0}
+            onPointerDown={startResize}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") resizePreview(previewWidth + 40);
+              if (e.key === "ArrowRight") resizePreview(previewWidth - 40);
+            }}
+            className="group absolute inset-y-0 -left-1.5 z-10 w-3 cursor-col-resize"
+          >
+            <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-transparent transition group-hover:bg-primary/50 group-focus-visible:bg-primary" />
+          </div>
+          <Preview book={book} chapters={chapters} chapterId={activeId} onSelect={select} />
         </aside>
       )}
     </div>
