@@ -1,6 +1,6 @@
 import { authorName, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { pageGeometry, type Binding } from "../kdp";
-import type { DocMark, DocNode } from "../doc/types";
+import { isSubhead, type DocMark, type DocNode } from "../doc/types";
 import { getTheme, sceneBreakGlyph, type InteriorTheme } from "../themes";
 import { bookFormat, printEdition, type BookFormat } from "../types";
 
@@ -53,7 +53,7 @@ function marked(text: string, marks: DocMark[] | undefined): string {
   return out;
 }
 
-export function docToTypst(doc: DocNode | null | undefined, opts: { leadIn?: boolean; imagePath?: TypstOptions["imagePath"] } = {}): string {
+export function docToTypst(doc: DocNode | null | undefined, opts: { leadIn?: boolean; imagePath?: TypstOptions["imagePath"]; outlineSubheads?: boolean } = {}): string {
   let leadInPending = !!opts.leadIn;
   let firstPara = true;
 
@@ -110,7 +110,8 @@ export function docToTypst(doc: DocNode | null | undefined, opts: { leadIn?: boo
       case "heading": {
         const level = Math.min(Math.max(Number(n.attrs?.level ?? 2), 2), 4);
         leadInPending = false;
-        return `#heading(level: ${level}, outlined: false)[${inline(n.content)}]`;
+        // sub-chapters join the printed contents when the book asks for them
+        return `#heading(level: ${level}, outlined: ${!!opts.outlineSubheads && isSubhead(n)})[${inline(n.content)}]`;
       }
       case "blockquote":
         return `#quote(block: true)[${blocks(n.content)}]`;
@@ -184,6 +185,7 @@ function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, 
 #show figure.caption: set text(size: 0.85em, style: "italic")
 #show footnote.entry: set text(size: 0.8em)
 #show outline.entry.where(level: 1): it => block(above: 0.9em, it)
+#show outline.entry.where(level: 2): it => block(above: 0.45em, text(size: 0.92em, it))
 #show list: set block(above: 0.9em, below: 0.9em)
 #show enum: set block(above: 0.9em, below: 0.9em)
 #set list(indent: 0.6em, spacing: 0.5em)
@@ -276,7 +278,7 @@ function elementTypst(input: ExportInput, e: BookElement, format: BookFormat, th
   const meta = `#metadata((section: ${str(e.section)}, title: ${str(e.title)}, numbers: ${numbers}, head: ${!o.hideHeader})) <jp-start>`;
   const imgPath = e.image && imagePath ? imagePath(e.image) : null;
   const heading = `#heading(level: 1, outlined: ${e.inToc}, bookmarked: true)[#${str(tocText(e))}]`;
-  const content = (lead = false) => docToTypst(e.chapter.content, { leadIn: lead, imagePath });
+  const content = (lead = false) => docToTypst(e.chapter.content, { leadIn: lead, imagePath, outlineSubheads: format.tocSubheads && e.inToc && e.kind.id !== "part" });
   switch (e.kind.id) {
     case "title_page":
       return `${meta}
@@ -302,7 +304,7 @@ ${book.imprint ? `#place(bottom + center, text(size: 10pt, tracking: 0.08em)[#${
     case "contents":
       return `${meta}
 #opener("", ${str(e.title)}, "")
-#outline(title: none, depth: 1, indent: 0pt)`;
+#outline(title: none, depth: ${format.tocSubheads ? 2 : 1}, indent: ${format.tocSubheads ? "1.2em" : "0pt"})`;
     case "part":
       return `${meta}
 ${heading}

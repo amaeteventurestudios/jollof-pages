@@ -47,9 +47,7 @@ export function paragraphsToDoc(text: string): DocNode {
     .filter(Boolean);
   return {
     type: "doc",
-    content: paras.length
-      ? paras.map((p) => ({ type: "paragraph", content: [{ type: "text", text: p.replace(/\n/g, " ") }] }))
-      : [{ type: "paragraph" }],
+    content: paras.length ? paras.map((p) => ({ type: "paragraph", content: [{ type: "text", text: p.replace(/\n/g, " ") }] })) : [{ type: "paragraph" }],
   };
 }
 
@@ -58,5 +56,21 @@ export function collectImages(node: DocNode | null | undefined, out: string[] = 
   if (!node) return out;
   if (node.type === "image" && typeof node.attrs?.src === "string") out.push(node.attrs.src);
   for (const c of node.content ?? []) collectImages(c, out);
+  return out;
+}
+
+/** A heading that starts a sub-chapter: level 2 with some text. Exports give the nth one the id `sub-n`. */
+export function isSubhead(node: DocNode): boolean {
+  return node.type === "heading" && Number(node.attrs?.level ?? 2) <= 2 && !!plainText(node, "").trim();
+}
+
+/** The sub-chapter headings of a chapter, in reading order. */
+export function subheads(doc: DocNode | null | undefined): string[] {
+  const out: string[] = [];
+  const walk = (n: DocNode) => {
+    if (isSubhead(n)) out.push(plainText(n, "").trim());
+    else n.content?.forEach(walk);
+  };
+  if (doc) walk(doc);
   return out;
 }

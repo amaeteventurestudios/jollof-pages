@@ -1,4 +1,4 @@
-import type { DocMark, DocNode } from "./types";
+import { isSubhead, type DocMark, type DocNode } from "./types";
 
 export interface HtmlOptions {
   /** "epub" adds epub:type attributes and produces XHTML-safe void tags */
@@ -32,6 +32,7 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
   const notes: string[] = [];
   const prefix = opts.notePrefix ?? "fn";
   let firstDone = false;
+  let sub = 0;
   const epub = opts.mode === "epub";
   const br = epub ? "<br/>" : "<br>";
 
@@ -91,7 +92,9 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
       case "heading": {
         const level = Math.min(Math.max(Number(n.attrs?.level ?? 2), 2), 4);
         firstDone = false;
-        return `<h${level}${align(n)}>${inline(n.content)}</h${level}>`;
+        // sub-chapters get ids so the contents can link to them
+        const id = isSubhead(n) ? ` id="sub-${++sub}"` : "";
+        return `<h${level}${id}${align(n)}>${inline(n.content)}</h${level}>`;
       }
       case "blockquote":
         return `<blockquote>${inline(n.content)}</blockquote>`;
@@ -107,11 +110,7 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
         return `<li>${inline(n.content)}</li>`;
       case "horizontalRule":
         firstDone = false;
-        return opts.sceneBreak
-          ? `<p class="scene-break" role="separator">${escapeHtml(opts.sceneBreak)}</p>`
-          : epub
-            ? '<hr class="scene-break"/>'
-            : '<hr class="scene-break">';
+        return opts.sceneBreak ? `<p class="scene-break" role="separator">${escapeHtml(opts.sceneBreak)}</p>` : epub ? '<hr class="scene-break"/>' : '<hr class="scene-break">';
       case "image": {
         const src = typeof n.attrs?.src === "string" ? n.attrs.src : "";
         if (!src) return "";
@@ -125,13 +124,9 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
         const text = escapeHtml(String(n.attrs?.text ?? ""));
         const id = `${prefix}-${i}`;
         notes.push(
-          epub
-            ? `<aside epub:type="footnote" id="${id}"><p><a href="#${id}-ref">${i}.</a> ${text}</p></aside>`
-            : `<li id="${id}">${text} <a href="#${id}-ref" aria-label="Back to text">↩</a></li>`,
+          epub ? `<aside epub:type="footnote" id="${id}"><p><a href="#${id}-ref">${i}.</a> ${text}</p></aside>` : `<li id="${id}">${text} <a href="#${id}-ref" aria-label="Back to text">↩</a></li>`,
         );
-        return epub
-          ? `<a epub:type="noteref" href="#${id}" id="${id}-ref" class="noteref">${i}</a>`
-          : `<sup><a href="#${id}" id="${id}-ref" class="noteref">${i}</a></sup>`;
+        return epub ? `<a epub:type="noteref" href="#${id}" id="${id}-ref" class="noteref">${i}</a>` : `<sup><a href="#${id}" id="${id}-ref" class="noteref">${i}</a></sup>`;
       }
       default:
         return inline(n.content);
@@ -139,10 +134,6 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
   }
 
   const html = node(doc ?? { type: "doc" });
-  const notesHtml = notes.length
-    ? epub
-      ? `<section class="footnotes">${notes.join("")}</section>`
-      : `<ol class="footnotes">${notes.join("")}</ol>`
-    : "";
+  const notesHtml = notes.length ? (epub ? `<section class="footnotes">${notes.join("")}</section>` : `<ol class="footnotes">${notes.join("")}</ol>`) : "";
   return { html, notes: notesHtml };
 }
