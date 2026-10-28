@@ -12,6 +12,8 @@ import { GoalsTab } from "@/components/studio/book/goals-tab";
 import { PublishTab } from "@/components/studio/book/publish-tab";
 import { ExportTab } from "@/components/studio/book/export-tab";
 import { loadBook, updateBook } from "@/lib/studio";
+import { isShared, roleOf } from "@/lib/collab";
+import { pb } from "@/lib/pb";
 import { errorMessage } from "@/lib/pb";
 import type { Book, Chapter } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -94,7 +96,10 @@ export default function BookWorkspacePage() {
       </p>
     );
 
-  const ws: Workspace = { book, chapters, setChapters, saveBook, setBook, track };
+  const role = roleOf(book, pb().authStore.record?.id) ?? "commenter";
+  const ws: Workspace = { book, chapters, setChapters, saveBook, setBook, track, role, live: isShared(book) };
+  // people the book is shared with work in the manuscript; the rest of the book is the owner's
+  const tabs = role === "owner" ? TABS : TABS.filter((t) => t.id === "write");
 
   return (
     <div className="flex h-dvh flex-col">
@@ -109,28 +114,31 @@ export default function BookWorkspacePage() {
           </span>
         </div>
         <nav className="order-last -mb-px flex w-full gap-1 overflow-x-auto md:order-none md:ml-auto md:w-auto" aria-label="Book">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               aria-current={tab === t.id ? "page" : undefined}
               onClick={() => router.replace(`/studio/books/${id}${t.id === "write" ? "" : `?tab=${t.id}`}`, { scroll: false })}
-              className={cn(
-                "h-11 border-b-2 border-transparent px-3 text-sm whitespace-nowrap text-ink-2 hover:text-ink",
-                tab === t.id && "border-primary font-medium text-ink",
-              )}
+              className={cn("h-11 border-b-2 border-transparent px-3 text-sm whitespace-nowrap text-ink-2 hover:text-ink", tab === t.id && "border-primary font-medium text-ink")}
             >
               {t.label}
             </button>
           ))}
         </nav>
-        <Link href="/studio/help" target="_blank" aria-label="Help and support" title="Help and support" className="-ml-2 rounded p-1.5 text-ink-2 hover:bg-muted max-md:absolute max-md:top-2 max-md:right-3">
+        <Link
+          href="/studio/help"
+          target="_blank"
+          aria-label="Help and support"
+          title="Help and support"
+          className="-ml-2 rounded p-1.5 text-ink-2 hover:bg-muted max-md:absolute max-md:top-2 max-md:right-3"
+        >
           <LifeBuoy className="size-4" />
         </Link>
       </header>
       <div className="flex min-h-0 flex-1 flex-col">
-        {tab === "write" && <WriteTab ws={ws} />}
-        {tab !== "write" && (
+        {(tab === "write" || role !== "owner") && <WriteTab ws={ws} />}
+        {tab !== "write" && role === "owner" && (
           <div className="min-h-0 flex-1 overflow-y-auto bg-background">
             {tab === "details" && <DetailsTab ws={ws} />}
             {tab === "format" && <FormatTab ws={ws} />}

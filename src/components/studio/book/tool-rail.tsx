@@ -5,16 +5,20 @@ import { useEditorState, type Editor } from "@tiptap/react";
 import { searchDocument, type SearchOptions } from "@tiptap/extension-find-and-replace";
 import { Fragment, type Node as PMNode, type Schema } from "@tiptap/pm/model";
 import { Transform } from "@tiptap/pm/transform";
-import { ChevronDown, ChevronUp, Quote, Search, Type, X } from "lucide-react";
+import { ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Type, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_EDITOR_SETTINGS, EDITOR_FONTS, type EditorSettings } from "@/lib/editor-settings";
 import { curlQuotesTransform, straightQuotesIn } from "@/lib/smart-quotes";
 import type { DocNode } from "@/lib/doc/types";
 import type { Chapter } from "@/lib/types";
+import type { CollabRole } from "@/lib/collab";
+import { listChanges } from "@/components/studio/track-changes";
+import { ChangesPanel } from "./changes-panel";
+import { CommentsPanel, type Comment } from "./comments-panel";
 import { cn } from "@/lib/utils";
 
-export type RailPanel = "settings" | "find" | "quotes";
+export type RailPanel = "settings" | "find" | "quotes" | "changes" | "comments";
 
 export interface ChapterEdit {
   id: string;
@@ -33,18 +37,33 @@ interface RailProps {
   onEditChapters: (edits: ChapterEdit[]) => Promise<void>;
   settings: EditorSettings;
   onSettings: (s: EditorSettings) => void;
+  bookId: string;
+  role: CollabRole;
+  /** shared book: other chapters may be open live elsewhere, so edits stay inside the open one */
+  live: boolean;
+  me: { id: string; name: string };
+  comments: Comment[] | null;
+  activeComment: string | null;
+  onActiveComment: (id: string | null) => void;
 }
 
 const TOOLS: { id: RailPanel; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "settings", label: "Editor settings", icon: Type },
   { id: "find", label: "Find and replace", icon: Search },
   { id: "quotes", label: "Smart quotes", icon: Quote },
+  { id: "changes", label: "Track changes", icon: FileDiff },
+  { id: "comments", label: "Comments", icon: MessageSquare },
 ];
 
 /** Writing tools down the right of the editor, each opening a panel, as in Atticus. */
 export function ToolRail(props: RailProps) {
-  const { open, onOpen } = props;
-  const tool = TOOLS.find((t) => t.id === open);
+  const { open, onOpen, editor, role, comments, activeId } = props;
+  // commenters cannot change the text, so the tools that do are left out
+  const tools = TOOLS.filter((t) => role !== "commenter" || t.id !== "quotes");
+  const tool = tools.find((t) => t.id === open);
+  const changes = useEditorState({ editor, selector: ({ editor: e }) => (e ? listChanges(e.state.doc).length : 0) }) ?? 0;
+  const openComments = (comments ?? []).filter((c) => !c.resolved && c.chapter === activeId).length;
+  const badge: Partial<Record<RailPanel, number>> = { changes, comments: openComments };
   return (
     <>
       {tool && (
@@ -59,11 +78,26 @@ export function ToolRail(props: RailProps) {
             {open === "settings" && <SettingsPanel settings={props.settings} onChange={props.onSettings} />}
             {open === "find" && <FindPanel {...props} />}
             {open === "quotes" && <QuotesPanel {...props} />}
+            {open === "changes" && <ChangesPanel editor={editor} role={role} />}
+            {open === "comments" && (
+              <CommentsPanel
+                all={comments}
+                editor={editor}
+                bookId={props.bookId}
+                chapterId={activeId}
+                chapters={props.chapters}
+                me={props.me}
+                role={role}
+                active={props.activeComment}
+                onActive={props.onActiveComment}
+                onSelect={props.onSelect}
+              />
+            )}
           </div>
         </aside>
       )}
       <nav aria-label="Writing tools" className="flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border bg-card py-2">
-        {TOOLS.map((t) => (
+        {tools.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -71,9 +105,17 @@ export function ToolRail(props: RailProps) {
             title={t.label}
             aria-pressed={open === t.id}
             onClick={() => onOpen(open === t.id ? null : t.id)}
-            className={cn("grid size-9 place-items-center rounded-md text-ink-2 transition hover:bg-paper-2 hover:text-ink", open === t.id && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary")}
+            className={cn(
+              "relative grid size-9 place-items-center rounded-md text-ink-2 transition hover:bg-paper-2 hover:text-ink",
+              open === t.id && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary",
+            )}
           >
             <t.icon className="size-[18px]" />
+            {!!badge[t.id] && (
+              <span className="tabular absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-none font-semibold text-primary-foreground">
+                {badge[t.id]}
+              </span>
+            )}
           </button>
         ))}
       </nav>
@@ -128,7 +170,27 @@ function SettingsPanel({ settings: s, onChange }: { settings: EditorSettings; on
   );
 }
 
-function Slider({ label, value, min, max, step, display, small, large, onChange }: { label: string; value: number; min: number; max: number; step: number; display: string; small: string; large: string; onChange: (v: number) => void }) {
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  small,
+  large,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  display: string;
+  small: string;
+  large: string;
+  onChange: (v: number) => void;
+}) {
   return (
     <label className="grid gap-1.5">
       <span className="flex justify-between">
@@ -188,7 +250,9 @@ function Scope({ value, onChange }: { value: "chapter" | "book"; onChange: (v: "
   );
 }
 
-function FindPanel({ editor, chapters, activeId, onSelect, onEditChapters }: RailProps) {
+function FindPanel({ editor, chapters, activeId, onSelect, onEditChapters, role, live }: RailProps) {
+  const canReplace = role !== "commenter";
+  const bookWide = !live && (role === "owner" || role === "cowriter");
   const [scope, setScope] = useState<"chapter" | "book">("chapter");
   const [term, setTerm] = useState("");
   const [replacement, setReplacement] = useState("");
@@ -249,8 +313,10 @@ function FindPanel({ editor, chapters, activeId, onSelect, onEditChapters }: Rai
 
   return (
     <div className="grid gap-4 text-sm">
-      <Scope value={scope} onChange={setScope} />
-      <p className="text-[13px] text-soft">{scope === "chapter" ? `Finding words in: ${chapters.find((c) => c.id === activeId)?.title ?? "this section"}` : `Searching all ${chapters.length} sections of the book.`}</p>
+      {bookWide && <Scope value={scope} onChange={setScope} />}
+      <p className="text-[13px] text-soft">
+        {scope === "chapter" ? `Finding words in: ${chapters.find((c) => c.id === activeId)?.title ?? "this section"}` : `Searching all ${chapters.length} sections of the book.`}
+      </p>
       <div className="grid gap-1.5">
         <div className="flex items-center justify-between">
           <label htmlFor="find-term" className="font-medium">
@@ -287,13 +353,15 @@ function FindPanel({ editor, chapters, activeId, onSelect, onEditChapters }: Rai
       <label className="flex items-center gap-2">
         <input type="checkbox" className="accent-[var(--primary)]" checked={caseSensitive} onChange={(e) => setCaseSensitive(e.target.checked)} /> Match case
       </label>
-      <div className="grid gap-1.5">
-        <label htmlFor="replace-term" className="font-medium">
-          Replace with
-        </label>
-        <Input id="replace-term" value={replacement} onChange={(e) => setReplacement(e.target.value)} />
-      </div>
-      {scope === "chapter" ? (
+      {canReplace && (
+        <div className="grid gap-1.5">
+          <label htmlFor="replace-term" className="font-medium">
+            Replace with
+          </label>
+          <Input id="replace-term" value={replacement} onChange={(e) => setReplacement(e.target.value)} />
+        </div>
+      )}
+      {!canReplace ? null : scope === "chapter" ? (
         <div className="grid grid-cols-2 gap-2">
           <Button variant="outline" disabled={!state.count} onClick={() => editor?.chain().replace().scrollIntoView().run()}>
             Replace
@@ -309,7 +377,9 @@ function FindPanel({ editor, chapters, activeId, onSelect, onEditChapters }: Rai
           </Button>
           {term && (
             <div className="grid gap-1">
-              <p className="text-[13px] text-soft">{bookTotal ? `${bookTotal} ${bookTotal === 1 ? "match" : "matches"} in ${bookHits.length} ${bookHits.length === 1 ? "section" : "sections"}` : "No matches in the book."}</p>
+              <p className="text-[13px] text-soft">
+                {bookTotal ? `${bookTotal} ${bookTotal === 1 ? "match" : "matches"} in ${bookHits.length} ${bookHits.length === 1 ? "section" : "sections"}` : "No matches in the book."}
+              </p>
               <ul className="grid gap-1">
                 {bookHits.map((h) => (
                   <li key={h.c.id}>
@@ -342,7 +412,8 @@ function FindPanel({ editor, chapters, activeId, onSelect, onEditChapters }: Rai
 
 /* ---------- smart quotes ---------- */
 
-function QuotesPanel({ editor, chapters, activeId, onSelect, onEditChapters }: RailProps) {
+function QuotesPanel({ editor, chapters, activeId, onSelect, onEditChapters, role, live }: RailProps) {
+  const bookWide = !live && (role === "owner" || role === "cowriter");
   const [tab, setTab] = useState<"apply" | "check">("apply");
   const [scope, setScope] = useState<"chapter" | "book">("chapter");
   const [note, setNote] = useState("");
@@ -402,7 +473,7 @@ function QuotesPanel({ editor, chapters, activeId, onSelect, onEditChapters }: R
       </div>
       {tab === "apply" ? (
         <>
-          <Scope value={scope} onChange={setScope} />
+          {bookWide && <Scope value={scope} onChange={setScope} />}
           <ul className="grid list-disc gap-2 pl-4 text-[13px] text-ink-2">
             <li>Turns straight quotes (&quot; and &apos;) into curly ones (“ ” ‘ ’) and apostrophes (’).</li>
             <li>Quotes you type are already curled. This fixes text pasted from ChatGPT, Word or Google Docs.</li>
@@ -418,22 +489,28 @@ function QuotesPanel({ editor, chapters, activeId, onSelect, onEditChapters }: R
           <ul className="grid gap-1">
             {counts.map(({ c, straight }) => (
               <li key={c.id}>
-                <button type="button" onClick={() => onSelect(c.id)} className={cn("flex w-full justify-between gap-2 rounded-md p-2 text-left hover:bg-paper-2", c.id === activeId && "bg-primary-soft hover:bg-primary-soft")}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(c.id)}
+                  className={cn("flex w-full justify-between gap-2 rounded-md p-2 text-left hover:bg-paper-2", c.id === activeId && "bg-primary-soft hover:bg-primary-soft")}
+                >
                   <span className="truncate">{c.title}</span>
                   <span className="tabular shrink-0 text-soft">{straight} straight</span>
                 </button>
               </li>
             ))}
           </ul>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setScope("book");
-              setTab("apply");
-            }}
-          >
-            Fix them all
-          </Button>
+          {bookWide && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setScope("book");
+                setTab("apply");
+              }}
+            >
+              Fix them all
+            </Button>
+          )}
         </>
       ) : (
         <p className="text-[13px] text-ok">Every quote in the book is curly.</p>

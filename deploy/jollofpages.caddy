@@ -1,12 +1,18 @@
-# Jollof Pages on the shared server. Copy to /etc/caddy/sites/jollofpages.caddy, then
-# `systemctl reload caddy`. Ports match docker-compose.yml (localhost only).
+# Jollof Pages on the shared server, installed as /etc/caddy/sites/jollofpages.caddy.
+# deploy/autodeploy.sh copies it there and reloads Caddy whenever this file changes. Ports match docker-compose.yml (localhost only).
 # Author sites (ada.jollofpages.com and authors' own domains) need the on_demand_tls global
 # option in the main Caddyfile; see docs/author-sites.md.
 jollofpages.com, www.jollofpages.com {
 	@www host www.jollofpages.com
 	redir @www https://jollofpages.com{uri} permanent
 	encode zstd gzip
-	reverse_proxy 127.0.0.1:3100
+	# live collaboration (WebSocket), see docker-compose.yml
+	handle_path /collab* {
+		reverse_proxy 127.0.0.1:3102
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3100
+	}
 }
 
 pb.jollofpages.com {

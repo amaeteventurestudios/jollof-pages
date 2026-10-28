@@ -12,7 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createBook, createBoxSet, createChapter, listAuthors, listBooks, loadLogs, userId } from "@/lib/studio";
+import { createBook, createBoxSet, createChapter, listAuthors, listBooks, listSharedBooks, loadLogs, userId } from "@/lib/studio";
+import { isCollaboratorOnly } from "@/components/studio/auth-gate";
+import { ROLE_INFO, roleOf } from "@/lib/collab";
 import { BOOK_STATUSES, bookGoal, type Author, type Book, type Section, type WritingLog } from "@/lib/types";
 import { fmt, lastDays, streak, wordsByDay } from "@/lib/progress";
 import { today } from "@/lib/slug";
@@ -26,20 +28,47 @@ export default function StudioHome() {
   const [logs, setLogs] = useState<WritingLog[]>([]);
   const [error, setError] = useState("");
   const [dialog, setDialog] = useState<null | "new" | "import" | "isbn" | "boxset">(null);
+  const [shared, setShared] = useState<Book[]>([]);
+  const guest = isCollaboratorOnly();
 
   const load = useCallback(() => {
-    Promise.all([listBooks(), loadLogs(60)])
-      .then(([b, l]) => {
+    Promise.all([guest ? [] : listBooks(), guest ? [] : loadLogs(60), listSharedBooks().catch(() => [])])
+      .then(([b, l, s]) => {
         setBooks(b);
         setLogs(l);
+        setShared(s);
       })
       .catch((e) => setError(errorMessage(e)));
-  }, []);
+  }, [guest]);
   useEffect(load, [load]);
 
   const byDay = wordsByDay(logs);
   const week = lastDays(7).reduce((s, d) => s + Math.max(byDay.get(d) ?? 0, 0), 0);
   const total = (books ?? []).reduce((s, b) => s + (b.word_count || 0), 0);
+
+  if (guest)
+    return (
+      <>
+        <StudioNav />
+        <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 sm:py-10">
+          <h1 className="text-[clamp(1.75rem,3vw,2.5rem)] leading-tight tracking-[-0.02em]">Shared with you</h1>
+          <p className="mt-1 text-soft">Books other authors invited you to work on.</p>
+          {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load the books: {error}</p>}
+          {books === null && !error ? (
+            <p className="mt-10 text-soft" role="status">
+              Loading books…
+            </p>
+          ) : shared.length ? (
+            <SharedGrid books={shared} />
+          ) : (
+            <div className="mt-10 border border-border bg-card p-10 text-center">
+              <h2 className="text-xl">Nothing shared with you yet</h2>
+              <p className="mx-auto mt-2 max-w-md text-soft">When an author invites you to a book, open the link in their email and the book appears here.</p>
+            </div>
+          )}
+        </main>
+      </>
+    );
 
   return (
     <>
@@ -132,12 +161,52 @@ export default function StudioHome() {
             })}
           </ul>
         )}
+
+        {shared.length > 0 && (
+          <section className="mt-14" aria-labelledby="shared-h">
+            <div className="flex items-baseline justify-between gap-4 border-b border-border pb-2">
+              <h2 id="shared-h" className="text-xl tracking-tight">
+                Shared with you
+              </h2>
+              <Link href="/studio/collaboration" className="text-sm text-primary hover:underline">
+                Collaboration
+              </Link>
+            </div>
+            <SharedGrid books={shared} />
+          </section>
+        )}
       </main>
       <NewBookDialog open={dialog === "new"} onClose={() => setDialog(null)} />
       <ImportDialog open={dialog === "import"} onClose={() => setDialog(null)} />
       <BoxSetDialog open={dialog === "boxset"} books={(books ?? []).filter((b) => !b.box_set)} onClose={() => setDialog(null)} />
       <IsbnDialog open={dialog === "isbn"} onClose={() => setDialog(null)} />
     </>
+  );
+}
+
+/** Other authors' books this person works on, with their part in each. */
+function SharedGrid({ books }: { books: Book[] }) {
+  const me = userId();
+  return (
+    <ul className="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
+      {books.map((b) => {
+        const role = roleOf(b, me);
+        return (
+          <li key={b.id}>
+            <Link href={`/studio/books/${b.id}`} className="group block focus-visible:outline-offset-4">
+              <div className="overflow-hidden bg-paper-2 transition-transform duration-200 group-hover:-translate-y-1">
+                <BookCover book={b} sizes="(min-width: 1024px) 240px, 45vw" />
+              </div>
+              <h3 className="mt-3 leading-snug font-medium text-ink group-hover:text-primary">{b.title}</h3>
+              <p className="mt-0.5 text-sm text-soft">
+                {b.expand?.author?.name ? `${b.expand.author.name} · ` : ""}
+                {role && role !== "owner" ? ROLE_INFO[role].label : "Shared"}
+              </p>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -162,7 +231,10 @@ function LearnCard() {
     );
   return (
     <section aria-labelledby="learn-h" className="relative mt-4 grid overflow-hidden border border-border bg-card sm:grid-cols-[1fr_auto]">
-      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-[0.07] [background-image:radial-gradient(var(--primary)_1.2px,transparent_1.6px)] [background-size:16px_16px] max-sm:hidden" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-[0.07] [background-image:radial-gradient(var(--primary)_1.2px,transparent_1.6px)] [background-size:16px_16px] max-sm:hidden"
+      />
       <div className="relative flex gap-4 p-5 sm:p-6">
         <span className="grid size-12 shrink-0 place-items-center bg-primary text-primary-foreground">
           <GraduationCap className="size-6" />
@@ -172,7 +244,9 @@ function LearnCard() {
             Learn how to use Jollof Pages
           </h2>
           <p className="mt-0.5 text-soft">
-            {done.size ? `${done.size} of ${TUTORIALS.length} guides done. Next up: ${next.title}.` : `Ten short guides take you from first chapter to published book. Start with \u201c${next.title}\u201d.`}
+            {done.size
+              ? `${done.size} of ${TUTORIALS.length} guides done. Next up: ${next.title}.`
+              : `Ten short guides take you from first chapter to published book. Start with \u201c${next.title}\u201d.`}
           </p>
           <div className="mt-3 h-1.5 max-w-sm overflow-hidden bg-paper-2" aria-hidden>
             <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
@@ -316,7 +390,8 @@ function BoxSetDialog({ open, books, onClose }: { open: boolean; books: Book[]; 
           <div>
             <DialogTitle>Make a box set</DialogTitle>
             <DialogDescription className="mt-1">
-              One book holding several of yours, each opening with its own &ldquo;Book One&rdquo;, &ldquo;Book Two&rdquo; page and its chapters numbered from one again. The box set gets its own title page, contents and cover; the original books are not changed.
+              One book holding several of yours, each opening with its own &ldquo;Book One&rdquo;, &ldquo;Book Two&rdquo; page and its chapters numbered from one again. The box set gets its own title
+              page, contents and cover; the original books are not changed.
             </DialogDescription>
           </div>
           <fieldset className="grid gap-2">
@@ -432,9 +507,9 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
         >
           <DialogTitle>Import a manuscript</DialogTitle>
           <DialogDescription>
-            A Word, Markdown (such as one written with ChatGPT), EPUB, RTF, OpenDocument, web page or plain text file, including public-domain books from Project Gutenberg and
-            Standard Ebooks. Each top heading (Heading 1, or # in Markdown) becomes its own chapter. Headings below it, bold and italic text, lists,
-            quotes, images and footnotes come across. Sections named Introduction, Acknowledgments and so on are placed in the front or back matter.
+            A Word, Markdown (such as one written with ChatGPT), EPUB, RTF, OpenDocument, web page or plain text file, including public-domain books from Project Gutenberg and Standard Ebooks. Each
+            top heading (Heading 1, or # in Markdown) becomes its own chapter. Headings below it, bold and italic text, lists, quotes, images and footnotes come across. Sections named Introduction,
+            Acknowledgments and so on are placed in the front or back matter.
           </DialogDescription>
           <div className="grid gap-1.5">
             <Label htmlFor="imp-file">Manuscript (.docx, .md, .epub, .rtf, .odt, .html or .txt)</Label>

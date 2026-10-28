@@ -2,6 +2,7 @@ import { elementKind, type ElementKind } from "./elements";
 import { capitalize, chapterLabel, numberWord, type InteriorTheme } from "./themes";
 import { chapterOptions, type Author, type Book, type Chapter, type ChapterOptions, type Section } from "./types";
 import { collectImages } from "./doc/types";
+import { withoutSuggestions } from "./doc/suggestions";
 
 export interface AlsoByEntry {
   title: string;
@@ -59,8 +60,10 @@ export function orderedElements(chapters: Chapter[], theme: InteriorTheme): Book
       number = ++chapterNo;
       label = chapterLabel(theme, number);
     }
+    // pending tracked changes are not part of the book until accepted
+    const content = withoutSuggestions(c.content);
     return {
-      chapter: c,
+      chapter: content === c.content ? c : { ...c, content },
       kind,
       number,
       label,

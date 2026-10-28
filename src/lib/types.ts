@@ -117,6 +117,10 @@ export interface Book {
   ebook_file?: string;
   created: string;
   updated: string;
+  /** people the owner shared the book with (see src/lib/collab.ts) */
+  cowriters?: string[];
+  editors?: string[];
+  commenters?: string[];
   /** a box set: the books it was assembled from, in order */
   box_set?: { books: string[] } | null;
   expand?: { author?: Author };
@@ -160,6 +164,8 @@ export interface Chapter {
   in_toc: boolean;
   numbered: boolean;
   options: ChapterOptions | null;
+  /** current live-editing generation, set by the collab server */
+  collab_gen?: string;
   created: string;
   updated: string;
 }

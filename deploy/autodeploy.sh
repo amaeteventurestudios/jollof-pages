@@ -23,4 +23,18 @@ files=(-f docker-compose.yml)
 [ -f docker-compose.override.yml ] && files+=(-f docker-compose.override.yml)
 docker compose "${files[@]}" up -d --build
 docker image prune -f >/dev/null
+
+# keep Caddy's copy of the site config in step, putting the old one back if Caddy rejects the new one
+site=/etc/caddy/sites/jollofpages.caddy
+if [ -d /etc/caddy/sites ] && command -v caddy >/dev/null && ! cmp -s deploy/jollofpages.caddy "$site"; then
+  [ -f "$site" ] && cp "$site" "$site.bak"
+  cp deploy/jollofpages.caddy "$site"
+  if caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1 && systemctl reload caddy; then
+    echo "Caddy config updated."
+  else
+    echo "Caddy rejected the new config; keeping the old one."
+    if [ -f "$site.bak" ]; then mv "$site.bak" "$site"; else rm -f "$site"; fi
+    systemctl reload caddy || true
+  fi
+fi
 echo "Now running $(git log --oneline -1)."

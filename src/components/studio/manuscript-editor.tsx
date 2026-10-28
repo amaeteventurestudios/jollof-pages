@@ -22,7 +22,12 @@ import {
   Undo2,
 } from "lucide-react";
 import FindAndReplace from "@tiptap/extension-find-and-replace";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import { manuscriptExtensions } from "./editor-extensions";
+import { TrackChanges } from "./track-changes";
+import { CommentHighlights, setCommentHandler } from "./comment-highlights";
+import { colorFor, type LiveChapter } from "./use-live-chapter";
 import { editorFontCss, type EditorSettings } from "@/lib/editor-settings";
 import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
@@ -41,17 +46,36 @@ interface Props {
   onEditor?: (editor: Editor | null) => void;
   /** Ctrl/Cmd+F */
   onFind?: () => void;
+  /** shared books: the chapter's live document on the collab server */
+  live?: LiveChapter | null;
+  /** who is writing, for tracked changes and the cursor others see */
+  me: { id: string; name: string };
+  /** record edits as tracked changes from the start (editors always do) */
+  tracking?: boolean;
+  /** commenters read and comment but cannot type */
+  readOnly?: boolean;
+  /** a comment highlight was clicked */
+  onCommentClick?: (id: string) => void;
 }
 
-export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind }: Props) {
+export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick }: Props) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+  const doc = live?.doc ?? null;
   const editor = useEditor(
     {
-      extensions: [...manuscriptExtensions(), FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 120 })],
-      content: initial ?? { type: "doc", content: [{ type: "paragraph" }] },
+      extensions: [
+        ...manuscriptExtensions(readOnly ? "" : "Start writing…", { live: !!live }),
+        FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 120 }),
+        TrackChanges.configure({ enabled: !!tracking, username: me.name, userId: me.id }),
+        CommentHighlights,
+        ...(live ? [Collaboration.configure({ document: live.doc }), CollaborationCaret.configure({ provider: live.provider, user: { name: me.name, color: colorFor(me.id) } })] : []),
+      ],
+      // a live chapter takes its text from the collab server
+      ...(live ? {} : { content: initial ?? { type: "doc", content: [{ type: "paragraph" }] } }),
+      editable: !readOnly,
       immediatelyRender: false,
       editorProps: {
         attributes: { class: "prose-manuscript", "aria-label": "Manuscript", spellcheck: "true" },
@@ -60,8 +84,11 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
         onChangeRef.current(editor.getJSON() as DocNode, editor.storage.characterCount.words());
       },
     },
-    [chapterId],
+    [chapterId, doc, readOnly],
   );
+  useEffect(() => {
+    if (editor) setCommentHandler(editor, (id) => onCommentClick?.(id));
+  }, [editor, onCommentClick]);
   useEffect(() => {
     onEditor?.(editor);
     return () => onEditor?.(null);
@@ -69,7 +96,12 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {editor && <Toolbar editor={editor} bookId={bookId} />}
+      {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} />}
+      {live && (live.problem || !live.synced) && (
+        <p role="status" className="border-b border-border bg-paper-2 px-4 py-1.5 text-[13px] text-ink-2">
+          {live.problem || "Connecting to the shared copy of this chapter…"}
+        </p>
+      )}
       <div
         className="min-h-0 flex-1 overflow-y-auto bg-[#faf8f7] dark:bg-background"
         id="manuscript-scroll"
@@ -222,7 +254,13 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
           bookId={bookId}
           title="Insert an image"
           description="Pick one of your images or upload a new one. It goes where the cursor is."
-          onPick={(a) => editor.chain().focus().setImage({ src: assetUrl(a), alt: a.alt }).run()}
+          onPick={(a) =>
+            editor
+              .chain()
+              .focus()
+              .setImage({ src: assetUrl(a), alt: a.alt })
+              .run()
+          }
         />
         <span className="mx-1 h-5 w-px shrink-0 bg-border" />
         <ToolButton label="Undo" disabled={!s.canUndo} on={() => editor.chain().focus().undo().run()}>
@@ -249,7 +287,13 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
         label="Note text"
         multiline
         onClose={() => setPrompt(null)}
-        onSubmit={(v) => editor.chain().focus().insertContent({ type: "footnote", attrs: { text: v } }).run()}
+        onSubmit={(v) =>
+          editor
+            .chain()
+            .focus()
+            .insertContent({ type: "footnote", attrs: { text: v } })
+            .run()
+        }
       />
     </div>
   );

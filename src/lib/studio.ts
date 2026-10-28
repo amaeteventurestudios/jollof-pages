@@ -15,11 +15,23 @@ export function userId(): string {
 }
 
 export async function listBooks(): Promise<Book[]> {
-  return pb().collection("books").getFullList<Book>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-updated", expand: "author" });
+  return pb()
+    .collection("books")
+    .getFullList<Book>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-updated", expand: "author" });
+}
+
+/** Books other authors shared with the signed-in person. */
+export async function listSharedBooks(): Promise<Book[]> {
+  const u = userId();
+  return pb()
+    .collection("books")
+    .getFullList<Book>({ filter: pb().filter("owner != {:u} && members.id ?= {:u}", { u }), sort: "-updated", expand: "author" });
 }
 
 export async function listAuthors(): Promise<Author[]> {
-  return pb().collection("authors").getFullList<Author>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "name" });
+  return pb()
+    .collection("authors")
+    .getFullList<Author>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "name" });
 }
 
 export async function ensureAuthor(id?: string): Promise<Author> {
@@ -28,7 +40,9 @@ export async function ensureAuthor(id?: string): Promise<Author> {
   if (chosen) return chosen;
   // no pen names yet: a placeholder the owner renames on the Pen names page
   const name = "New pen name";
-  return pb().collection("authors").create<Author>({ owner: userId(), name, slug: await uniqueSlug("authors", slugify(name)) });
+  return pb()
+    .collection("authors")
+    .create<Author>({ owner: userId(), name, slug: await uniqueSlug("authors", slugify(name)) });
 }
 
 export async function uniqueSlug(collection: string, base: string, exceptId?: string): Promise<string> {
@@ -47,7 +61,9 @@ export async function uniqueSlug(collection: string, base: string, exceptId?: st
 
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   // every author's site settings are public, so ask for this account's own
-  const list = await pb().collection("site_settings").getList<SiteSettings>(1, 1, { filter: pb().filter("owner = {:u}", { u: userId() }), sort: "created" });
+  const list = await pb()
+    .collection("site_settings")
+    .getList<SiteSettings>(1, 1, { filter: pb().filter("owner = {:u}", { u: userId() }), sort: "created" });
   return list.items[0] ?? null;
 }
 
@@ -84,10 +100,7 @@ export async function createBook(input: { title: string; subtitle?: string; auth
   return book;
 }
 
-export async function createChapter(
-  book: Book,
-  o: { kind: string; title?: string; order: number; content?: DocNode; authorBio?: string; authorName?: string },
-): Promise<Chapter> {
+export async function createChapter(book: Book, o: { kind: string; title?: string; order: number; content?: DocNode; authorBio?: string; authorName?: string }): Promise<Chapter> {
   const kind = elementKind(o.kind);
   const content =
     o.content ??
@@ -122,7 +135,9 @@ export async function createChapter(
 export async function loadBook(id: string): Promise<{ book: Book; chapters: Chapter[] }> {
   const [book, chapters] = await Promise.all([
     pb().collection("books").getOne<Book>(id, { expand: "author" }),
-    pb().collection("chapters").getFullList<Chapter>({ filter: pb().filter("book = {:b}", { b: id }), sort: "section,order" }),
+    pb()
+      .collection("chapters")
+      .getFullList<Chapter>({ filter: pb().filter("book = {:b}", { b: id }), sort: "section,order" }),
   ]);
   return { book, chapters: sortChapters(chapters) };
 }
@@ -154,13 +169,43 @@ export async function createBoxSet(input: { title: string; subtitle?: string; au
   for (const { book: src, chapters } of sources) {
     await pb()
       .collection("chapters")
-      .create({ owner: userId(), book: book.id, kind: "part", section: "body", order: order++, title: src.title, subtitle: src.subtitle || "", content: null, word_count: 0, status: "final", in_toc: true, numbered: false, is_sample: false, options: { volume: true } });
+      .create({
+        owner: userId(),
+        book: book.id,
+        kind: "part",
+        section: "body",
+        order: order++,
+        title: src.title,
+        subtitle: src.subtitle || "",
+        content: null,
+        word_count: 0,
+        status: "final",
+        in_toc: true,
+        numbered: false,
+        is_sample: false,
+        options: { volume: true },
+      });
     step();
     for (const c of chapters) {
       if (BOX_SET_SKIP.has(c.kind)) continue;
       await pb()
         .collection("chapters")
-        .create({ owner: userId(), book: book.id, kind: c.kind, section: "body", order: order++, title: c.title, subtitle: c.subtitle, content: c.content, word_count: c.word_count, status: c.status, in_toc: c.in_toc, numbered: c.numbered, is_sample: false, options: c.options });
+        .create({
+          owner: userId(),
+          book: book.id,
+          kind: c.kind,
+          section: "body",
+          order: order++,
+          title: c.title,
+          subtitle: c.subtitle,
+          content: c.content,
+          word_count: c.word_count,
+          status: c.status,
+          in_toc: c.in_toc,
+          numbered: c.numbered,
+          is_sample: false,
+          options: c.options,
+        });
       step();
     }
   }
@@ -202,7 +247,10 @@ export async function saveChapter(ch: Chapter, patch: Partial<Chapter>): Promise
 
 export async function refreshBookWordCount(bookId: string, chapters: Chapter[]): Promise<number> {
   const total = chapters.reduce((s, c) => s + (c.word_count || 0), 0);
-  await pb().collection("books").update(bookId, { word_count: total }).catch(() => undefined);
+  await pb()
+    .collection("books")
+    .update(bookId, { word_count: total })
+    .catch(() => undefined);
   return total;
 }
 
