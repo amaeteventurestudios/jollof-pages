@@ -49,6 +49,11 @@ services:
       MAIL_FROM_DOMAIN: ${MAIL_FROM_DOMAIN:-}
       EBOOK_FEE_PERCENT: ${EBOOK_FEE_PERCENT:-}
       EBOOK_FEE_FIXED_CENTS: ${EBOOK_FEE_FIXED_CENTS:-}
+      # support inbox and the owner's admin (both fall back to OWNER_EMAIL)
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      SUPPORT_EMAILS: ${SUPPORT_EMAILS:-}
+      SUPPORT_ADDRESS: ${SUPPORT_ADDRESS:-}
       # writing assistant (docs/assistant.md): the publisher's own keys, for COVER_AI_FREE_EMAILS accounts only
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
