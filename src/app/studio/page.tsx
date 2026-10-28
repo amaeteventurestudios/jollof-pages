@@ -10,7 +10,8 @@ import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
+import { AiSuggest } from "@/components/studio/ai-suggest";
 import { Label } from "@/components/ui/label";
 import { createBook, createBoxSet, createChapter, listAuthors, listBooks, listSharedBooks, loadLogs, userId } from "@/lib/studio";
 import { isCollaboratorOnly } from "@/components/studio/auth-gate";
@@ -267,15 +268,21 @@ function LearnCard() {
   );
 }
 
+const NEW_PEN = "__new";
+
 function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
+  const [idea, setIdea] = useState("");
   const [starter, setStarter] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [authors, setAuthors] = useState<Author[]>([]);
   const [author, setAuthor] = useState("");
+  const [penName, setPenName] = useState("");
+  const newName = !authors.length || author === NEW_PEN;
+  const newBookContext = () => ({ "About the book": idea, "Working title": title, Subtitle: subtitle });
   useEffect(() => {
     if (open)
       listAuthors()
@@ -292,7 +299,14 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
             setBusy(true);
             setError("");
             try {
-              const book = await createBook({ title: title.trim(), subtitle: subtitle.trim(), author: author || undefined, withStarter: starter });
+              const book = await createBook({
+                title: title.trim(),
+                subtitle: subtitle.trim(),
+                pitch: idea.trim().slice(0, 300),
+                author: newName ? undefined : author || undefined,
+                newAuthorName: newName ? penName : undefined,
+                withStarter: starter,
+              });
               router.push(`/studio/books/${book.id}`);
             } catch (err) {
               setError(errorMessage(err));
@@ -303,25 +317,55 @@ function NewBookDialog({ open, onClose }: { open: boolean; onClose: () => void }
           <DialogTitle>New book</DialogTitle>
           <DialogDescription>You can change all of this later.</DialogDescription>
           <div className="grid gap-1.5">
-            <Label htmlFor="nb-title">Title</Label>
-            <Input id="nb-title" required autoFocus value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label htmlFor="nb-idea">What is it about?</Label>
+            <Textarea
+              id="nb-idea"
+              rows={3}
+              autoFocus
+              value={idea}
+              maxLength={1000}
+              onChange={(e) => setIdea(e.target.value)}
+              placeholder="A line or two about the book, its readers and genre. Optional, but it helps the AI suggest a title."
+            />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="nb-sub">Subtitle</Label>
+            <div className="-my-1 flex items-center justify-between gap-2">
+              <Label htmlFor="nb-title">Title</Label>
+              <AiSuggest kind="title" context={newBookContext} onPick={setTitle} />
+            </div>
+            <Input id="nb-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <div className="-my-1 flex items-center justify-between gap-2">
+              <Label htmlFor="nb-sub">Subtitle</Label>
+              <AiSuggest kind="subtitle" context={newBookContext} onPick={setSubtitle} />
+            </div>
             <Input id="nb-sub" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
           </div>
-          {authors.length > 0 && (
-            <div className="grid gap-1.5">
-              <Label htmlFor="nb-author">Pen name</Label>
+          <div className="grid gap-1.5">
+            <div className="-my-1 flex items-center justify-between gap-2">
+              <Label htmlFor={newName ? "nb-pen" : "nb-author"}>Pen name</Label>
+              <AiSuggest
+                kind="penname"
+                context={newBookContext}
+                onPick={(v) => {
+                  setAuthor(NEW_PEN);
+                  setPenName(v);
+                }}
+              />
+            </div>
+            {authors.length > 0 && (
               <select id="nb-author" value={author || authors[0].id} onChange={(e) => setAuthor(e.target.value)} className="h-9 rounded-md border border-input bg-card px-3 text-sm">
                 {authors.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
                   </option>
                 ))}
+                <option value={NEW_PEN}>New pen name…</option>
               </select>
-            </div>
-          )}
+            )}
+            {newName && <Input id="nb-pen" value={penName} maxLength={120} onChange={(e) => setPenName(e.target.value)} placeholder="The name on the cover" />}
+          </div>
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" className="mt-1" checked={starter} onChange={(e) => setStarter(e.target.checked)} />
             <span>Add title page, copyright, dedication, contents, introduction, a first chapter, acknowledgments and about the author.</span>

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { LETTERING_MARK, STYLES, buildCoverPrompt, type Quality, type StyleId, type Target } from "@/lib/cover-ai";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
+import { AiSuggest } from "../ai-suggest";
 import type { CoverDesign } from "./cover-designer";
 
 interface Pack {
@@ -44,7 +45,17 @@ const auth = () => ({ Authorization: `Bearer ${pb().authStore.token}`, "Content-
 
 function toPicture(r: GenRecord): Picture {
   const svg = r.image.endsWith(".svg");
-  return { id: r.id, url: fileUrl(r, r.image), thumb: fileUrl(r, r.image, svg ? undefined : "480x0"), target: r.target, quality: r.quality, mock: r.mock, prompt: r.prompt, width: r.width, height: r.height };
+  return {
+    id: r.id,
+    url: fileUrl(r, r.image),
+    thumb: fileUrl(r, r.image, svg ? undefined : "480x0"),
+    target: r.target,
+    quality: r.quality,
+    mock: r.mock,
+    prompt: r.prompt,
+    width: r.width,
+    height: r.height,
+  };
 }
 
 export interface AiCoverPanelProps {
@@ -222,7 +233,14 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
         <div className="grid h-fit gap-4 text-sm">
           <div role="tablist" aria-label="Which panel" className="grid w-fit grid-cols-2 gap-1 rounded-md bg-paper-2 p-1">
             {(["front", "back"] as const).map((t) => (
-              <button key={t} role="tab" type="button" aria-selected={target === t} onClick={() => setTarget(t)} className={cn("rounded px-3 py-1.5", target === t ? "bg-card font-medium" : "text-ink-2")}>
+              <button
+                key={t}
+                role="tab"
+                type="button"
+                aria-selected={target === t}
+                onClick={() => setTarget(t)}
+                className={cn("rounded px-3 py-1.5", target === t ? "bg-card font-medium" : "text-ink-2")}
+              >
                 {t === "front" ? "Front cover" : "Back cover"}
               </button>
             ))}
@@ -244,16 +262,22 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
             </div>
           </fieldset>
 
-          <label className="grid gap-1">
-            <span className="font-medium">What should the picture show?</span>
+          <div className="grid gap-1">
+            <span className="-my-1 flex items-center justify-between gap-2">
+              <label htmlFor="ai-cover-idea" className="font-medium">
+                What should the picture show?
+              </label>
+              <AiSuggest kind="cover" bookId={bookId} context={() => ({ "Picture idea so far": idea, Style: STYLES.find((s) => s.id === style)?.label ?? "" })} onPick={setIdea} label="Ideas" />
+            </span>
             <textarea
+              id="ai-cover-idea"
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
               rows={3}
               placeholder="A lone baobab tree at dusk, seen from below, with a flock of birds leaving it"
               className="rounded-md border border-input bg-card px-3 py-2"
             />
-          </label>
+          </div>
 
           <div className="grid gap-2">
             <label className="flex items-center gap-2">

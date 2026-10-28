@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Maximize2, Minus, Plus } from "lucide-react";
+import { BookOpen, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Maximize2, Minus, Plus } from "lucide-react";
+import { FullBookPreview } from "./full-book-preview";
 import { elementHtml } from "@/lib/render-element";
 import { orderedElements } from "@/lib/book-model";
 import { themeCss } from "@/lib/theme-css";
 import { getTheme, THEME_FONTS_HREF } from "@/lib/themes";
-import { getTrim, pageGeometry } from "@/lib/kdp";
+import { getTrim, hardcoverTrim, pageGeometry } from "@/lib/kdp";
 import { bookFormat, type Book, type Chapter } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -95,22 +96,34 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   const [zoom, setZoom] = useState<number | "fit">(() => readPref<number | "fit">("jp-preview-zoom", "fit"));
   const [page, setPage] = useState(0);
   const [pages, setPages] = useState(1);
+  const [fullBook, setFullBook] = useState(false);
   const goLast = useRef(false);
 
   const format = bookFormat(book);
   const theme = getTheme(format.theme);
   const elements = orderedElements(chapters, theme);
-  const index = Math.max(0, elements.findIndex((e) => e.chapter.id === chapterId));
+  const index = Math.max(
+    0,
+    elements.findIndex((e) => e.chapter.id === chapterId),
+  );
   const el = elements[index];
   const html = el ? elementHtml(el, { book, author: book.expand?.author ?? null, alsoBy: [] }, elements, theme) : "";
   const css = themeCss(theme, { scope: ".jp-preview", dropCaps: format.dropCaps, lineHeight: format.lineHeight });
-  const print = deviceId === "print";
+  // "print" is the paperback; "hardcover" its own trim and wider gutter
+  const binding = deviceId === "hardcover" && format.hardcover ? "hardcover" : "paperback";
+  const print = deviceId === "print" || deviceId === "hardcover";
   const device = DEVICES.find((d) => d.id === deviceId) ?? DEVICES[0];
   const font = FONTS.find((f) => f.id === fontId) ?? FONTS[0];
 
   // the page: a trim at 72 px per inch with KDP margins, or the device screen
-  const trim = getTrim(format.trim);
-  const g = pageGeometry(format.trim, book.page_count || 200, false);
+  // strings only: the compiler can't tell that a helper given the whole format leaves it alone
+  const hardTrimId = hardcoverTrim(format.hardcoverTrim || format.trim).id;
+  const editionTrim = binding === "hardcover" ? hardTrimId : format.trim;
+  const trim = getTrim(editionTrim);
+  const paperLabel = getTrim(format.trim).label;
+  const hardLabel = getTrim(hardTrimId).label;
+  const hasHardcover = format.hardcover;
+  const g = pageGeometry(editionTrim, (binding === "hardcover" ? book.hardcover_page_count : book.page_count) || 200, false, binding);
   const PPI = 72;
   const recto = page % 2 === 0;
   const screen = print
@@ -198,10 +211,12 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
     }
   }
 
-  const setPref = <T,>(key: string, set: (v: T) => void) => (v: T) => {
-    set(v);
-    writePref(key, v);
-  };
+  const setPref =
+    <T,>(key: string, set: (v: T) => void) =>
+    (v: T) => {
+      set(v);
+      writePref(key, v);
+    };
   const changeZoom = (delta: number) => setPref<number | "fit">("jp-preview-zoom", setZoom)(Math.min(3, Math.max(0.25, Math.round((z + delta) * 20) / 20)));
 
   const pageNo = print ? `${page + 1} / ${pages}` : `Page ${page + 1} of ${pages}`;
@@ -227,7 +242,10 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
           }}
           className="h-8 min-w-0 flex-1 rounded-md border border-input bg-card px-2 text-sm"
         >
-          <option value="print">Print ({trim.label})</option>
+          <optgroup label="Print, at your trim size">
+            <option value="print">Paperback ({paperLabel})</option>
+            {hasHardcover && <option value="hardcover">Hardcover ({hardLabel})</option>}
+          </optgroup>
           {GROUPS.map((grp) => (
             <optgroup key={grp} label={grp}>
               {DEVICES.filter((d) => d.group === grp).map((d) => (
@@ -238,8 +256,22 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
             </optgroup>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={() => setFullBook(true)}
+          title="Page through the whole printed book, two pages at a time"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-primary/60 px-2.5 text-sm font-medium text-primary hover:bg-primary-soft"
+        >
+          <BookOpen className="size-4" aria-hidden /> Full book preview
+        </button>
+        {fullBook && <FullBookPreview book={book} chapters={chapters} startChapterId={chapterId} onClose={() => setFullBook(false)} />}
         {!print && (
-          <select aria-label="Reader font" value={fontId} onChange={(e) => setPref("jp-preview-font", setFontId)(e.target.value)} className="h-8 min-w-0 flex-1 rounded-md border border-input bg-card px-2 text-sm">
+          <select
+            aria-label="Reader font"
+            value={fontId}
+            onChange={(e) => setPref("jp-preview-font", setFontId)(e.target.value)}
+            className="h-8 min-w-0 flex-1 rounded-md border border-input bg-card px-2 text-sm"
+          >
             {FONTS.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
@@ -302,7 +334,10 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
                 >
                   {!print && device.notch && <span aria-hidden className="absolute top-3 left-1/2 h-7 w-28 -translate-x-1/2 rounded-full bg-black" />}
                   {runningHead && (
-                    <div className="absolute truncate text-[0.72em] tracking-[0.08em] uppercase opacity-70" style={{ left: screen.pad[3], right: screen.pad[1], top: screen.pad[0] * 0.45, textAlign: recto ? "right" : "left" }}>
+                    <div
+                      className="absolute truncate text-[0.72em] tracking-[0.08em] uppercase opacity-70"
+                      style={{ left: screen.pad[3], right: screen.pad[1], top: screen.pad[0] * 0.45, textAlign: recto ? "right" : "left" }}
+                    >
                       {runningHead}
                     </div>
                   )}
@@ -314,7 +349,10 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
                       dangerouslySetInnerHTML={{ __html: html }}
                     />
                   </div>
-                  <div className="absolute right-0 left-0 text-[0.72em] opacity-60" style={{ bottom: screen.pad[2] * 0.35, textAlign: "center", fontFamily: print ? undefined : "system-ui, sans-serif" }}>
+                  <div
+                    className="absolute right-0 left-0 text-[0.72em] opacity-60"
+                    style={{ bottom: screen.pad[2] * 0.35, textAlign: "center", fontFamily: print ? undefined : "system-ui, sans-serif" }}
+                  >
                     {print ? (page === 0 || el?.options.hidePageNumber ? "" : page + 1) : pageNo}
                   </div>
                 </div>
@@ -358,7 +396,9 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
           </div>
         </div>
         <p className="text-[12px] text-soft">
-          {print ? `${trim.label}, ${theme.name} theme. Build a PDF on the Export tab for exact page breaks.` : `${theme.name} theme. Readers can change the font and size on their own device.`}
+          {print
+            ? `${binding === "hardcover" ? "Hardcover" : "Paperback"} at ${trim.label}, ${theme.name} theme. Change the trim size on the Format tab.`
+            : `${theme.name} theme. Readers can change the font and size on their own device.`}
         </p>
       </div>
     </div>

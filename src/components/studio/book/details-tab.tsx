@@ -9,11 +9,19 @@ import { slugify } from "@/lib/slug";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { BOOK_STATUSES, type Author, type Book, type BookStatus } from "@/lib/types";
 import type { Workspace } from "./workspace";
+import { AiSuggest } from "../ai-suggest";
 
-export function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
+export function Field({ id, label, hint, action, children }: { id: string; label: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      {action ? (
+        <div className="-my-1 flex items-center justify-between gap-2">
+          <Label htmlFor={id}>{label}</Label>
+          {action}
+        </div>
+      ) : (
+        <Label htmlFor={id}>{label}</Label>
+      )}
       {children}
       {hint && <p className="text-[13px] text-soft">{hint}</p>}
     </div>
@@ -53,6 +61,8 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
   });
   const [msg, setMsg] = useState("");
   const set = <K extends keyof typeof d>(k: K, v: (typeof d)[K]) => setD((x) => ({ ...x, [k]: v }));
+  // suggestions read the saved book, plus what is typed here but not saved yet
+  const typed = () => ({ "Title (as typed)": d.title, "Subtitle (as typed)": d.subtitle, "Description (as typed)": d.description, "Hook (as typed)": d.pitch });
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -80,10 +90,15 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
     <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-8">
       <form onSubmit={save}>
         <Panel title="Title" description="As it appears on the cover, the title page and every store.">
-          <Field id="d-title" label="Title">
+          <Field id="d-title" label="Title" action={<AiSuggest kind="title" bookId={book.id} context={typed} onPick={(v) => set("title", v)} />}>
             <Input id="d-title" required value={d.title} onChange={(e) => set("title", e.target.value)} />
           </Field>
-          <Field id="d-sub" label="Subtitle" hint="Non-fiction subtitles carry search terms. Say who it is for and what it does.">
+          <Field
+            id="d-sub"
+            label="Subtitle"
+            action={<AiSuggest kind="subtitle" bookId={book.id} context={typed} onPick={(v) => set("subtitle", v)} />}
+            hint="Non-fiction subtitles carry search terms. Say who it is for and what it does."
+          >
             <Input id="d-sub" value={d.subtitle} onChange={(e) => set("subtitle", e.target.value)} />
           </Field>
           <div className="grid grid-cols-[1fr_8rem] gap-3">
@@ -105,20 +120,63 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
           </Field>
         </Panel>
         <Panel title="Description" description="The blurb for the back cover, the store page and your website.">
-          <Field id="d-pitch" label="One-line hook" hint="Shown large on your website. About 20 words.">
+          <Field
+            id="d-pitch"
+            label="One-line hook"
+            action={<AiSuggest kind="pitch" bookId={book.id} context={typed} onPick={(v) => set("pitch", v)} />}
+            hint="Shown large on your website. About 20 words."
+          >
             <Input id="d-pitch" value={d.pitch} maxLength={300} onChange={(e) => set("pitch", e.target.value)} />
           </Field>
-          <Field id="d-desc" label="Book description" hint={`${d.description.length} of 4,000 characters (KDP's limit). Leave a blank line between paragraphs.`}>
+          <Field
+            id="d-desc"
+            label="Book description"
+            action={<AiSuggest kind="description" bookId={book.id} context={typed} onPick={(v) => set("description", v)} />}
+            hint={`${d.description.length} of 4,000 characters (KDP's limit). Leave a blank line between paragraphs.`}
+          >
             <Textarea id="d-desc" rows={9} maxLength={8000} value={d.description} onChange={(e) => set("description", e.target.value)} />
           </Field>
         </Panel>
         <Panel title="Discovery" description="KDP gives you seven keyword boxes and lets you choose categories when you upload.">
+          <div className="-mb-2 flex items-center justify-between gap-2">
+            <span className="text-sm font-medium">Keywords</span>
+            <AiSuggest
+              kind="keywords"
+              bookId={book.id}
+              context={typed}
+              onPick={(v) => {
+                const i = d.keywords.findIndex((k) => !k.trim());
+                set(
+                  "keywords",
+                  d.keywords.map((x, j) => (j === (i < 0 ? 6 : i) ? v : x)),
+                );
+              }}
+              onPickAll={(items) => set("keywords", [...items, "", "", "", "", "", "", ""].slice(0, 7))}
+            />
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {d.keywords.map((k, i) => (
-              <Input key={i} aria-label={`Keyword ${i + 1}`} placeholder={`Keyword ${i + 1}`} value={k} maxLength={50} onChange={(e) => set("keywords", d.keywords.map((x, j) => (j === i ? e.target.value : x)))} />
+              <Input
+                key={i}
+                aria-label={`Keyword ${i + 1}`}
+                placeholder={`Keyword ${i + 1}`}
+                value={k}
+                maxLength={50}
+                onChange={(e) =>
+                  set(
+                    "keywords",
+                    d.keywords.map((x, j) => (j === i ? e.target.value : x)),
+                  )
+                }
+              />
             ))}
           </div>
-          <Field id="d-cat" label="Categories" hint="Separate with commas, for example: Business, Entrepreneurship">
+          <Field
+            id="d-cat"
+            label="Categories"
+            action={<AiSuggest kind="categories" bookId={book.id} context={typed} onPick={(v) => set("categories", d.categories.trim() ? `${d.categories}, ${v}` : v)} />}
+            hint="Separate with commas, for example: Business, Entrepreneurship"
+          >
             <Input id="d-cat" value={d.categories} onChange={(e) => set("categories", e.target.value)} />
           </Field>
           <Field id="d-lang" label="Language code" hint="en, en-GB, fr, yo, ig, ha…">
@@ -217,7 +275,7 @@ function AuthorForm({ ws, authors, setAuthors, current }: { ws: Workspace; autho
             <Input id="a-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
           </Field>
         </div>
-        <Field id="a-name" label="Name">
+        <Field id="a-name" label="Name" action={<AiSuggest kind="penname" bookId={ws.book.id} onPick={(v) => setForm({ ...form, name: v })} />}>
           <Input id="a-name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </Field>
         <Field id="a-bio" label="Biography">

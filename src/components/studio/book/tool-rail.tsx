@@ -5,7 +5,7 @@ import { useEditorState, type Editor } from "@tiptap/react";
 import { searchDocument, type SearchOptions } from "@tiptap/extension-find-and-replace";
 import { Fragment, type Node as PMNode, type Schema } from "@tiptap/pm/model";
 import { Transform } from "@tiptap/pm/transform";
-import { ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Type, X } from "lucide-react";
+import { ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Sparkles, Type, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_EDITOR_SETTINGS, EDITOR_FONTS, type EditorSettings } from "@/lib/editor-settings";
@@ -16,9 +16,10 @@ import type { CollabRole } from "@/lib/collab";
 import { listChanges } from "@/components/studio/track-changes";
 import { ChangesPanel } from "./changes-panel";
 import { CommentsPanel, type Comment } from "./comments-panel";
+import { AssistantPanel } from "./assistant-panel";
 import { cn } from "@/lib/utils";
 
-export type RailPanel = "settings" | "find" | "quotes" | "changes" | "comments";
+export type RailPanel = "assistant" | "settings" | "find" | "quotes" | "changes" | "comments";
 
 export interface ChapterEdit {
   id: string;
@@ -47,12 +48,13 @@ interface RailProps {
   onActiveComment: (id: string | null) => void;
 }
 
-const TOOLS: { id: RailPanel; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "settings", label: "Editor settings", icon: Type },
-  { id: "find", label: "Find and replace", icon: Search },
-  { id: "quotes", label: "Smart quotes", icon: Quote },
-  { id: "changes", label: "Track changes", icon: FileDiff },
-  { id: "comments", label: "Comments", icon: MessageSquare },
+const TOOLS: { id: RailPanel; label: string; short: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "assistant", label: "Writing assistant", short: "AI", icon: Sparkles },
+  { id: "settings", label: "Editor settings", short: "Text", icon: Type },
+  { id: "find", label: "Find and replace", short: "Find", icon: Search },
+  { id: "quotes", label: "Smart quotes", short: "Quotes", icon: Quote },
+  { id: "changes", label: "Track changes", short: "Changes", icon: FileDiff },
+  { id: "comments", label: "Comments", short: "Notes", icon: MessageSquare },
 ];
 
 /** Writing tools down the right of the editor, each opening a panel, as in Atticus. */
@@ -67,7 +69,13 @@ export function ToolRail(props: RailProps) {
   return (
     <>
       {tool && (
-        <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card max-xl:absolute max-xl:inset-y-0 max-xl:right-12 max-xl:z-20 max-xl:shadow-xl" aria-label={tool.label}>
+        <aside
+          className={cn(
+            "flex shrink-0 flex-col border-l border-border bg-card max-xl:absolute max-xl:inset-y-0 max-xl:right-14 max-xl:z-20 max-xl:shadow-xl",
+            open === "assistant" ? "w-96 max-sm:w-[calc(100vw-3.5rem)]" : "w-80",
+          )}
+          aria-label={tool.label}
+        >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="font-medium">{tool.label}</h2>
             <Button variant="ghost" size="icon-sm" aria-label={`Close ${tool.label.toLowerCase()}`} onClick={() => onOpen(null)}>
@@ -75,6 +83,7 @@ export function ToolRail(props: RailProps) {
             </Button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            {open === "assistant" && <AssistantPanel editor={editor} bookId={props.bookId} chapterId={activeId} role={role} />}
             {open === "settings" && <SettingsPanel settings={props.settings} onChange={props.onSettings} />}
             {open === "find" && <FindPanel {...props} />}
             {open === "quotes" && <QuotesPanel {...props} />}
@@ -96,7 +105,7 @@ export function ToolRail(props: RailProps) {
           </div>
         </aside>
       )}
-      <nav aria-label="Writing tools" className="flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border bg-card py-2">
+      <nav aria-label="Writing tools" className="flex w-14 shrink-0 flex-col items-center gap-1 border-l border-border bg-card py-2">
         {tools.map((t) => (
           <button
             key={t.id}
@@ -106,13 +115,14 @@ export function ToolRail(props: RailProps) {
             aria-pressed={open === t.id}
             onClick={() => onOpen(open === t.id ? null : t.id)}
             className={cn(
-              "relative grid size-9 place-items-center rounded-md text-ink-2 transition hover:bg-paper-2 hover:text-ink",
+              "relative flex w-12 flex-col items-center gap-0.5 rounded-md py-1.5 text-ink-2 transition hover:bg-paper-2 hover:text-ink",
               open === t.id && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary",
             )}
           >
             <t.icon className="size-[18px]" />
+            <span className="text-[10.5px] leading-none">{t.short}</span>
             {!!badge[t.id] && (
-              <span className="tabular absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-none font-semibold text-primary-foreground">
+              <span className="tabular absolute top-0 right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-none font-semibold text-primary-foreground">
                 {badge[t.id]}
               </span>
             )}

@@ -49,3 +49,5 @@ next-env.d.ts
 /e2e/output/
 !.env.example
 /dist
+/.assistant
+/local_cache

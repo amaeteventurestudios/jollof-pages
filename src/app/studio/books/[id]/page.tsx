@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, LifeBuoy } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { AccountMenu } from "@/components/studio/studio-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { WriteTab } from "@/components/studio/book/write-tab";
 import { DetailsTab } from "@/components/studio/book/details-tab";
 import { FormatTab } from "@/components/studio/book/format-tab";
@@ -26,14 +28,14 @@ const CoverTab = dynamic(() => import("@/components/studio/book/cover-tab").then
 
 const TABS = [
   { id: "write", label: "Write" },
-  { id: "details", label: "Book details" },
+  { id: "details", label: "Book details", short: "Details" },
   { id: "format", label: "Format" },
   { id: "cover", label: "Cover" },
   { id: "goals", label: "Goals" },
   { id: "publish", label: "Publish" },
   { id: "export", label: "Export" },
-] as const;
-type TabId = (typeof TABS)[number]["id"];
+] as { id: string; label: string; short?: string }[];
+type TabId = "write" | "details" | "format" | "cover" | "goals" | "publish" | "export";
 
 export default function BookWorkspacePage() {
   const { id } = useParams<{ id: string }>();
@@ -113,28 +115,27 @@ export default function BookWorkspacePage() {
             {saving === "saving" ? "Saving…" : saving === "saved" ? "All changes saved" : saving === "error" ? "Not saved, check your connection" : ""}
           </span>
         </div>
-        <nav className="order-last -mb-px flex w-full gap-1 overflow-x-auto md:order-none md:ml-auto md:w-auto" aria-label="Book">
+        <nav className={cn("order-last -mb-px grid w-full md:order-none md:ml-auto md:flex md:w-auto md:gap-1", tabs.length > 1 ? "grid-cols-7" : "grid-cols-1")} aria-label="Book">
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               aria-current={tab === t.id ? "page" : undefined}
               onClick={() => router.replace(`/studio/books/${id}${t.id === "write" ? "" : `?tab=${t.id}`}`, { scroll: false })}
-              className={cn("h-11 border-b-2 border-transparent px-3 text-sm whitespace-nowrap text-ink-2 hover:text-ink", tab === t.id && "border-primary font-medium text-ink")}
+              className={cn(
+                "h-11 truncate border-b-2 border-transparent px-1 text-[13px] whitespace-nowrap text-ink-2 hover:text-ink md:px-3 md:text-sm",
+                tab === t.id && "border-primary font-medium text-ink",
+              )}
             >
-              {t.label}
+              <span className="md:hidden">{t.short ?? t.label}</span>
+              <span className="max-md:hidden">{t.label}</span>
             </button>
           ))}
         </nav>
-        <Link
-          href="/studio/help"
-          target="_blank"
-          aria-label="Help and support"
-          title="Help and support"
-          className="-ml-2 rounded p-1.5 text-ink-2 hover:bg-muted max-md:absolute max-md:top-2 max-md:right-3"
-        >
-          <LifeBuoy className="size-4" />
-        </Link>
+        <div className="flex items-center gap-1 max-md:ml-auto">
+          <ThemeToggle className="size-9 justify-center rounded text-ink-2 hover:bg-muted [&_svg]:size-[18px]" />
+          <AccountMenu />
+        </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col">
         {(tab === "write" || role !== "owner") && <WriteTab ws={ws} />}
