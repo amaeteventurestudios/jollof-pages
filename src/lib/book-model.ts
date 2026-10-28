@@ -1,6 +1,7 @@
 import { elementKind, type ElementKind } from "./elements";
 import { capitalize, chapterLabel, numberWord, type InteriorTheme } from "./themes";
-import type { Author, Book, Chapter, Section } from "./types";
+import { chapterOptions, type Author, type Book, type Chapter, type ChapterOptions, type Section } from "./types";
+import { collectImages } from "./doc/types";
 
 export interface AlsoByEntry {
   title: string;
@@ -26,6 +27,9 @@ export interface BookElement {
   subtitle: string;
   section: Section;
   inToc: boolean;
+  options: ChapterOptions;
+  /** chapter image to show, if any (unset when hidden) */
+  image: string | null;
 }
 
 const SECTION_ORDER: Record<Section, number> = { front: 0, body: 1, back: 2 };
@@ -57,6 +61,8 @@ export function orderedElements(chapters: Chapter[], theme: InteriorTheme): Book
       subtitle: c.subtitle || "",
       section: c.section,
       inToc: c.in_toc && !kind.smart,
+      options: chapterOptions(c),
+      image: chapterImage(c),
     };
   });
 }
@@ -69,4 +75,20 @@ export function authorName(input: Pick<ExportInput, "author">): string {
 export function tocText(e: BookElement): string {
   if (e.kind.id === "part") return `${e.label}: ${e.title}`;
   return e.title;
+}
+
+export function chapterImage(c: Pick<Chapter, "options">): string | null {
+  const o = chapterOptions(c);
+  return o.image && !o.hideImage ? o.image : null;
+}
+
+/** Every image a set of chapters uses: manuscript images plus chapter opening images. */
+export function bookImages(chapters: Pick<Chapter, "content" | "options">[]): string[] {
+  const out = new Set<string>();
+  for (const c of chapters) {
+    for (const src of collectImages(c.content)) out.add(src);
+    const img = chapterImage(c);
+    if (img) out.add(img);
+  }
+  return [...out];
 }

@@ -221,7 +221,7 @@ ${sceneBreak(theme)}
   numbering: "i",
   header: context {
     let cur = page-state()
-    if cur.kind != "text" or cur.value.section == "front" { return }
+    if cur.kind != "text" or cur.value.section == "front" or not cur.value.at("head", default: true) { return }
     let p = here().page()${runningHead}
   },
   footer: context {
@@ -231,21 +231,38 @@ ${sceneBreak(theme)}
   },
 )
 
-#let opener(label, title, subtitle) = {
-  v(${opener})
+// opening of a chapter. small: a compact title block; img: a picture above the title, or behind
+// it when invert is on (white type over a darkened image)
+#let opener(label, title, subtitle, small: false, img: none, invert: false) = {
   set par(first-line-indent: 0em, justify: false)
-  align(${theme.headingAlign}, {
+  let s = if small { 0.62 } else { 1 }
+  let inverted = invert and img != none
+  let label-fill = if inverted { white } else { accent }
+  let head = align(${theme.headingAlign}, {
     ${
       theme.labelStyle === "large"
-        ? `if label != "" { text(font: head-font, size: ${(3 * scale).toFixed(2)}em, weight: ${theme.headingWeight}, fill: accent, label); v(0.3em) }`
+        ? `if label != "" { text(font: head-font, size: ${(3 * scale).toFixed(2)}em * s, weight: ${theme.headingWeight}, fill: label-fill, label); v(0.3em) }`
         : theme.labelStyle === "upper"
-          ? `if label != "" { text(font: head-font, size: 0.8em, tracking: 0.16em, upper(label)); v(0.7em) }`
-          : `if label != "" { text(font: head-font, size: 1.05em, tracking: 0.08em, sc(label)); v(0.7em) }`
+          ? `if label != "" { text(font: head-font, size: 0.8em, tracking: 0.16em, upper(label)); v(0.7em * s) }`
+          : `if label != "" { text(font: head-font, size: 1.05em, tracking: 0.08em, sc(label)); v(0.7em * s) }`
     }
-    text(font: head-font, size: ${(theme.headingSize * scale).toFixed(1)}pt, weight: ${theme.headingWeight}, style: ${theme.headingItalic ? '"italic"' : '"normal"'}, title)
-    if subtitle != "" { v(0.5em); text(size: 1.1em, style: "italic", subtitle) }
+    text(font: head-font, size: ${(theme.headingSize * scale).toFixed(1)}pt * s, weight: ${theme.headingWeight}, style: ${theme.headingItalic ? '"italic"' : '"normal"'}, title)
+    if subtitle != "" { v(0.5em * s); text(size: 1.1em, style: "italic", subtitle) }
   })
-  v(${(g.trim.height * 0.07).toFixed(2)}in)
+  if inverted {
+    block(width: 100%, height: ${(g.trim.height * 0.32).toFixed(2)}in, clip: true, {
+      image(img, width: 100%, height: 100%, fit: "cover")
+      place(top + left, rect(width: 100%, height: 100%, fill: black.transparentize(60%)))
+      place(horizon + left, pad(x: 1.2em, text(fill: white, head)))
+    })
+  } else {
+    if img != none {
+      image(img, width: 100%, height: ${(g.trim.height * 0.28).toFixed(2)}in, fit: "cover")
+      v(1.4em * s)
+    } else { v(${opener} * s) }
+    head
+  }
+  v(${(g.trim.height * 0.07).toFixed(2)}in * s)
 }
 `;
 }
@@ -254,8 +271,10 @@ const LEAD_IN_KINDS = new Set(["chapter", "introduction", "foreword", "preface",
 
 function elementTypst(input: ExportInput, e: BookElement, format: BookFormat, theme: InteriorTheme, imagePath: TypstOptions["imagePath"]): string {
   const { book } = input;
-  const numbers = e.section !== "front" || e.inToc;
-  const meta = `#metadata((section: ${str(e.section)}, title: ${str(e.title)}, numbers: ${numbers})) <jp-start>`;
+  const o = e.options;
+  const numbers = (e.section !== "front" || e.inToc) && !o.hidePageNumber;
+  const meta = `#metadata((section: ${str(e.section)}, title: ${str(e.title)}, numbers: ${numbers}, head: ${!o.hideHeader})) <jp-start>`;
+  const imgPath = e.image && imagePath ? imagePath(e.image) : null;
   const heading = `#heading(level: 1, outlined: ${e.inToc}, bookmarked: true)[#${str(tocText(e))}]`;
   const content = (lead = false) => docToTypst(e.chapter.content, { leadIn: lead, imagePath });
   switch (e.kind.id) {
@@ -300,11 +319,17 @@ ${heading}
 #opener("", ${str(e.title)}, "")
 #set par(first-line-indent: 0em)
 ${input.alsoBy.length ? input.alsoBy.map((b) => `#${str(b.title)}${b.subtitle ? `#": "#emph[#${str(b.subtitle)}]` : ""}`).join("\n\n") : '#"More books coming soon."'}`;
-    default:
+    default: {
+      const opening = o.hideHeading
+        ? imgPath
+          ? `#image(${str(imgPath)}, width: 100%, height: 28%, fit: "cover")\n#v(1.4em)`
+          : ""
+        : `#opener(${str(e.label)}, ${str(e.title)}, ${str(e.subtitle)}, small: ${!!o.smallTitle}, img: ${imgPath ? str(imgPath) : "none"}, invert: ${!!o.invert})`;
       return `${meta}
 ${heading}
-#opener(${str(e.label)}, ${str(e.title)}, ${str(e.subtitle)})
+${opening}
 ${content(theme.leadIn && format.dropCaps && LEAD_IN_KINDS.has(e.kind.id))}`;
+    }
   }
 }
 

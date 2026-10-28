@@ -1,8 +1,8 @@
 "use client";
 
 import { pb } from "./pb";
-import { sortChapters, type ExportInput } from "./book-model";
-import { countWords, collectImages, type DocNode } from "./doc/types";
+import { bookImages, sortChapters, type ExportInput } from "./book-model";
+import { countWords, type DocNode } from "./doc/types";
 import { defaultContent, elementKind, STARTER_ELEMENTS } from "./elements";
 import { slugify, today } from "./slug";
 import { DEFAULT_FORMAT, DEFAULT_GOAL, type Author, type Book, type Chapter, type Section, type SiteSettings, type WritingLog } from "./types";
@@ -187,7 +187,7 @@ async function fetchBinary(url: string): Promise<BinaryAsset | null> {
 
 export async function fetchImages(input: ExportInput): Promise<Map<string, BinaryAsset>> {
   const out = new Map<string, BinaryAsset>();
-  const srcs = new Set(input.chapters.flatMap((c) => collectImages(c.content)));
+  const srcs = bookImages(input.chapters);
   for (const src of srcs) {
     const bin = await fetchBinary(src);
     if (bin) out.set(src, bin);

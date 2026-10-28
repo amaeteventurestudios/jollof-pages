@@ -26,8 +26,7 @@ import { manuscriptExtensions } from "./editor-extensions";
 import { editorFontCss, type EditorSettings } from "@/lib/editor-settings";
 import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
-import { pb, fileUrl, errorMessage } from "@/lib/pb";
-import { userId } from "@/lib/studio";
+import { ImagePickerDialog, assetUrl } from "./image-library";
 import type { DocNode } from "@/lib/doc/types";
 
 interface Props {
@@ -137,21 +136,8 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
     }),
   });
   const [prompt, setPrompt] = useState<null | "link" | "footnote">(null);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [picking, setPicking] = useState(false);
   const style = s.h2 ? "h2" : s.h3 ? "h3" : s.h4 ? "h4" : "p";
-
-  async function upload(file: File) {
-    setUploading(true);
-    try {
-      const rec = await pb().collection("assets").create({ owner: userId(), book: bookId, file, alt: file.name.replace(/\.[^.]+$/, "") });
-      editor.chain().focus().setImage({ src: fileUrl(rec, rec.file), alt: rec.alt }).run();
-    } catch (e) {
-      alert(`Image upload failed: ${errorMessage(e)}`);
-    } finally {
-      setUploading(false);
-    }
-  }
 
   return (
     <div className="relative border-b border-border bg-card">
@@ -227,19 +213,16 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
         <ToolButton label="Footnote" on={() => setPrompt("footnote")}>
           <NotebookPen />
         </ToolButton>
-        <ToolButton label={uploading ? "Uploading image" : "Image"} disabled={uploading} on={() => fileRef.current?.click()}>
+        <ToolButton label="Image" on={() => setPicking(true)}>
           <ImagePlus />
         </ToolButton>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) upload(f);
-            e.target.value = "";
-          }}
+        <ImagePickerDialog
+          open={picking}
+          onOpenChange={setPicking}
+          bookId={bookId}
+          title="Insert an image"
+          description="Pick one of your images or upload a new one. It goes where the cursor is."
+          onPick={(a) => editor.chain().focus().setImage({ src: assetUrl(a), alt: a.alt }).run()}
         />
         <span className="mx-1 h-5 w-px shrink-0 bg-border" />
         <ToolButton label="Undo" disabled={!s.canUndo} on={() => editor.chain().focus().undo().run()}>

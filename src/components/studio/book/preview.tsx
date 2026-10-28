@@ -205,7 +205,7 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   const changeZoom = (delta: number) => setPref<number | "fit">("jp-preview-zoom", setZoom)(Math.min(3, Math.max(0.25, Math.round((z + delta) * 20) / 20)));
 
   const pageNo = print ? `${page + 1} / ${pages}` : `Page ${page + 1} of ${pages}`;
-  const runningHead = print && format.runningHeads && page > 0 && el && el.section !== "front" ? (recto ? el.title : book.title) : "";
+  const runningHead = print && format.runningHeads && page > 0 && el && el.section !== "front" && !el.options.hideHeader ? (recto ? el.title : book.title) : "";
   const screenBg = print ? "#ffffff" : device.eink ? "#f2f1ec" : "#ffffff";
 
   return (
@@ -315,7 +315,7 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
                     />
                   </div>
                   <div className="absolute right-0 left-0 text-[0.72em] opacity-60" style={{ bottom: screen.pad[2] * 0.35, textAlign: "center", fontFamily: print ? undefined : "system-ui, sans-serif" }}>
-                    {print ? (page === 0 ? "" : page + 1) : pageNo}
+                    {print ? (page === 0 || el?.options.hidePageNumber ? "" : page + 1) : pageNo}
                   </div>
                 </div>
               </div>

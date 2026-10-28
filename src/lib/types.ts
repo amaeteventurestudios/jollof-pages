@@ -120,6 +120,25 @@ export interface Book {
   expand?: { author?: Author };
 }
 
+/** Per-chapter layout switches, like the gear menu in Atticus. All off by default. */
+export interface ChapterOptions {
+  /** opening image above (or behind) the chapter title; a file URL from the image library */
+  image?: string;
+  hideImage?: boolean;
+  /** no title block at all: the text starts at the top of the page */
+  hideHeading?: boolean;
+  hidePageNumber?: boolean;
+  /** no running head on this chapter's pages */
+  hideHeader?: boolean;
+  smallTitle?: boolean;
+  /** white title set over the chapter image */
+  invert?: boolean;
+}
+
+export function chapterOptions(c: Pick<Chapter, "options">): ChapterOptions {
+  return c.options && typeof c.options === "object" ? c.options : {};
+}
+
 export interface Chapter {
   id: string;
   collectionId: string;
@@ -136,6 +155,7 @@ export interface Chapter {
   is_sample: boolean;
   in_toc: boolean;
   numbered: boolean;
+  options: ChapterOptions | null;
   created: string;
   updated: string;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Eye, EyeOff, MoreHorizontal, PanelLeft, Timer } from "lucide-react";
+import { Eye, EyeOff, PanelLeft, Settings2, Timer } from "lucide-react";
 import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
 import { ChapterSidebar } from "./chapter-sidebar";
 import { Preview } from "./preview";
@@ -9,11 +9,12 @@ import { ToolRail, type ChapterEdit, type RailPanel } from "./tool-rail";
 import type { Editor } from "@tiptap/react";
 import { loadEditorSettings, saveEditorSettings, type EditorSettings } from "@/lib/editor-settings";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ImagePickerDialog, assetUrl } from "@/components/studio/image-library";
 import { createChapter, logWords, refreshBookWordCount, saveChapter } from "@/lib/studio";
 import { elementKind } from "@/lib/elements";
 import { getTheme } from "@/lib/themes";
-import { bookFormat, type Chapter } from "@/lib/types";
+import { bookFormat, chapterOptions, type Chapter, type ChapterOptions } from "@/lib/types";
 import { fmt } from "@/lib/progress";
 import { errorMessage, pb } from "@/lib/pb";
 import type { DocNode } from "@/lib/doc/types";
@@ -137,7 +138,13 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     const order = Math.max(-1, ...chapters.filter((c) => c.section === k.section).map((c) => c.order)) + 1;
     const n = chapters.filter((c) => c.kind === "chapter").length + 1;
     try {
-      const created = await ws.track(createChapter(book, { kind, order, title: kind === "chapter" ? `Chapter ${n}` : k.label }));
+      const created = await ws.track(
+        createChapter(book, {
+          kind,
+          order,
+          title: kind === "chapter" ? `Chapter ${n}` : k.label,
+        }),
+      );
       setChapters((all) => [...all, created]);
       setActiveId(created.id);
     } catch (e) {
@@ -170,6 +177,13 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     await ws.track(saveChapter(active, p));
   }
 
+  function patchOptions(o: Partial<ChapterOptions>) {
+    if (!active) return;
+    const next = { ...chapterOptions(active), ...o };
+    for (const k of Object.keys(next) as (keyof ChapterOptions)[]) if (next[k] === false || next[k] === "") delete next[k];
+    return patch({ options: next });
+  }
+
   async function remove() {
     if (!active || !confirm(`Delete “${active.title}”? This cannot be undone.`)) return;
     pendingRef.current = null;
@@ -182,10 +196,20 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   }
 
   const kind = active ? elementKind(active.kind) : null;
+  const opts = active ? chapterOptions(active) : {};
+  // sections with a title block of their own (not the title page, copyright, dedication or a part divider)
+  const headed = !!kind && !kind.smart && !kind.hideTitle && kind.id !== "part";
+  const [pickingImage, setPickingImage] = useState(false);
 
   return (
     <div className="flex min-h-0 flex-1">
-      <aside className={cn("w-72 shrink-0 border-r border-border bg-card", showSidebar ? "block" : "hidden", "max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:top-[96px] max-md:z-20 max-md:shadow-xl")}>
+      <aside
+        className={cn(
+          "w-72 shrink-0 border-r border-border bg-card",
+          showSidebar ? "block" : "hidden",
+          "max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:top-[96px] max-md:z-20 max-md:shadow-xl",
+        )}
+      >
         <ChapterSidebar ws={ws} activeId={activeId} onSelect={select} onAdd={add} />
       </aside>
 
@@ -219,14 +243,59 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                 {showPreview ? <EyeOff /> : <Eye />}
               </Button>
               <DropdownMenu>
-                <DropdownMenuTrigger aria-label="Section options" className="rounded p-1.5 text-ink-2 hover:bg-muted">
-                  <MoreHorizontal className="size-4" />
+                <DropdownMenuTrigger aria-label="Chapter settings" title="Chapter settings" className="rounded p-1.5 text-ink-2 hover:bg-muted data-[state=open]:bg-muted">
+                  <Settings2 className="size-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuContent align="end" className="max-h-[80vh] w-72 overflow-y-auto">
+                  {headed && (
+                    <>
+                      <DropdownMenuLabel>Chapter opening</DropdownMenuLabel>
+                      <DropdownMenuItem onSelect={() => setPickingImage(true)}>{opts.image ? "Change chapter image…" : "Add chapter image…"}</DropdownMenuItem>
+                      {opts.image && (
+                        <>
+                          <DropdownMenuCheckboxItem checked={!!opts.hideImage} onCheckedChange={(v) => patchOptions({ hideImage: !!v })}>
+                            Hide chapter image
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem checked={!!opts.invert} disabled={!!opts.hideImage || !!opts.hideHeading} onCheckedChange={(v) => patchOptions({ invert: !!v })}>
+                            White title over the image
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              patchOptions({
+                                image: "",
+                                hideImage: false,
+                                invert: false,
+                              })
+                            }
+                          >
+                            Remove chapter image
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuCheckboxItem checked={!!opts.hideHeading} onCheckedChange={(v) => patchOptions({ hideHeading: !!v })}>
+                        Hide chapter heading
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={!!opts.smallTitle} disabled={!!opts.hideHeading} onCheckedChange={(v) => patchOptions({ smallTitle: !!v })}>
+                        Smaller chapter title
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   {!kind.smart && (
-                    <DropdownMenuCheckboxItem checked={active.in_toc} onCheckedChange={(v) => patch({ in_toc: !!v })}>
-                      Show in table of contents
-                    </DropdownMenuCheckboxItem>
+                    <>
+                      <DropdownMenuLabel>Print pages</DropdownMenuLabel>
+                      <DropdownMenuCheckboxItem checked={!!opts.hidePageNumber} onCheckedChange={(v) => patchOptions({ hidePageNumber: !!v })}>
+                        Hide page numbers
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem checked={!!opts.hideHeader} onCheckedChange={(v) => patchOptions({ hideHeader: !!v })}>
+                        Hide running head
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Contents and website</DropdownMenuLabel>
+                      <DropdownMenuCheckboxItem checked={active.in_toc} onCheckedChange={(v) => patch({ in_toc: !!v })}>
+                        Show in table of contents
+                      </DropdownMenuCheckboxItem>
+                    </>
                   )}
                   {active.kind === "chapter" && (
                     <DropdownMenuCheckboxItem checked={active.numbered} onCheckedChange={(v) => patch({ numbered: !!v })}>
@@ -244,6 +313,14 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <ImagePickerDialog
+                open={pickingImage}
+                onOpenChange={setPickingImage}
+                bookId={book.id}
+                title="Chapter image"
+                description="Shown at the top of the chapter's first page, in print and in the ebook. Wide images work best."
+                onPick={(a) => patchOptions({ image: assetUrl(a), hideImage: false })}
+              />
             </>
           )}
         </div>

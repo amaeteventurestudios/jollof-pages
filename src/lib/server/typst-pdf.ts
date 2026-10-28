@@ -3,9 +3,8 @@ import { mkdtemp, rm, writeFile, readFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PDFDocument } from "pdf-lib";
-import type { ExportInput } from "../book-model";
+import { bookImages, type ExportInput } from "../book-model";
 import { buildTypst } from "../export/typst";
-import { collectImages } from "../doc/types";
 import { estimatePages, minGutter, type Binding } from "../kdp";
 import { bookFormat, printEdition } from "../types";
 import { fontPath, run, typstBin } from "./tools";
@@ -38,7 +37,7 @@ export async function compileInterior(
     await mkdir(path.join(dir, "img"));
     const paths = new Map<string, string>();
     let n = 0;
-    for (const src of new Set(input.chapters.flatMap((c) => collectImages(c.content)))) {
+    for (const src of bookImages(input.chapters)) {
       const img = await fetchImage(src).catch(() => null);
       if (!img) continue;
       const name = `img/${++n}.${extFor(img.type)}`;
