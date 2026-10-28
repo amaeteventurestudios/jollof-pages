@@ -21,7 +21,7 @@ const LOREM = [
 ];
 
 export function sampleChapters(): Omit<Chapter, "id" | "collectionId" | "book" | "owner" | "created" | "updated">[] {
-  const base = { subtitle: "", status: "draft" as const, is_sample: false, in_toc: true, numbered: false, word_count: 0 };
+  const base = { subtitle: "", status: "draft" as const, is_sample: false, in_toc: true, numbered: false, word_count: 0, options: null };
   return [
     { ...base, kind: "title_page", section: "front", order: 0, title: "Title page", content: null, in_toc: false },
     {

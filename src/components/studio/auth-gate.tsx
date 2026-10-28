@@ -7,8 +7,18 @@ import { Button } from "@/components/ui/button";
 
 /**
  * Keeps the studio private: anyone without a valid PocketBase session goes to /login, and an
- * account that has not paid yet sees the checkout step instead of the studio.
+ * account that has not paid yet sees the checkout step instead of the studio. Free collaborator
+ * accounts (made by accepting an invitation) only reach the books shared with them.
  */
+
+/** Pages a collaborator account can open. */
+const COLLABORATOR_PAGES = /^\/studio(\/books\/[^/]+|\/collaboration|\/help|\/learn)?\/?$/;
+
+/** A free account that only works on other authors' books. Valid once the gate has opened. */
+export function isCollaboratorOnly(): boolean {
+  return pb().authStore.record?.access === "collaborator";
+}
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
@@ -35,6 +45,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         }
         const auth = await client.collection("users").authRefresh();
         setState(auth.record.access === "pending" ? "unpaid" : "ready");
+        if (auth.record.access === "collaborator" && !COLLABORATOR_PAGES.test(path)) router.replace("/studio");
       } catch {
         client.authStore.clear();
         router.replace(`/login?next=${encodeURIComponent(path)}`);

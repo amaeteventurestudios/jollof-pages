@@ -1,7 +1,7 @@
 import JSZip from "jszip";
-import { authorName, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
+import { chapterHeadHtml } from "../render-element";
+import { authorName, bookImages, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { docToHtml, escapeHtml } from "../doc/html";
-import { collectImages } from "../doc/types";
 import { themeCss } from "../theme-css";
 import { getTheme, sceneBreakGlyph } from "../themes";
 import { bookFormat } from "../types";
@@ -88,20 +88,17 @@ export async function buildEpub(input: ExportInput, assets: EpubAssets = {}): Pr
   );
   zip.file("OEBPS/styles.css", themeCss(theme, { dropCaps: format.dropCaps, lineHeight: format.lineHeight, epub: true }));
 
-  // images used in the manuscript
+  // images used in the manuscript and chapter openings
   const imageHref = new Map<string, string>();
   const manifestImages: string[] = [];
   let imgNo = 0;
-  for (const c of input.chapters) {
-    for (const src of collectImages(c.content)) {
-      if (imageHref.has(src)) continue;
-      const asset = assets.images?.get(src);
-      if (!asset) continue;
-      const name = `img-${++imgNo}.${ext(asset.mediaType)}`;
-      zip.file(`OEBPS/images/${name}`, asset.bytes);
-      imageHref.set(src, `../images/${name}`);
-      manifestImages.push(`<item id="img${imgNo}" href="images/${name}" media-type="${asset.mediaType}"/>`);
-    }
+  for (const src of bookImages(input.chapters)) {
+    const asset = assets.images?.get(src);
+    if (!asset) continue;
+    const name = `img-${++imgNo}.${ext(asset.mediaType)}`;
+    zip.file(`OEBPS/images/${name}`, asset.bytes);
+    imageHref.set(src, `../images/${name}`);
+    manifestImages.push(`<item id="img${imgNo}" href="images/${name}" media-type="${asset.mediaType}"/>`);
   }
 
   const files = elements.map((e, i) => epubFileName(e, i));
@@ -137,9 +134,9 @@ ${input.alsoBy.length ? input.alsoBy.map((b) => `<p class="first">${escapeHtml(b
         if (e.kind.id === "copyright") body = `<section class="copyright">${html}</section>`;
         else if (e.kind.id === "dedication" || e.kind.id === "epigraph") body = `<section class="centered dedication">${html}</section>`;
         else if (e.kind.id === "part")
-          body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}</h1></header>${html}</section>`;
+          body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>${html}</section>`;
         else
-          body = `<section><header class="chapter-head">${e.label ? `<span class="chapter-label">${escapeHtml(e.label)}</span>` : ""}<h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>
+          body = `<section>${chapterHeadHtml(e, e.image ? (imageHref.get(e.image) ?? null) : null)}
 ${html}${notes}</section>`;
       }
     }

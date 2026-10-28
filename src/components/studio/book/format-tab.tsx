@@ -1,16 +1,18 @@
 "use client";
 
-import { coverGeometry, estimatePages, inches, maxPages, MIN_PAGES, PAPER_LABELS, pageGeometry, TRIM_SIZES, type PaperType } from "@/lib/kdp";
+import { coverGeometry, estimatePages, HARDCOVER, HARDCOVER_TRIMS, hardcoverTrim, inches, maxPages, minPages, PAPER_LABELS, pageGeometry, TRIM_SIZES, type Binding, type PaperType } from "@/lib/kdp";
 import { getTheme, THEMES, THEME_FONTS_HREF } from "@/lib/themes";
-import { bookFormat, type BookFormat } from "@/lib/types";
+import { bookFormat, printEdition, type BookFormat } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/progress";
 import type { Workspace } from "./workspace";
 
-export function usePageCount(ws: Workspace): { pages: number; estimated: boolean } {
+export function usePageCount(ws: Workspace, binding: Binding = "paperback"): { pages: number; estimated: boolean } {
   const f = bookFormat(ws.book);
-  if (ws.book.page_count) return { pages: ws.book.page_count, estimated: false };
-  return { pages: estimatePages(ws.book.word_count || 0, f.trim, ws.chapters.length, f.largePrint ? 16 : f.fontSize), estimated: true };
+  const built = binding === "hardcover" ? ws.book.hardcover_page_count : ws.book.page_count;
+  if (built) return { pages: built, estimated: false };
+  const { trim } = printEdition(f, binding);
+  return { pages: estimatePages(ws.book.word_count || 0, trim, ws.chapters.length, f.largePrint ? 16 : f.fontSize), estimated: true };
 }
 
 function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint: string }) {
@@ -33,6 +35,11 @@ export function FormatTab({ ws }: { ws: Workspace }) {
   const cover = coverGeometry(f.trim, pages, f.paper);
   const max = maxPages(g.trim, f.paper);
   const theme = getTheme(f.theme);
+  const hard = usePageCount(ws, "hardcover");
+  const hc = printEdition(f, "hardcover");
+  const hg = pageGeometry(hc.trim, hard.pages, f.bleed, "hardcover");
+  const hcover = coverGeometry(hc.trim, hard.pages, hc.paper, "hardcover");
+  const sameTrim = hc.trim === f.trim;
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-8 sm:px-8 lg:grid-cols-[1fr_22rem]">
@@ -119,6 +126,42 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           </label>
         </section>
 
+        <section>
+          <h2 className="text-lg font-medium">Hardcover edition</h2>
+          <p className="mt-1 text-sm text-soft">
+            KDP&apos;s case laminate hardcover: the cover is printed on the boards, with no dust jacket. It is a separate edition on KDP with its own ISBN, interior PDF and cover, all made from this
+            same manuscript.
+          </p>
+          <div className="mt-4 grid gap-4">
+            <Toggle
+              checked={f.hardcover}
+              onChange={(v) => set({ hardcover: v, hardcoverTrim: f.hardcoverTrim || hardcoverTrim(f.trim).id })}
+              label="Also publish a hardcover"
+              hint={`${HARDCOVER.minPages} to ${HARDCOVER.maxPages} pages. The interior gets a ${inches(HARDCOVER.extraGutter)} wider gutter, because a hardcover does not open as flat.`}
+            />
+            {f.hardcover && (
+              <>
+                <div className="flex flex-wrap items-end gap-3" role="radiogroup" aria-label="Hardcover trim size">
+                  {HARDCOVER_TRIMS.map((t) => (
+                    <button key={t.id} type="button" role="radio" aria-checked={t.id === hc.trim} onClick={() => set({ hardcoverTrim: t.id })} className="group flex flex-col items-center gap-2">
+                      <span
+                        className={cn("block bg-card ring-2 ring-transparent transition group-hover:ring-paper-3", t.id === hc.trim && "bg-primary-soft ring-primary group-hover:ring-primary")}
+                        style={{ width: t.width * 9, height: t.height * 9 }}
+                        aria-hidden
+                      />
+                      <span className={cn("text-[13px] text-ink-2", t.id === hc.trim && "font-medium text-primary")}>{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[13px] text-soft">
+                  {sameTrim ? "Same size as the paperback, so both editions sit together on a shelf." : `KDP does not bind ${getTrimLabel(f.trim)} in hardcover, so the hardcover is ${getTrimLabel(hc.trim)}.`}
+                  {hc.paper !== f.paper && " Hardcovers print colour only as premium colour, so this edition uses premium colour paper."}
+                </p>
+              </>
+            )}
+          </div>
+        </section>
+
         <section className="grid gap-3 sm:grid-cols-2">
           <Toggle checked={f.chaptersOnRight} onChange={(v) => set({ chaptersOnRight: v })} label="Start chapters on a right-hand page" hint="Adds a blank page where needed, as most printed books do." />
           <Toggle checked={f.dropCaps} onChange={(v) => set({ dropCaps: v })} label="Decorative chapter openings" hint={`Drop cap in the ebook${theme.leadIn ? " and small-caps lead-in in print" : ""}.`} />
@@ -161,14 +204,47 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           <dt className="text-soft">Spine text</dt>
           <dd>{cover.spineTextAllowed ? "Allowed" : "Not until 79 pages"}</dd>
         </dl>
-        {(pages < MIN_PAGES || pages > max) && (
-          <p className="mt-4 rounded bg-[#fbeedd] p-3 text-[13px] text-[#7a4210] dark:bg-[#3a2a12] dark:text-[#f0c27a]">
-            KDP prints {MIN_PAGES} to {max} pages for this trim and paper. This book is at {pages}.
-          </p>
+        {(pages < minPages() || pages > max) && <Warning>KDP prints paperbacks of {minPages()} to {max} pages for this trim and paper. This book is at {pages}.</Warning>}
+        {f.hardcover && (
+          <>
+            <h2 className="mt-6 border-t border-border pt-5 font-medium">Hardcover</h2>
+            <p className="mt-1 text-[13px] text-soft">{hard.estimated ? "Pages estimated. Build the hardcover PDF on the Export tab for the exact count." : "Page count from your last hardcover PDF."}</p>
+            <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-sm">
+              <dt className="text-soft">Pages</dt>
+              <dd className="tabular">{fmt(hard.pages)}</dd>
+              <dt className="text-soft">Page size</dt>
+              <dd className="tabular">
+                {inches(hg.pageWidth)} x {inches(hg.pageHeight)}
+              </dd>
+              <dt className="text-soft">Inside margin (gutter)</dt>
+              <dd className="tabular">
+                {inches(hg.margins.inside)} <span className="text-soft">min {inches(hg.minimums.inside)}</span>
+              </dd>
+              <dt className="text-soft">Spine with boards</dt>
+              <dd className="tabular">{inches(hcover.spine, 4)}</dd>
+              <dt className="text-soft">Cover with wrap</dt>
+              <dd className="tabular">
+                {inches(hcover.width)} x {inches(hcover.height)}
+              </dd>
+            </dl>
+            {(hard.pages < HARDCOVER.minPages || hard.pages > HARDCOVER.maxPages) && (
+              <Warning>
+                KDP prints hardcovers of {HARDCOVER.minPages} to {HARDCOVER.maxPages} pages. This edition is at {hard.pages}.
+              </Warning>
+            )}
+          </>
         )}
       </aside>
     </div>
   );
+}
+
+function getTrimLabel(id: string): string {
+  return TRIM_SIZES.find((t) => t.id === id)?.label ?? id;
+}
+
+function Warning({ children }: { children: React.ReactNode }) {
+  return <p className="mt-4 rounded bg-[#fbeedd] p-3 text-[13px] text-[#7a4210] dark:bg-[#3a2a12] dark:text-[#f0c27a]">{children}</p>;
 }
 
 function PageDiagram({ width, height, m }: { width: number; height: number; m: { inside: number; outside: number; top: number; bottom: number } }) {

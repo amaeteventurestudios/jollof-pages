@@ -13,17 +13,25 @@ import { fmt } from "@/lib/progress";
 import { cn } from "@/lib/utils";
 import type { Workspace } from "./workspace";
 
-const STATUS_DOT: Record<Chapter["status"], string> = { draft: "bg-paper-3", revised: "bg-[#d39b2a]", final: "bg-primary" };
+const STATUS_DOT: Record<Chapter["status"], string> = {
+  draft: "bg-paper-3",
+  revised: "bg-[#d39b2a]",
+  final: "bg-primary",
+};
 
-function Row({ c, label, active, onSelect }: { c: Chapter; label: string; active: boolean; onSelect: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
+function Row({ c, label, active, onSelect, fixed }: { c: Chapter; label: string; active: boolean; onSelect: () => void; fixed: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id, disabled: fixed });
   const kind = elementKind(c.kind);
   return (
     <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={cn("group relative", isDragging && "z-10 opacity-80")}>
       <div className={cn("flex items-center rounded", active ? "bg-primary-soft" : "hover:bg-paper-2")}>
-        <button type="button" aria-label={`Reorder ${c.title}`} className="cursor-grab touch-none p-1.5 text-soft opacity-60 group-hover:opacity-100" {...attributes} {...listeners}>
-          <GripVertical className="size-3.5" />
-        </button>
+        {fixed ? (
+          <span className="w-2" />
+        ) : (
+          <button type="button" aria-label={`Reorder ${c.title}`} className="cursor-grab touch-none p-1.5 text-soft opacity-60 group-hover:opacity-100" {...attributes} {...listeners}>
+            <GripVertical className="size-3.5" />
+          </button>
+        )}
         <button type="button" onClick={onSelect} aria-current={active ? "true" : undefined} className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2 text-left">
           <span className={cn("size-2 shrink-0 rounded-full", STATUS_DOT[c.status] ?? STATUS_DOT.draft)} title={`Status: ${c.status}`} />
           <span className="min-w-0 flex-1">
@@ -41,10 +49,17 @@ function Row({ c, label, active, onSelect }: { c: Chapter; label: string; active
 }
 
 export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspace; activeId: string | null; onSelect: (id: string) => void; onAdd: (kind: string) => void }) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
   const theme = getTheme(bookFormat(ws.book).theme);
   const labels = new Map(orderedElements(ws.chapters, theme).map((e) => [e.chapter.id, e.label]));
   const sections: Section[] = ["front", "body", "back"];
+  // editors and commenters work inside the chapters; only the author and co-writers shape the book
+  const fixed = ws.role !== "owner" && ws.role !== "cowriter";
 
   async function onDragEnd(section: Section, e: DragEndEvent) {
     const { active, over } = e;
@@ -59,40 +74,57 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
   }
 
   return (
-    <nav aria-label="Chapters" className="flex h-full flex-col overflow-y-auto px-2 py-3">
-      {sections.map((section) => {
-        const list = ws.chapters.filter((c) => c.section === section);
-        return (
-          <div key={section} className="mb-4">
-            <div className="flex items-center justify-between px-2 pb-1">
-              <h3 className="text-[13px] font-semibold text-ink-2">{SECTION_LABELS[section]}</h3>
-              <DropdownMenu>
-                <DropdownMenuTrigger aria-label={`Add to ${SECTION_LABELS[section]}`} className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink">
-                  <Plus className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
-                  {ELEMENT_KINDS.filter((k) => k.section === section).map((k) => (
-                    <DropdownMenuItem key={k.id} onSelect={() => onAdd(k.id)} className="flex-col items-start gap-0">
-                      <span>{k.label}</span>
-                      <span className="text-[13px] text-soft">{k.hint}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+    <div className="flex h-full flex-col">
+      <nav aria-label="Chapters" className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-3">
+        {sections.map((section) => {
+          const list = ws.chapters.filter((c) => c.section === section);
+          return (
+            <div key={section} className="mb-4">
+              <div className="flex items-center justify-between px-2 pb-1">
+                <h3 className="text-[13px] font-semibold text-ink-2">{SECTION_LABELS[section]}</h3>
+                {!fixed && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger aria-label={`Add to ${SECTION_LABELS[section]}`} className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink">
+                      <Plus className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
+                      {ELEMENT_KINDS.filter((k) => k.section === section).map((k) => (
+                        <DropdownMenuItem key={k.id} onSelect={() => onAdd(k.id)} className="flex-col items-start gap-0">
+                          <span>{k.label}</span>
+                          <span className="text-[13px] text-soft">{k.hint}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => onDragEnd(section, e)}>
+                <SortableContext items={list.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                  <ul className="grid gap-0.5">
+                    {list.map((c) => (
+                      <Row key={c.id} c={c} label={labels.get(c.id) ?? ""} active={c.id === activeId} onSelect={() => onSelect(c.id)} fixed={fixed} />
+                    ))}
+                    {!list.length && <li className="px-2 py-1 text-[13px] text-soft">Nothing here yet.</li>}
+                  </ul>
+                </SortableContext>
+              </DndContext>
             </div>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => onDragEnd(section, e)}>
-              <SortableContext items={list.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                <ul className="grid gap-0.5">
-                  {list.map((c) => (
-                    <Row key={c.id} c={c} label={labels.get(c.id) ?? ""} active={c.id === activeId} onSelect={() => onSelect(c.id)} />
-                  ))}
-                  {!list.length && <li className="px-2 py-1 text-[13px] text-soft">Nothing here yet.</li>}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          </div>
-        );
-      })}
-    </nav>
+          );
+        })}
+      </nav>
+      {!fixed && (
+        <div className="border-t border-border bg-card p-3">
+          <button
+            type="button"
+            onClick={() => onAdd("chapter")}
+            className="flex h-11 w-full items-center justify-center gap-2 bg-primary text-[15px] font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <Plus className="size-4.5" />
+            Add new chapter
+          </button>
+          <p className="mt-1.5 text-center text-xs text-soft">Other pages, like a foreword or glossary, are under the + by each section.</p>
+        </div>
+      )}
+    </div>
   );
 }

@@ -11,12 +11,12 @@ import { pb, errorMessage } from "@/lib/pb";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => params.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const next = params.get("next");
-  const target = next && next.startsWith("/studio") ? next : "/studio";
+  const target = next && /^\/(studio|invite)(\/|$)/.test(next) ? next : "/studio";
 
   return (
     <form

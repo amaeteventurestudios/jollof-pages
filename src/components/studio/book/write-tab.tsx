@@ -1,16 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Eye, EyeOff, MoreHorizontal, PanelLeft, Timer } from "lucide-react";
+import { Eye, EyeOff, PanelLeft, Settings2, Timer } from "lucide-react";
 import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
+import { useLiveChapter } from "@/components/studio/use-live-chapter";
+import { useBookComments } from "./comments-panel";
 import { ChapterSidebar } from "./chapter-sidebar";
 import { Preview } from "./preview";
+import { ToolRail, type ChapterEdit, type RailPanel } from "./tool-rail";
+import type { Editor } from "@tiptap/react";
+import { loadEditorSettings, saveEditorSettings, type EditorSettings } from "@/lib/editor-settings";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ImagePickerDialog, assetUrl } from "@/components/studio/image-library";
 import { createChapter, logWords, refreshBookWordCount, saveChapter } from "@/lib/studio";
 import { elementKind } from "@/lib/elements";
 import { getTheme } from "@/lib/themes";
-import { bookFormat, type Chapter } from "@/lib/types";
+import { bookFormat, chapterOptions, type Chapter, type ChapterOptions } from "@/lib/types";
 import { fmt } from "@/lib/progress";
 import { errorMessage, pb } from "@/lib/pb";
 import type { DocNode } from "@/lib/doc/types";
@@ -20,11 +26,65 @@ import type { Workspace } from "./workspace";
 const SAVE_DELAY = 1200;
 
 export function WriteTab({ ws }: { ws: Workspace }) {
-  const { book, chapters, setChapters } = ws;
+  const { book, chapters, setChapters, role, live } = ws;
+  // the author and co-writers shape the book; editors and commenters work inside its chapters
+  const structural = role === "owner" || role === "cowriter";
+  const [me] = useState(() => {
+    const r = pb().authStore.record;
+    return { id: r?.id ?? "", name: String(r?.name || String(r?.email ?? "").split("@")[0] || "Someone") };
+  });
+  const [activeComment, setActiveComment] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(() => chapters.find((c) => c.kind === "chapter")?.id ?? chapters[0]?.id ?? null);
   const [showPreview, setShowPreview] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const active = chapters.find((c) => c.id === activeId) ?? null;
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [rail, setRail] = useState<RailPanel | null>(null);
+  const comments = useBookComments(book.id, editor, activeId, activeComment);
+  const openComment = useCallback(
+    (id: string) => {
+      setActiveComment(id);
+      setRail("comments");
+    },
+    [setRail],
+  );
+  // this tab only renders in the browser, after the book has loaded, so storage can seed state
+  const [settings, setSettings] = useState<EditorSettings>(loadEditorSettings);
+  const changeSettings = useCallback((s: EditorSettings) => {
+    setSettings(s);
+    saveEditorSettings(s);
+  }, []);
+  const openFind = useCallback(() => setRail("find"), [setRail]);
+  const [previewWidth, setPreviewWidth] = useState(() => {
+    try {
+      return Number(localStorage.getItem("jp-preview-width")) || 440;
+    } catch {
+      return 440;
+    }
+  });
+  const resizePreview = useCallback((w: number) => {
+    const clamped = Math.round(Math.min(Math.max(320, w), Math.max(360, window.innerWidth * 0.7)));
+    setPreviewWidth(clamped);
+    try {
+      localStorage.setItem("jp-preview-width", String(clamped));
+    } catch {
+      // no storage: the width lasts for this visit
+    }
+  }, []);
+  function startResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = previewWidth;
+    const move = (ev: PointerEvent) => resizePreview(startW + (startX - ev.clientX));
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.style.cursor = "";
+    };
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
   const theme = getTheme(bookFormat(book).theme);
 
   // autosave: one pending content save at a time, flushed when switching chapters
@@ -75,17 +135,20 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   const onChange = useCallback(
     (doc: DocNode, words: number) => {
       if (!activeId) return;
-      pendingRef.current = { id: activeId, doc, words };
       setChapters((all) => all.map((c) => (c.id === activeId ? { ...c, content: doc, word_count: words } : c)));
+      // a shared book's chapters are saved by the collab server
+      if (live) return;
+      pendingRef.current = { id: activeId, doc, words };
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(flush, SAVE_DELAY);
     },
-    [activeId, flush, setChapters],
+    [activeId, flush, live, setChapters],
   );
 
   async function select(id: string) {
     await flush();
     setActiveId(id);
+    setActiveComment(null);
     if (window.matchMedia("(max-width: 767px)").matches) setShowSidebar(false);
   }
 
@@ -95,7 +158,13 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     const order = Math.max(-1, ...chapters.filter((c) => c.section === k.section).map((c) => c.order)) + 1;
     const n = chapters.filter((c) => c.kind === "chapter").length + 1;
     try {
-      const created = await ws.track(createChapter(book, { kind, order, title: kind === "chapter" ? `Chapter ${n}` : k.label }));
+      const created = await ws.track(
+        createChapter(book, {
+          kind,
+          order,
+          title: kind === "chapter" ? `Chapter ${n}` : k.label,
+        }),
+      );
       setChapters((all) => [...all, created]);
       setActiveId(created.id);
     } catch (e) {
@@ -103,10 +172,36 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     }
   }
 
+  /** sections changed by book-wide replace or smart quotes, saved one by one */
+  async function editChapters(edits: ChapterEdit[]) {
+    await flush();
+    for (const e of edits) {
+      const ch = chaptersRef.current.find((c) => c.id === e.id);
+      if (!ch) continue;
+      await ws.track(saveChapter(ch, { content: e.content, word_count: e.words }));
+      savedWords.current.set(e.id, e.words);
+    }
+    const byId = new Map(edits.map((e) => [e.id, e]));
+    const next = chaptersRef.current.map((c) => {
+      const e = byId.get(c.id);
+      return e ? { ...c, content: e.content, word_count: e.words } : c;
+    });
+    setChapters(next);
+    const total = await refreshBookWordCount(book.id, next);
+    ws.setBook((b) => (b ? { ...b, word_count: total } : b));
+  }
+
   async function patch(p: Partial<Chapter>) {
     if (!active) return;
     setChapters((all) => all.map((c) => (c.id === active.id ? { ...c, ...p } : c)));
     await ws.track(saveChapter(active, p));
+  }
+
+  function patchOptions(o: Partial<ChapterOptions>) {
+    if (!active) return;
+    const next = { ...chapterOptions(active), ...o };
+    for (const k of Object.keys(next) as (keyof ChapterOptions)[]) if (next[k] === false || next[k] === "") delete next[k];
+    return patch({ options: next });
   }
 
   async function remove() {
@@ -121,10 +216,20 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   }
 
   const kind = active ? elementKind(active.kind) : null;
+  const opts = active ? chapterOptions(active) : {};
+  // sections with a title block of their own (not the title page, copyright, dedication or a part divider)
+  const headed = !!kind && !kind.smart && !kind.hideTitle && kind.id !== "part";
+  const [pickingImage, setPickingImage] = useState(false);
 
   return (
     <div className="flex min-h-0 flex-1">
-      <aside className={cn("w-72 shrink-0 border-r border-border bg-card", showSidebar ? "block" : "hidden", "max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:top-[96px] max-md:z-20 max-md:shadow-xl")}>
+      <aside
+        className={cn(
+          "w-72 shrink-0 border-r border-border bg-card",
+          showSidebar ? "block" : "hidden",
+          "max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:top-[96px] max-md:z-20 max-md:shadow-xl",
+        )}
+      >
         <ChapterSidebar ws={ws} activeId={activeId} onSelect={select} onAdd={add} />
       </aside>
 
@@ -138,13 +243,15 @@ export function WriteTab({ ws }: { ws: Workspace }) {
               <input
                 aria-label="Title"
                 value={active.title}
+                readOnly={!structural}
                 onChange={(e) => setChapters((all) => all.map((c) => (c.id === active.id ? { ...c, title: e.target.value } : c)))}
                 onBlur={(e) => patch({ title: e.target.value.trim() || kind.label })}
-                className="min-w-0 flex-1 rounded bg-transparent px-1.5 py-1 text-lg font-medium tracking-tight hover:bg-paper focus:bg-paper"
+                className="min-w-40 flex-1 rounded bg-transparent px-1.5 py-1 text-lg font-medium tracking-tight hover:bg-paper focus:bg-paper"
               />
               <select
                 aria-label="Status"
                 value={active.status}
+                disabled={!structural}
                 onChange={(e) => patch({ status: e.target.value as Chapter["status"] })}
                 className="h-8 rounded border border-input bg-card px-2 text-sm"
               >
@@ -153,36 +260,100 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                 <option value="final">Final</option>
               </select>
               <span className="tabular hidden text-sm text-soft sm:inline">{fmt(active.word_count || 0)} words</span>
-              <SprintTimer bookId={book.id} />
+              {role === "owner" && <SprintTimer bookId={book.id} />}
               <Button variant="ghost" size="icon-sm" aria-label={showPreview ? "Hide preview" : "Show preview"} onClick={() => setShowPreview((v) => !v)} className="max-lg:hidden">
                 {showPreview ? <EyeOff /> : <Eye />}
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger aria-label="Section options" className="rounded p-1.5 text-ink-2 hover:bg-muted">
-                  <MoreHorizontal className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  {!kind.smart && (
-                    <DropdownMenuCheckboxItem checked={active.in_toc} onCheckedChange={(v) => patch({ in_toc: !!v })}>
-                      Show in table of contents
-                    </DropdownMenuCheckboxItem>
-                  )}
-                  {active.kind === "chapter" && (
-                    <DropdownMenuCheckboxItem checked={active.numbered} onCheckedChange={(v) => patch({ numbered: !!v })}>
-                      Number this chapter
-                    </DropdownMenuCheckboxItem>
-                  )}
-                  {!kind.smart && (
-                    <DropdownMenuCheckboxItem checked={active.is_sample} onCheckedChange={(v) => patch({ is_sample: !!v })}>
-                      Free sample on the website
-                    </DropdownMenuCheckboxItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive" onSelect={remove}>
-                    Delete this section
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {structural && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger aria-label="Chapter settings" title="Chapter settings" className="rounded p-1.5 text-ink-2 hover:bg-muted data-[state=open]:bg-muted">
+                    <Settings2 className="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="max-h-[80vh] w-72 overflow-y-auto">
+                    {headed && (
+                      <>
+                        <DropdownMenuLabel>Chapter opening</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => setPickingImage(true)}>{opts.image ? "Change chapter image…" : "Add chapter image…"}</DropdownMenuItem>
+                        {opts.image && (
+                          <>
+                            <DropdownMenuCheckboxItem checked={!!opts.hideImage} onCheckedChange={(v) => patchOptions({ hideImage: !!v })}>
+                              Hide chapter image
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem checked={!!opts.invert} disabled={!!opts.hideImage || !!opts.hideHeading} onCheckedChange={(v) => patchOptions({ invert: !!v })}>
+                              White title over the image
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                patchOptions({
+                                  image: "",
+                                  hideImage: false,
+                                  invert: false,
+                                })
+                              }
+                            >
+                              Remove chapter image
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuCheckboxItem checked={!!opts.hideHeading} onCheckedChange={(v) => patchOptions({ hideHeading: !!v })}>
+                          Hide chapter heading
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem checked={!!opts.smallTitle} disabled={!!opts.hideHeading} onCheckedChange={(v) => patchOptions({ smallTitle: !!v })}>
+                          Smaller chapter title
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {active.kind === "part" && (
+                      <>
+                        <DropdownMenuLabel>Box set</DropdownMenuLabel>
+                        <DropdownMenuCheckboxItem checked={!!opts.volume} onCheckedChange={(v) => patchOptions({ volume: !!v })}>
+                          Starts a new book (Book One, Two…)
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {!kind.smart && (
+                      <>
+                        <DropdownMenuLabel>Print pages</DropdownMenuLabel>
+                        <DropdownMenuCheckboxItem checked={!!opts.hidePageNumber} onCheckedChange={(v) => patchOptions({ hidePageNumber: !!v })}>
+                          Hide page numbers
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem checked={!!opts.hideHeader} onCheckedChange={(v) => patchOptions({ hideHeader: !!v })}>
+                          Hide running head
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Contents and website</DropdownMenuLabel>
+                        <DropdownMenuCheckboxItem checked={active.in_toc} onCheckedChange={(v) => patch({ in_toc: !!v })}>
+                          Show in table of contents
+                        </DropdownMenuCheckboxItem>
+                      </>
+                    )}
+                    {active.kind === "chapter" && (
+                      <DropdownMenuCheckboxItem checked={active.numbered} onCheckedChange={(v) => patch({ numbered: !!v })}>
+                        Number this chapter
+                      </DropdownMenuCheckboxItem>
+                    )}
+                    {!kind.smart && (
+                      <DropdownMenuCheckboxItem checked={active.is_sample} onCheckedChange={(v) => patch({ is_sample: !!v })}>
+                        Free sample on the website
+                      </DropdownMenuCheckboxItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onSelect={remove}>
+                      Delete this section
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <ImagePickerDialog
+                open={pickingImage}
+                onOpenChange={setPickingImage}
+                bookId={book.id}
+                title="Chapter image"
+                description="Shown at the top of the chapter's first page, in print and in the ebook. Wide images work best."
+                onPick={(a) => patchOptions({ image: assetUrl(a), hideImage: false })}
+              />
             </>
           )}
         </div>
@@ -194,6 +365,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             <input
               id="ch-sub"
               value={active.subtitle}
+              readOnly={!structural}
               placeholder="Optional"
               onChange={(e) => setChapters((all) => all.map((c) => (c.id === active.id ? { ...c, subtitle: e.target.value } : c)))}
               onBlur={(e) => patch({ subtitle: e.target.value.trim() })}
@@ -211,17 +383,74 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             </div>
           </div>
         ) : (
-          <ManuscriptEditor key={active.id} chapterId={active.id} bookId={book.id} initial={active.content} onChange={onChange} fontFamily={theme.bodyCss} />
+          <ChapterEditor
+            key={active.id}
+            chapter={active}
+            live={live}
+            bookId={book.id}
+            onChange={onChange}
+            fontFamily={theme.bodyCss}
+            settings={settings}
+            onEditor={setEditor}
+            onFind={openFind}
+            me={me}
+            tracking={role === "editor"}
+            readOnly={role === "commenter"}
+            onCommentClick={openComment}
+          />
         )}
       </section>
 
+      <div className="relative flex shrink-0">
+        <ToolRail
+          open={rail}
+          onOpen={setRail}
+          editor={kind?.smart ? null : editor}
+          chapters={chapters}
+          activeId={activeId}
+          onSelect={select}
+          onEditChapters={editChapters}
+          settings={settings}
+          onSettings={changeSettings}
+          bookId={book.id}
+          role={role}
+          live={live}
+          me={me}
+          comments={comments}
+          activeComment={activeComment}
+          onActiveComment={setActiveComment}
+        />
+      </div>
+
       {showPreview && (
-        <aside className="hidden w-[400px] shrink-0 border-l border-border bg-card lg:block" aria-label="Preview">
-          <Preview book={book} chapters={chapters} chapterId={activeId} />
+        <aside className="relative hidden shrink-0 border-l border-border bg-card lg:block" style={{ width: previewWidth }} aria-label="Preview">
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Drag to resize the preview"
+            aria-valuenow={previewWidth}
+            tabIndex={0}
+            onPointerDown={startResize}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") resizePreview(previewWidth + 40);
+              if (e.key === "ArrowRight") resizePreview(previewWidth - 40);
+            }}
+            className="group absolute inset-y-0 -left-1.5 z-10 w-3 cursor-col-resize"
+          >
+            <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-transparent transition group-hover:bg-primary/50 group-focus-visible:bg-primary" />
+          </div>
+          <Preview book={book} chapters={chapters} chapterId={activeId} onSelect={select} />
         </aside>
       )}
     </div>
   );
+}
+
+/** The open chapter: straight from its saved content, or live through the collab server in a shared book. */
+function ChapterEditor({ chapter, live, ...props }: { chapter: Chapter; live: boolean } & Omit<React.ComponentProps<typeof ManuscriptEditor>, "chapterId" | "initial" | "live">) {
+  const doc = useLiveChapter(chapter.id, chapter.collab_gen, live);
+  if (live && !doc) return <p className="p-10 text-soft">Opening the shared chapter…</p>;
+  return <ManuscriptEditor {...props} chapterId={chapter.id} initial={chapter.content} live={live ? doc : null} />;
 }
 
 /** A writing sprint: pick a length, write, and the minutes go into the writing log. */

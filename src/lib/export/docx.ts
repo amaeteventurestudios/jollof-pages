@@ -148,15 +148,18 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
         children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [...brk, new TextRun(e.title)] }), ...input.alsoBy.map((b) => new Paragraph({ children: [new TextRun(b.title)] })));
         return;
     }
-    if (e.label) children.push(new Paragraph({ style: "ChapterLabel", children: [...brk, new TextRun(e.label)] }));
+    // a hidden heading stays in the file, invisible, so Word's table of contents still finds it
+    const hidden = e.kind.hideTitle || e.options.hideHeading;
+    const label = hidden ? "" : e.label;
+    if (label) children.push(new Paragraph({ style: "ChapterLabel", children: [...brk, new TextRun(label)] }));
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
-        children: [...(e.label ? [] : brk), new TextRun(e.title)],
-        ...(e.kind.hideTitle ? { style: "HiddenTitle" } : {}),
+        children: [...(label ? [] : brk), new TextRun(e.title)],
+        ...(hidden ? { style: "HiddenTitle" } : {}),
       }),
     );
-    if (e.subtitle) children.push(new Paragraph({ style: "Subtitle", children: [new TextRun(e.subtitle)] }));
+    if (e.subtitle && !hidden) children.push(new Paragraph({ style: "Subtitle", children: [new TextRun(e.subtitle)] }));
     children.push(...blocks(e.chapter.content?.content));
   });
 

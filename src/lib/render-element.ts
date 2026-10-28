@@ -23,8 +23,23 @@ export function elementHtml(e: BookElement, input: Pick<ExportInput, "book" | "a
   if (e.kind.id === "copyright") return `<section class="copyright">${html}</section>`;
   if (e.kind.id === "dedication" || e.kind.id === "epigraph") return `<section class="centered dedication">${html}</section>`;
   if (e.kind.id === "part")
-    return `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}</h1></header>${html}</section>`;
-  return `<section><header class="chapter-head">${e.label ? `<span class="chapter-label">${escapeHtml(e.label)}</span>` : ""}<h1>${escapeHtml(e.title)}${
+    return `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>${html}</section>`;
+  return `<section>${chapterHeadHtml(e, e.image)}${html}${notes}</section>`;
+}
+
+/**
+ * The opening of a chapter: its image, label, title and subtitle, following the chapter's options.
+ * `imageSrc` is where the chapter image lives in this output (a URL, or a path inside the EPUB).
+ */
+export function chapterHeadHtml(e: BookElement, imageSrc: string | null): string {
+  const o = e.options;
+  const img = imageSrc ? `<img src="${escapeHtml(imageSrc)}" alt=""/>` : "";
+  if (o.hideHeading) return img ? `<figure class="chapter-image">${img}</figure>` : "";
+  const inverted = !!(img && o.invert);
+  const cls = ["chapter-head", o.smallTitle && "small", inverted && "inverted"].filter(Boolean).join(" ");
+  const head = `${e.label ? `<span class="chapter-label">${escapeHtml(e.label)}</span>` : ""}<h1>${escapeHtml(e.title)}${
     e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""
-  }</h1></header>${html}${notes}</section>`;
+  }</h1>`;
+  if (inverted) return `<header class="${cls}">${img}<div class="chapter-head-text">${head}</div></header>`;
+  return `${img ? `<figure class="chapter-image">${img}</figure>` : ""}<header class="${cls}">${head}</header>`;
 }

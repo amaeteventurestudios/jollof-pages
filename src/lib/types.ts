@@ -1,4 +1,4 @@
-import type { PaperType } from "./kdp";
+import { hardcoverPaper, hardcoverTrim, type Binding, type PaperType } from "./kdp";
 import type { DocNode } from "./doc/types";
 
 export type BookStatus = "idea" | "drafting" | "revising" | "editing" | "ready" | "published";
@@ -30,6 +30,10 @@ export interface BookFormat {
   printToc: boolean;
   /** large-print edition: 16pt body, wider leading */
   largePrint: boolean;
+  /** also publish a case laminate hardcover edition */
+  hardcover: boolean;
+  /** hardcover trim; empty means the paperback trim, or the nearest hardcover size to it */
+  hardcoverTrim: string;
 }
 
 export const DEFAULT_FORMAT: BookFormat = {
@@ -44,6 +48,8 @@ export const DEFAULT_FORMAT: BookFormat = {
   runningHeads: true,
   printToc: true,
   largePrint: false,
+  hardcover: false,
+  hardcoverTrim: "",
 };
 
 export interface BookGoal {
@@ -85,6 +91,7 @@ export interface Book {
   language: string;
   isbn_ebook: string;
   isbn_paperback: string;
+  isbn_hardcover?: string;
   imprint: string;
   publication_date: string;
   status: BookStatus;
@@ -101,13 +108,43 @@ export interface Book {
   accent: string;
   word_count: number;
   page_count: number;
+  /** pages in the hardcover interior, which has its own trim and a wider gutter */
+  hardcover_page_count?: number;
+  cover_hardcover?: string;
   /** sold straight from the author's site, paid into their own Stripe account (Pro) */
   sell_direct?: boolean;
   ebook_price_cents?: number;
   ebook_file?: string;
   created: string;
   updated: string;
+  /** people the owner shared the book with (see src/lib/collab.ts) */
+  cowriters?: string[];
+  editors?: string[];
+  commenters?: string[];
+  /** a box set: the books it was assembled from, in order */
+  box_set?: { books: string[] } | null;
   expand?: { author?: Author };
+}
+
+/** Per-chapter layout switches, like the gear menu in Atticus. All off by default. */
+export interface ChapterOptions {
+  /** opening image above (or behind) the chapter title; a file URL from the image library */
+  image?: string;
+  hideImage?: boolean;
+  /** no title block at all: the text starts at the top of the page */
+  hideHeading?: boolean;
+  hidePageNumber?: boolean;
+  /** no running head on this chapter's pages */
+  hideHeader?: boolean;
+  smallTitle?: boolean;
+  /** white title set over the chapter image */
+  invert?: boolean;
+  /** on a part: it opens one book of a box set ("Book One"), and chapter numbers start again */
+  volume?: boolean;
+}
+
+export function chapterOptions(c: Pick<Chapter, "options">): ChapterOptions {
+  return c.options && typeof c.options === "object" ? c.options : {};
 }
 
 export interface Chapter {
@@ -126,6 +163,9 @@ export interface Chapter {
   is_sample: boolean;
   in_toc: boolean;
   numbered: boolean;
+  options: ChapterOptions | null;
+  /** current live-editing generation, set by the collab server */
+  collab_gen?: string;
   created: string;
   updated: string;
 }
@@ -173,6 +213,12 @@ export interface SiteSettings {
 
 export function bookFormat(b: Pick<Book, "format">): BookFormat {
   return { ...DEFAULT_FORMAT, ...(b.format ?? {}) };
+}
+
+/** The trim and paper of one print edition. */
+export function printEdition(f: BookFormat, binding: Binding): { trim: string; paper: PaperType } {
+  if (binding === "paperback") return { trim: f.trim, paper: f.paper };
+  return { trim: hardcoverTrim(f.hardcoverTrim || f.trim).id, paper: hardcoverPaper(f.paper) };
 }
 
 export function bookGoal(b: Pick<Book, "goal">): BookGoal {

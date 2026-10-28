@@ -1,8 +1,8 @@
 "use client";
 
 import { pb } from "./pb";
-import { sortChapters, type ExportInput } from "./book-model";
-import { countWords, collectImages, type DocNode } from "./doc/types";
+import { bookImages, sortChapters, type ExportInput } from "./book-model";
+import { countWords, type DocNode } from "./doc/types";
 import { defaultContent, elementKind, STARTER_ELEMENTS } from "./elements";
 import { slugify, today } from "./slug";
 import { DEFAULT_FORMAT, DEFAULT_GOAL, type Author, type Book, type Chapter, type Section, type SiteSettings, type WritingLog } from "./types";
@@ -15,11 +15,23 @@ export function userId(): string {
 }
 
 export async function listBooks(): Promise<Book[]> {
-  return pb().collection("books").getFullList<Book>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-updated", expand: "author" });
+  return pb()
+    .collection("books")
+    .getFullList<Book>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-updated", expand: "author" });
+}
+
+/** Books other authors shared with the signed-in person. */
+export async function listSharedBooks(): Promise<Book[]> {
+  const u = userId();
+  return pb()
+    .collection("books")
+    .getFullList<Book>({ filter: pb().filter("owner != {:u} && members.id ?= {:u}", { u }), sort: "-updated", expand: "author" });
 }
 
 export async function listAuthors(): Promise<Author[]> {
-  return pb().collection("authors").getFullList<Author>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "name" });
+  return pb()
+    .collection("authors")
+    .getFullList<Author>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "name" });
 }
 
 export async function ensureAuthor(id?: string): Promise<Author> {
@@ -28,7 +40,9 @@ export async function ensureAuthor(id?: string): Promise<Author> {
   if (chosen) return chosen;
   // no pen names yet: a placeholder the owner renames on the Pen names page
   const name = "New pen name";
-  return pb().collection("authors").create<Author>({ owner: userId(), name, slug: await uniqueSlug("authors", slugify(name)) });
+  return pb()
+    .collection("authors")
+    .create<Author>({ owner: userId(), name, slug: await uniqueSlug("authors", slugify(name)) });
 }
 
 export async function uniqueSlug(collection: string, base: string, exceptId?: string): Promise<string> {
@@ -47,7 +61,9 @@ export async function uniqueSlug(collection: string, base: string, exceptId?: st
 
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   // every author's site settings are public, so ask for this account's own
-  const list = await pb().collection("site_settings").getList<SiteSettings>(1, 1, { filter: pb().filter("owner = {:u}", { u: userId() }), sort: "created" });
+  const list = await pb()
+    .collection("site_settings")
+    .getList<SiteSettings>(1, 1, { filter: pb().filter("owner = {:u}", { u: userId() }), sort: "created" });
   return list.items[0] ?? null;
 }
 
@@ -84,10 +100,7 @@ export async function createBook(input: { title: string; subtitle?: string; auth
   return book;
 }
 
-export async function createChapter(
-  book: Book,
-  o: { kind: string; title?: string; order: number; content?: DocNode; authorBio?: string; authorName?: string },
-): Promise<Chapter> {
+export async function createChapter(book: Book, o: { kind: string; title?: string; order: number; content?: DocNode; authorBio?: string; authorName?: string }): Promise<Chapter> {
   const kind = elementKind(o.kind);
   const content =
     o.content ??
@@ -98,6 +111,7 @@ export async function createChapter(
       imprint: book.imprint || "Jollof Pages",
       isbnEbook: book.isbn_ebook,
       isbnPaperback: book.isbn_paperback,
+      isbnHardcover: book.isbn_hardcover,
       authorBio: o.authorBio ?? book.expand?.author?.bio,
     });
   return pb()
@@ -121,9 +135,87 @@ export async function createChapter(
 export async function loadBook(id: string): Promise<{ book: Book; chapters: Chapter[] }> {
   const [book, chapters] = await Promise.all([
     pb().collection("books").getOne<Book>(id, { expand: "author" }),
-    pb().collection("chapters").getFullList<Chapter>({ filter: pb().filter("book = {:b}", { b: id }), sort: "section,order" }),
+    pb()
+      .collection("chapters")
+      .getFullList<Chapter>({ filter: pb().filter("book = {:b}", { b: id }), sort: "section,order" }),
   ]);
   return { book, chapters: sortChapters(chapters) };
+}
+
+/** Pages that belong to one book and are replaced by the box set's own. */
+const BOX_SET_SKIP = new Set(["title_page", "copyright", "contents", "also_by", "about_author", "review_request"]);
+
+/**
+ * A box set: one new book holding copies of several books, each opened by a "Book One" divider
+ * with chapter numbers starting again. The copies are independent, so editing the box set never
+ * touches the original books.
+ */
+export async function createBoxSet(input: { title: string; subtitle?: string; author?: string; bookIds: string[]; onProgress?: (done: number, total: number) => void }): Promise<Book> {
+  const sources = [];
+  for (const id of input.bookIds) sources.push(await loadBook(id));
+  const first = sources[0]?.book;
+  const book = await createBook({ title: input.title, subtitle: input.subtitle, author: input.author || first?.author, withStarter: false });
+  const author = book.expand?.author ?? (await ensureAuthor(book.author));
+  const total = sources.reduce((n, s) => n + s.chapters.filter((c) => !BOX_SET_SKIP.has(c.kind)).length + 1, 0) + 5;
+  let done = 0;
+  const step = () => input.onProgress?.(++done, total);
+
+  let front = 0;
+  for (const kind of ["title_page", "copyright", "contents"]) {
+    await createChapter(book, { kind, order: front++, authorName: author.name });
+    step();
+  }
+  let order = 0;
+  for (const { book: src, chapters } of sources) {
+    await pb()
+      .collection("chapters")
+      .create({
+        owner: userId(),
+        book: book.id,
+        kind: "part",
+        section: "body",
+        order: order++,
+        title: src.title,
+        subtitle: src.subtitle || "",
+        content: null,
+        word_count: 0,
+        status: "final",
+        in_toc: true,
+        numbered: false,
+        is_sample: false,
+        options: { volume: true },
+      });
+    step();
+    for (const c of chapters) {
+      if (BOX_SET_SKIP.has(c.kind)) continue;
+      await pb()
+        .collection("chapters")
+        .create({
+          owner: userId(),
+          book: book.id,
+          kind: c.kind,
+          section: "body",
+          order: order++,
+          title: c.title,
+          subtitle: c.subtitle,
+          content: c.content,
+          word_count: c.word_count,
+          status: c.status,
+          in_toc: c.in_toc,
+          numbered: c.numbered,
+          is_sample: false,
+          options: c.options,
+        });
+      step();
+    }
+  }
+  let back = 0;
+  for (const kind of ["about_author", "also_by"]) {
+    await createChapter(book, { kind, order: back++, authorBio: author.bio, authorName: author.name });
+    step();
+  }
+  const words = sources.reduce((n, s) => n + s.chapters.filter((c) => !BOX_SET_SKIP.has(c.kind)).reduce((m, c) => m + (c.word_count || 0), 0), 0);
+  return updateBook(book.id, { box_set: { books: input.bookIds }, format: first?.format ?? DEFAULT_FORMAT, word_count: words, language: first?.language || "en" });
 }
 
 export async function updateBook(id: string, data: Partial<Book>): Promise<Book> {
@@ -155,7 +247,10 @@ export async function saveChapter(ch: Chapter, patch: Partial<Chapter>): Promise
 
 export async function refreshBookWordCount(bookId: string, chapters: Chapter[]): Promise<number> {
   const total = chapters.reduce((s, c) => s + (c.word_count || 0), 0);
-  await pb().collection("books").update(bookId, { word_count: total }).catch(() => undefined);
+  await pb()
+    .collection("books")
+    .update(bookId, { word_count: total })
+    .catch(() => undefined);
   return total;
 }
 
@@ -186,7 +281,7 @@ async function fetchBinary(url: string): Promise<BinaryAsset | null> {
 
 export async function fetchImages(input: ExportInput): Promise<Map<string, BinaryAsset>> {
   const out = new Map<string, BinaryAsset>();
-  const srcs = new Set(input.chapters.flatMap((c) => collectImages(c.content)));
+  const srcs = bookImages(input.chapters);
   for (const src of srcs) {
     const bin = await fetchBinary(src);
     if (bin) out.set(src, bin);

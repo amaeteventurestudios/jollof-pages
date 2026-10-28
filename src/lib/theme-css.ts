@@ -42,6 +42,19 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
     "h1",
     `font-family: ${theme.headingCss}; font-weight: ${theme.headingWeight}; font-style: ${theme.headingItalic ? "italic" : "normal"}; font-size: 1.9em; line-height: 1.15; margin: 0; text-align: ${theme.headingAlign}; hyphens: none;`,
   );
+  add(".chapter-image", "margin: 0 0 1.6em; text-align: center;");
+  add(".chapter-image img", "width: 100%; max-height: 40vh; object-fit: cover; display: block;");
+  add(".chapter-image + .chapter-head", "margin-top: 0;");
+  add(".chapter-head.small", "margin: 1.6em 0 1.4em;");
+  add(".chapter-head.small h1", "font-size: 1.35em;");
+  add(".chapter-head.small .chapter-label", theme.labelStyle === "large" ? "font-size: 1.8em;" : "font-size: 0.85em;");
+  add(".chapter-head.inverted", "position: relative; margin-top: 0; color: #fff;");
+  add(".chapter-head.inverted img", "width: 100%; height: 16em; object-fit: cover; display: block;");
+  add(
+    ".chapter-head-text",
+    "position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 1em 1.4em; background: rgba(0,0,0,0.38);",
+  );
+  add(".chapter-head.inverted h1, .chapter-head.inverted .chapter-label", "color: #fff;");
   add(".chapter-subtitle", "display: block; font-style: italic; font-size: 1.1em; margin-top: 0.6em; font-weight: 400;");
   add("h2", `font-family: ${theme.headingCss}; font-size: 1.3em; line-height: 1.25; margin: 1.8em 0 0.6em; font-weight: 700; hyphens: none;`);
   add("h3", `font-family: ${theme.headingCss}; font-size: 1.12em; line-height: 1.3; margin: 1.5em 0 0.5em; font-weight: 700;`);
