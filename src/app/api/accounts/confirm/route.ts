@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const s = await getCheckout(sessionId);
     if (s.client_reference_id !== me.id || s.metadata?.kind !== "studio") return NextResponse.json({ error: "This payment belongs to another account." }, { status: 403 });
     if (s.payment_status !== "paid") return NextResponse.json({ paid: false });
-    await markStudioPaid(me.id);
+    await markStudioPaid(me.id, s.amount_total ?? 0);
     return NextResponse.json({ paid: true });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 502 });

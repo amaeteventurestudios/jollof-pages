@@ -32,11 +32,11 @@ export async function subdomainAvailability(name: string, exceptOwner?: string):
 }
 
 /** Marks an account paid after Stripe confirms the studio payment. Safe to call twice. */
-export async function markStudioPaid(userId: string): Promise<void> {
+export async function markStudioPaid(userId: string, cents: number): Promise<void> {
   const pb = await adminPb();
   const u = await pb.collection("users").getOne(userId);
   if (u.access === "paid" || u.access === "comp") return;
-  await pb.collection("users").update(userId, { access: "paid" });
+  await pb.collection("users").update(userId, { access: "paid", paid_cents: cents, paid_at: new Date().toISOString().replace("T", " ") });
 }
 
 // a small brake on scripted sign-ups: 5 an hour from one address

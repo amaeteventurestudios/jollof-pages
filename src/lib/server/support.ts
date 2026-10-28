@@ -1,6 +1,6 @@
 import "server-only";
 import { letterHtml, letterText, mailConfigured, sendMail } from "./mail";
-import { topicLabel, type SupportRequest } from "../support";
+import { TICKET_FILES, ticketNo, topicLabel, type SupportRequest } from "../support";
 
 /**
  * Who answers help requests: the addresses in SUPPORT_EMAILS (comma separated), or OWNER_EMAIL.
@@ -17,6 +17,35 @@ export function isSupport(email: string): boolean {
   return supportTeam().includes(email.toLowerCase());
 }
 
+/** The public address for support, used as the reply-to on every support email. */
+export const SUPPORT_ADDRESS = process.env.SUPPORT_ADDRESS || "support@jollofpages.com";
+
+/**
+ * A ticket's fields and screenshots, from JSON or a multipart form ("files" may repeat).
+ * Screenshots are checked here so a bad file is a plain sentence, not a database error.
+ */
+export async function readTicketBody(req: Request): Promise<{ fields: Record<string, string>; files: File[] } | { error: string }> {
+  if (!(req.headers.get("content-type") || "").includes("multipart/form-data")) {
+    const j = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    return { fields: Object.fromEntries(Object.entries(j).map(([k, v]) => [k, typeof v === "string" ? v : ""])), files: [] };
+  }
+  const form = await req.formData().catch(() => null);
+  if (!form) return { error: "Could not read the message." };
+  const fields: Record<string, string> = {};
+  const files: File[] = [];
+  for (const [k, v] of form.entries()) {
+    if (typeof v === "string") fields[k] = v;
+    else if (k === "files" && v.size) files.push(v);
+  }
+  if (files.length > TICKET_FILES.max) return { error: `Attach up to ${TICKET_FILES.max} files at a time.` };
+  const allowed = TICKET_FILES.accept.split(",");
+  for (const f of files) {
+    if (!allowed.includes(f.type)) return { error: `${f.name} is not a picture or PDF.` };
+    if (f.size > TICKET_FILES.maxBytes) return { error: `${f.name} is larger than 10 MB.` };
+  }
+  return { fields, files };
+}
+
 /** Emails are a courtesy on top of the inbox; a request is never lost because mail is not set up. */
 export async function notifyTeam(r: SupportRequest, inboxUrl: string, followUp?: string): Promise<boolean> {
   if (!mailConfigured()) return false;
@@ -27,7 +56,7 @@ export async function notifyTeam(r: SupportRequest, inboxUrl: string, followUp?:
     for (const to of team)
       await sendMail({
         to,
-        subject: `${followUp ? "Re: " : "[Help] "}${r.subject}`,
+        subject: `${followUp ? "Re: " : "[Help] "}${ticketNo(r)} ${r.subject}`,
         html: letterHtml(body, { name: "Jollof Pages support", footer: "Sent from the Help page in the studio." }),
         text: letterText(body),
         fromName: "Jollof Pages Help",
@@ -44,20 +73,36 @@ export async function notifyWriter(r: SupportRequest, text: string, helpUrl: str
   if (!mailConfigured() || !r.email) return false;
   const body =
     kind === "received"
-      ? `Thanks for writing in. We have your message about **${r.subject}** and will answer within one working day, usually sooner.\n\nYou can follow the conversation on the Help page in the studio: ${helpUrl}`
-      : `${text}\n\nYou can reply to this email, or continue on the Help page in the studio: ${helpUrl}`;
+      ? `Thanks for writing in. Your ticket ${ticketNo(r)} about **${r.subject}** is open, and we will answer within one working day, usually sooner.\n\nFollow it, add details or screenshots on your ticket in the studio: ${helpUrl}`
+      : `${text}\n\nTo answer, open your ticket in the studio: ${helpUrl}`;
   try {
     await sendMail({
       to: r.email,
-      subject: kind === "received" ? `We got your message: ${r.subject}` : `Re: ${r.subject}`,
+      subject: kind === "received" ? `Ticket ${ticketNo(r)} opened: ${r.subject}` : `Re: ${ticketNo(r)} ${r.subject}`,
       html: letterHtml(body, { name: "Jollof Pages", footer: "You are getting this because you asked for help in the Jollof Pages studio." }),
       text: letterText(body),
       fromName: "Jollof Pages Help",
       fromLocal: "help",
-      replyTo: supportTeam()[0],
+      replyTo: SUPPORT_ADDRESS,
     });
     return true;
   } catch {
     return false;
   }
+}
+
+/** Lets the team know about a new feature request. */
+export async function notifyTeamOfIdea(from: string, title: string, details: string, url: string): Promise<void> {
+  if (!mailConfigured()) return;
+  const body = `**New feature request from ${from}**\n\n**${title}**\n\n${details || "(no details)"}\n\nSee every request and set its status: ${url}`;
+  for (const to of supportTeam())
+    await sendMail({
+      to,
+      subject: `[Idea] ${title}`,
+      html: letterHtml(body, { name: "Jollof Pages", footer: "Sent from Feature requests in the studio." }),
+      text: letterText(body),
+      fromName: "Jollof Pages Ideas",
+      fromLocal: "help",
+      replyTo: from,
+    }).catch(() => undefined);
 }

@@ -153,6 +153,14 @@ export const FAQ: FaqGroup[] = [
     title: "Account and billing",
     items: [
       {
+        q: "How do I get help with a problem?",
+        a: "Open a support ticket from Help and support (in your account menu). Describe what happened and attach a screenshot if you can. Each ticket gets a number, and our answer shows on the Help page with a copy by email. Reply on the ticket to follow up.",
+      },
+      {
+        q: "Can I ask for a new feature?",
+        a: "Yes. Open Request a feature from your account menu. Suggest an idea or vote for one already there; the most wanted rise to the top, and each one shows whether it is planned, being built or shipped.",
+      },
+      {
         q: "Is there a subscription?",
         a: "No. The studio is one payment of $119 with every future update included. AI cover credits are optional and pay as you go. Author Site Pro is the only monthly plan, and you only need it for your own domain and the Pro website features.",
       },
