@@ -4,7 +4,6 @@ import { getSite } from "@/lib/pb-server";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SpineCalculator } from "@/components/site/spine-calculator";
-import { SubscribeForm } from "@/components/site/subscribe-form";
 import { Pattern, Rim, type PatternKind } from "@/components/site/patterns";
 import { Marquee } from "@/components/site/marquee";
 import { Intro } from "@/components/site/intro";
@@ -135,9 +134,6 @@ const COMPARE: { row: string; us: string | boolean; them: string | boolean | nul
   { row: "Price, one time", us: "$119", them: "$147" },
 ];
 
-/** Where "Buy" goes once Stripe is set up. Empty: the button joins early access instead. */
-const CHECKOUT_URL = "";
-
 const PLATFORMS = [
   { name: "Windows", how: "In Chrome or Edge, press Install in the address bar." },
   { name: "Mac", how: "In Safari choose File, then Add to Dock. Chrome works too." },
@@ -250,8 +246,8 @@ export default async function Home() {
               Create print books and ebooks in one studio.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3" data-rise style={{ ["--i" as string]: 2 }}>
-              <a href="#early-access" className="btn">
-                Get early access
+              <a href="/signup" className="btn">
+                Buy for $119
                 <Arrow />
               </a>
               <a href="#write" className="btn btn-ghost">
@@ -618,8 +614,8 @@ export default async function Home() {
                   <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">$119</p>
                   <p className="mt-4 text-[1.125rem] font-semibold">One-time payment. No monthly fees.</p>
                   <p className="mt-3 max-w-[34ch] text-cream/95">Buy it once and write as many books as you like, with every update we ship included.</p>
-                  <a href={CHECKOUT_URL || "#early-access"} className="btn mt-8">
-                    {CHECKOUT_URL ? "Buy Jollof Pages" : "Join early access"}
+                  <a href="/signup" className="btn mt-8">
+                    Buy Jollof Pages
                     <Arrow />
                   </a>
                 </div>
@@ -635,7 +631,7 @@ export default async function Home() {
             </div>
             <div className="flex flex-col items-start justify-between gap-4 bg-bonnet p-6 text-char sm:flex-row sm:items-center sm:p-8" data-reveal>
               <div>
-                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, coming soon</p>
+                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, pay as you go</p>
                 <p className="wide mt-1 text-[1.5rem] font-bold">AI cover credits</p>
                 <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. $10 buys 100 credits: about 50 drafts or 25 print-ready covers. Credits never expire.</p>
               </div>
@@ -703,11 +699,16 @@ export default async function Home() {
             <span className="cta-page bg-char" style={{ ["--r" as string]: "6deg" }} />
           </div>
           <div className="relative px-4 sm:px-8">
-            <SectionHead id="cta-title" title="Your book is ready to cook" sub="Join early access and be first in the kitchen." />
+            <SectionHead id="cta-title" title="Your book is ready to cook" sub="Pay once, get the studio and your author website." />
             <div className="mx-auto mt-8 max-w-[560px]" data-reveal style={{ ["--i" as string]: 2 }}>
-              <SubscribeForm source="early-access" tone="dark" button="Join" done="You are on the early-access list. We will email you when your seat is ready." />
+              <div className="flex justify-center">
+                <a href="/signup" className="btn">
+                  Buy Jollof Pages for $119
+                  <Arrow />
+                </a>
+              </div>
               <p className="t-small mt-4 text-center text-cream/85">
-                One email when your access is ready. See our{" "}
+                One-time payment through Stripe. See our{" "}
                 <Link href="/privacy" className="link underline">
                   privacy policy
                 </Link>

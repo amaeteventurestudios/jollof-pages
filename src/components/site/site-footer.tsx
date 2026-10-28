@@ -16,7 +16,7 @@ const COLUMNS = [
     links: [
       { href: "/#pricing", label: "Pricing" },
       { href: "/#faq", label: "FAQ" },
-      { href: "/#early-access", label: "Early access" },
+      { href: "/signup", label: "Buy Jollof Pages" },
       { href: "/login", label: "Sign in" },
     ],
   },
