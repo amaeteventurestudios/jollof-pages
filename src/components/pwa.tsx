@@ -22,7 +22,8 @@ export function RegisterServiceWorker() {
  * "Install app", shown only where the browser offers installation (Chrome and Edge on Windows,
  * Mac, Linux, Chromebook and Android). Safari users add it from the Share or File menu instead.
  */
-export function InstallButton({ className, label = "Install app" }: { className?: string; label?: string }) {
+/** The browser's install offer, or null where it isn't offered (or the app is already installed). */
+export function useInstallPrompt(): (() => Promise<void>) | null {
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null);
   useEffect(() => {
     const onPrompt = (e: Event) => {
@@ -38,16 +39,18 @@ export function InstallButton({ className, label = "Install app" }: { className?
     };
   }, []);
   if (!prompt) return null;
+  return async () => {
+    await prompt.prompt();
+    await prompt.userChoice;
+    setPrompt(null);
+  };
+}
+
+export function InstallButton({ className, label = "Install app" }: { className?: string; label?: string }) {
+  const install = useInstallPrompt();
+  if (!install) return null;
   return (
-    <button
-      type="button"
-      className={cn("inline-flex items-center gap-2", className)}
-      onClick={async () => {
-        await prompt.prompt();
-        await prompt.userChoice;
-        setPrompt(null);
-      }}
-    >
+    <button type="button" className={cn("inline-flex items-center gap-2", className)} onClick={install}>
       <Download className="size-4" aria-hidden />
       {label}
     </button>

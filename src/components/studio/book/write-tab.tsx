@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Eye, EyeOff, PanelLeft, Settings2, Timer } from "lucide-react";
+import { Eye, EyeOff, GripVertical, PanelLeft, Settings2, Timer } from "lucide-react";
 import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
 import { useLiveChapter } from "@/components/studio/use-live-chapter";
 import { useBookComments } from "./comments-panel";
@@ -71,8 +71,24 @@ export function WriteTab({ ws }: { ws: Workspace }) {
       // no storage: the width lasts for this visit
     }
   }, []);
+  const [resizeHintSeen, setResizeHintSeen] = useState(() => {
+    try {
+      return localStorage.getItem("jp-resize-hint") === "1";
+    } catch {
+      return true;
+    }
+  });
+  const dismissResizeHint = useCallback(() => {
+    setResizeHintSeen(true);
+    try {
+      localStorage.setItem("jp-resize-hint", "1");
+    } catch {
+      // no storage: the tip comes back next visit
+    }
+  }, []);
   function startResize(e: React.PointerEvent) {
     e.preventDefault();
+    dismissResizeHint();
     const startX = e.clientX;
     const startW = previewWidth;
     const move = (ev: PointerEvent) => resizePreview(startW + (startX - ev.clientX));
@@ -152,21 +168,19 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     if (window.matchMedia("(max-width: 767px)").matches) setShowSidebar(false);
   }
 
-  async function add(kind: string) {
+  /** adds a section, or one chapter per title (from the AI outline) */
+  async function add(kind: string, titles?: string[]) {
     await flush();
     const k = elementKind(kind);
-    const order = Math.max(-1, ...chapters.filter((c) => c.section === k.section).map((c) => c.order)) + 1;
-    const n = chapters.filter((c) => c.kind === "chapter").length + 1;
+    let order = Math.max(-1, ...chapters.filter((c) => c.section === k.section).map((c) => c.order)) + 1;
+    let n = chapters.filter((c) => c.kind === "chapter").length + 1;
     try {
-      const created = await ws.track(
-        createChapter(book, {
-          kind,
-          order,
-          title: kind === "chapter" ? `Chapter ${n}` : k.label,
-        }),
-      );
-      setChapters((all) => [...all, created]);
-      setActiveId(created.id);
+      for (const title of titles?.length ? titles : [kind === "chapter" ? `Chapter ${n}` : k.label]) {
+        const created = await ws.track(createChapter(book, { kind, order: order++, title }));
+        n++;
+        setChapters((all) => [...all, created]);
+        setActiveId(created.id);
+      }
     } catch (e) {
       alert(`Could not add: ${errorMessage(e)}`);
     }
@@ -435,10 +449,25 @@ export function WriteTab({ ws }: { ws: Workspace }) {
               if (e.key === "ArrowLeft") resizePreview(previewWidth + 40);
               if (e.key === "ArrowRight") resizePreview(previewWidth - 40);
             }}
-            className="group absolute inset-y-0 -left-1.5 z-10 w-3 cursor-col-resize"
+            onDoubleClick={() => resizePreview(440)}
+            title="Drag to resize the preview. Double-click to reset."
+            className="group absolute inset-y-0 -left-2 z-10 w-4 cursor-col-resize touch-none outline-none"
           >
-            <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-transparent transition group-hover:bg-primary/50 group-focus-visible:bg-primary" />
+            <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border transition group-hover:w-0.5 group-hover:bg-primary/60 group-focus-visible:w-0.5 group-focus-visible:bg-primary" />
+            <span className="absolute top-1/2 left-1/2 grid h-12 w-3.5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-border bg-card text-soft shadow-sm transition group-hover:border-primary/60 group-hover:text-primary group-focus-visible:border-primary group-focus-visible:text-primary">
+              <GripVertical className="size-3" aria-hidden />
+            </span>
           </div>
+          {!resizeHintSeen && (
+            <div role="note" className="absolute top-1/2 left-4 z-10 w-52 -translate-y-1/2 rounded-md border border-primary/40 bg-card p-3 text-[13px] text-ink-2 shadow-lg">
+              <p>
+                <span className="font-medium text-ink">Tip:</span> drag the handle on the left edge to make the preview wider or narrower.
+              </p>
+              <button type="button" onClick={dismissResizeHint} className="mt-2 text-[13px] font-medium text-primary hover:underline">
+                Got it
+              </button>
+            </div>
+          )}
           <Preview book={book} chapters={chapters} chapterId={activeId} onSelect={select} />
         </aside>
       )}

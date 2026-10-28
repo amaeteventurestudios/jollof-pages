@@ -12,6 +12,7 @@ import { bookFormat, type Chapter, type Section } from "@/lib/types";
 import { fmt } from "@/lib/progress";
 import { cn } from "@/lib/utils";
 import type { Workspace } from "./workspace";
+import { AiSuggest } from "../ai-suggest";
 
 const STATUS_DOT: Record<Chapter["status"], string> = {
   draft: "bg-paper-3",
@@ -48,7 +49,7 @@ function Row({ c, label, active, onSelect, fixed }: { c: Chapter; label: string;
   );
 }
 
-export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspace; activeId: string | null; onSelect: (id: string) => void; onAdd: (kind: string) => void }) {
+export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspace; activeId: string | null; onSelect: (id: string) => void; onAdd: (kind: string, titles?: string[]) => void }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -81,7 +82,10 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
           return (
             <div key={section} className="mb-4">
               <div className="flex items-center justify-between px-2 pb-1">
-                <h3 className="text-[13px] font-semibold text-ink-2">{SECTION_LABELS[section]}</h3>
+                <h3 className="flex-1 text-[13px] font-semibold text-ink-2">{SECTION_LABELS[section]}</h3>
+                {!fixed && section === "body" && (
+                  <AiSuggest kind="outline" bookId={ws.book.id} align="left" label="Outline" onPick={(t) => onAdd("chapter", [t])} onPickAll={(all) => onAdd("chapter", all)} />
+                )}
                 {!fixed && (
                   <DropdownMenu>
                     <DropdownMenuTrigger aria-label={`Add to ${SECTION_LABELS[section]}`} className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink">

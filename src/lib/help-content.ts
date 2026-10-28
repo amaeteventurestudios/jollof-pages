@@ -48,7 +48,11 @@ export const FAQ: FaqGroup[] = [
     items: [
       {
         q: "How do I turn on the writing assistant?",
-        a: "In the Write tab, click the sparkle button at the top of the tool rail on the right. Choose Claude, ChatGPT or OpenRouter, then paste an API key from that company. The panel shows the exact page to get one. Your key is stored encrypted and never shown again.",
+        a: "Open your account menu at the top right and choose AI assistant, or click the sparkle button at the top of the Write tab's tool rail. Choose Claude, ChatGPT or OpenRouter, then paste an API key from that company. The page shows the exact place to get one. Your key is stored encrypted and never shown again.",
+      },
+      {
+        q: "What do the Suggest buttons do?",
+        a: "They ask your AI for a few options: titles, subtitles and pen names when you start a book; a hook, description, keywords and categories on Book details; picture ideas on the Cover tab; and a chapter outline next to Body in the Write tab. Nothing changes until you click an option, and you can edit it afterwards. Use all fills every keyword box, or adds every outlined chapter, at once.",
       },
       {
         q: "Who pays for the assistant?",
@@ -74,7 +78,11 @@ export const FAQ: FaqGroup[] = [
     items: [
       {
         q: "How do I see what my book will look like?",
-        a: "The preview beside the editor shows the current chapter as a printed page or on a phone, tablet or e-reader. Turn pages with the Page buttons, the arrow keys or your mouse wheel, jump chapters with the Chapter buttons, and zoom with + and −. Drag the edge of the preview to make it wider.",
+        a: "The preview beside the editor shows the current chapter as a printed page or on a phone, tablet or e-reader. Turn pages with the Page buttons, the arrow keys or your mouse wheel, jump chapters with the Chapter buttons, and zoom with + and −. Drag the round handle on the preview's left edge to make it wider, and double-click it to reset. Print shows your book at the trim size chosen on the Format tab (and your hardcover size, if you publish one).",
+      },
+      {
+        q: "How do I page through the whole printed book?",
+        a: "Click Full book preview above the preview. The studio lays out every page at your trim size, then shows them two at a time like an open book. Turn pages with the arrows or your arrow keys, jump between chapters, or type a page number. Go back returns you to where you were writing.",
       },
       {
         q: "Can I hide a chapter's title, page number or running head?",

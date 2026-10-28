@@ -19,7 +19,7 @@ interface Msg {
 
 const auth = () => ({ Authorization: pb().authStore.token });
 
-async function api<T>(url: string, init?: RequestInit): Promise<T> {
+export async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, headers: { "Content-Type": "application/json", ...auth(), ...init?.headers } });
   const body = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) throw new Error(body.error || `Request failed (${res.status}).`);
@@ -348,7 +348,7 @@ function AssistantReply({ msg, editor, canWrite, streaming }: { msg: Msg; editor
 
 /* ---------- settings ---------- */
 
-function SettingsView({ setup, onSetup, onDone }: { setup: AssistantSetup; onSetup: (s: AssistantSetup) => void; onDone: () => void }) {
+export function SettingsView({ setup, onSetup, onDone }: { setup: AssistantSetup; onSetup: (s: AssistantSetup) => void; onDone?: () => void }) {
   const [provider, setProvider] = useState<Provider>(setup.provider ?? "anthropic");
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
@@ -444,7 +444,7 @@ function SettingsView({ setup, onSetup, onDone }: { setup: AssistantSetup; onSet
           onSubmit={async (e) => {
             e.preventDefault();
             const next = await save({ key });
-            if (next?.keys[provider]) onDone();
+            if (next?.keys[provider]) onDone?.();
           }}
         >
           <Input
@@ -509,7 +509,7 @@ function SettingsView({ setup, onSetup, onDone }: { setup: AssistantSetup; onSet
           {error}
         </p>
       )}
-      {setup.provider && setup.keys[setup.provider] && (
+      {onDone && setup.provider && setup.keys[setup.provider] && (
         <Button variant="outline" onClick={onDone}>
           Back to the conversation
         </Button>
@@ -520,7 +520,7 @@ function SettingsView({ setup, onSetup, onDone }: { setup: AssistantSetup; onSet
 
 /* ---------- memory ---------- */
 
-function MemoryView({ memoryOn }: { memoryOn: boolean }) {
+export function MemoryView({ memoryOn }: { memoryOn: boolean }) {
   const [rows, setRows] = useState<{ id: string; memory: string; book?: string }[] | null>(null);
   const [error, setError] = useState("");
   const load = useCallback(() => {

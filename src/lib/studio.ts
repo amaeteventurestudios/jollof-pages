@@ -67,8 +67,13 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
   return list.items[0] ?? null;
 }
 
-export async function createBook(input: { title: string; subtitle?: string; author?: string; withStarter?: boolean }): Promise<Book> {
-  const author = await ensureAuthor(input.author);
+export async function createBook(input: { title: string; subtitle?: string; author?: string; withStarter?: boolean; pitch?: string; newAuthorName?: string }): Promise<Book> {
+  const fresh = input.newAuthorName?.trim();
+  const author = fresh
+    ? await pb()
+        .collection("authors")
+        .create<Author>({ owner: userId(), name: fresh, slug: await uniqueSlug("authors", slugify(fresh)) })
+    : await ensureAuthor(input.author);
   const site = await getSiteSettings().catch(() => null);
   const book = await pb()
     .collection("books")
@@ -76,6 +81,7 @@ export async function createBook(input: { title: string; subtitle?: string; auth
       owner: userId(),
       title: input.title,
       subtitle: input.subtitle ?? "",
+      pitch: input.pitch ?? "",
       slug: await uniqueSlug("books", slugify(input.title)),
       author: author.id,
       status: "drafting",
@@ -188,24 +194,22 @@ export async function createBoxSet(input: { title: string; subtitle?: string; au
     step();
     for (const c of chapters) {
       if (BOX_SET_SKIP.has(c.kind)) continue;
-      await pb()
-        .collection("chapters")
-        .create({
-          owner: userId(),
-          book: book.id,
-          kind: c.kind,
-          section: "body",
-          order: order++,
-          title: c.title,
-          subtitle: c.subtitle,
-          content: c.content,
-          word_count: c.word_count,
-          status: c.status,
-          in_toc: c.in_toc,
-          numbered: c.numbered,
-          is_sample: false,
-          options: c.options,
-        });
+      await pb().collection("chapters").create({
+        owner: userId(),
+        book: book.id,
+        kind: c.kind,
+        section: "body",
+        order: order++,
+        title: c.title,
+        subtitle: c.subtitle,
+        content: c.content,
+        word_count: c.word_count,
+        status: c.status,
+        in_toc: c.in_toc,
+        numbered: c.numbered,
+        is_sample: false,
+        options: c.options,
+      });
       step();
     }
   }
