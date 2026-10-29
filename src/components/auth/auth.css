@@ -206,6 +206,81 @@
 @keyframes auth-drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(4rem, 3rem, 0) scale(1.15); } }
 @keyframes auth-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
 @keyframes auth-shine { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0% 0; } }
+/* ---------- app mode: phones and tablets sign in to an app, not a web page ---------- */
+.auth-app-icon,
+.auth-app-name {
+  display: none;
+}
+@media (max-width: 1023.98px), (pointer: coarse) and (max-width: 1366px) {
+  html.studio-app .auth {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+  }
+  html.studio-app .auth-show {
+    align-items: center;
+    min-height: 0;
+    padding: calc(env(safe-area-inset-top) + 2.75rem) 1.5rem 2.25rem;
+    border-radius: 0;
+    text-align: center;
+    box-shadow: none;
+  }
+  html.studio-app .auth-brand,
+  html.studio-app .auth-lead,
+  html.studio-app .auth-points {
+    display: none;
+  }
+  html.studio-app .auth-app-icon {
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    background: #fff7ef;
+    color: var(--jollof);
+    box-shadow: 0 18px 40px -16px rgba(20, 5, 0, 0.7);
+  }
+  html.studio-app .auth-app-icon svg {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+  html.studio-app .auth-app-name {
+    display: block;
+    margin-top: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  html.studio-app .auth-copy {
+    margin-top: 1.25rem;
+  }
+  html.studio-app .auth-copy h2 {
+    font-size: clamp(1.6rem, 1.2rem + 2vw, 2.4rem);
+  }
+  html.studio-app .auth-pane {
+    flex: 1;
+    align-items: flex-start;
+    padding: 1.75rem 1.25rem calc(1.75rem + env(safe-area-inset-bottom));
+  }
+  html.studio-app .auth-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  html.studio-app :is(.auth-field, .auth-go, .auth-google) {
+    border-radius: 0;
+  }
+  html.studio-app .auth-go,
+  html.studio-app .auth-field {
+    height: 3.25rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth *, .auth *::before, .auth *::after { animation: none !important; transition: none !important; }
 }

@@ -21,6 +21,13 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    // shown on Android's install sheet, which then looks like a store listing
+    screenshots: [
+      { src: "/app/screens/phone-books.png", sizes: "786x1318", type: "image/png", form_factor: "narrow", label: "Your books" },
+      { src: "/app/screens/phone-write.png", sizes: "786x1318", type: "image/png", form_factor: "narrow", label: "Write chapter by chapter" },
+      { src: "/app/screens/phone-preview.png", sizes: "786x1318", type: "image/png", form_factor: "narrow", label: "See the printed page as you write" },
+      { src: "/app/screens/desktop-books.png", sizes: "1440x900", type: "image/png", form_factor: "wide", label: "The studio on a computer" },
+    ],
     shortcuts: [
       { name: "Your books", url: "/studio", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Writing progress", url: "/studio/progress", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },

@@ -122,7 +122,7 @@ export default function SiteSettingsPage() {
               </Button>
             </div>
           </Panel>
-          <div className="sticky bottom-0 flex items-center gap-3 bg-background/95 py-4">
+          <div className="sticky bottom-0 flex items-center gap-3 bg-background/95 py-4 app:bottom-[calc(var(--app-tab-h)+env(safe-area-inset-bottom))]">
             <Button type="submit">Save site</Button>
             <span className="text-sm text-soft" role="status">
               {msg}

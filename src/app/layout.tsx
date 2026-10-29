@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import "./globals.css";
 import { THEME_SCRIPT } from "@/lib/theme";
+import { APP_SCRIPT } from "@/lib/app-mode";
 import { RegisterServiceWorker } from "@/components/pwa";
 
 // variable weight plus the width axis, so display lines can be set extra wide
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${archivo.variable} h-full`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT + APP_SCRIPT }} />
       </head>
       <body className="min-h-full">
         {children}

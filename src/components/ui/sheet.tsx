@@ -21,14 +21,14 @@ function SheetContent({
         className={cn(
           "fixed z-50 flex flex-col bg-card shadow-xl transition ease-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-200 data-[state=closed]:duration-150",
           side === "right" && "inset-y-0 right-0 h-full w-full sm:max-w-md data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
-          side === "left" && "inset-y-0 left-0 h-full w-72 data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
-          side === "bottom" && "inset-x-0 bottom-0 max-h-[88vh] rounded-t-xl data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+          side === "left" && "inset-y-0 left-0 h-full w-72 app:max-sm:w-full data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
+          side === "bottom" && "inset-x-0 bottom-0 max-h-[88vh] rounded-t-xl app:rounded-none app:pb-[env(safe-area-inset-bottom)] data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
           className,
         )}
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="absolute top-3 right-3 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+        <SheetPrimitive.Close className="absolute top-3 right-3 rounded-md p-1.5 app:top-[calc(0.5rem+env(safe-area-inset-top))] app:grid app:size-11 app:place-items-center text-muted-foreground hover:bg-muted hover:text-foreground">
           <XIcon className="size-4" />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>

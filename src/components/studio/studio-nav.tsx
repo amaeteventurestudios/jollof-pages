@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, ChevronDown, Download, ExternalLink, Feather, Flame, GraduationCap, Images, LifeBuoy, Lightbulb, LogOut, Mail, Monitor, Moon, Settings2, ShieldCheck, Sparkles, Sun, Users } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, GraduationCap, LifeBuoy, Lightbulb, LogOut, ShieldCheck, Sparkles } from "lucide-react";
 import { pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { ThemeToggle, useThemeChoice, type ThemeChoice } from "@/components/theme-toggle";
@@ -20,27 +20,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { forgetMySite, useMySite } from "./use-my-site";
 import { isCollaboratorOnly } from "./auth-gate";
+import { AppChrome } from "@/components/app/app-chrome";
+import { LINKS, THEMES } from "./studio-links";
 
-const LINKS = [
-  { href: "/studio", label: "Books", icon: BookOpen, exact: true, collaborator: true },
-  { href: "/studio/authors", label: "Pen names", icon: Feather },
-  { href: "/studio/progress", label: "Progress", icon: Flame },
-  { href: "/studio/images", label: "My images", short: "Images", icon: Images },
-  { href: "/studio/collaboration", label: "Collaboration", short: "Collab", icon: Users, collaborator: true },
-  { href: "/studio/site", label: "Website", icon: Settings2 },
-  { href: "/studio/readers", label: "Readers", icon: Mail },
-  { href: "/studio/stats", label: "Analytics", short: "Stats", icon: BarChart3 },
-];
-
-const THEMES: { id: ThemeChoice; label: string; icon: typeof Sun }[] = [
-  { id: "light", label: "Light", icon: Sun },
-  { id: "dark", label: "Dark", icon: Moon },
-  { id: "system", label: "Match my device", icon: Monitor },
-];
+export { LINKS, THEMES };
 
 /**
  * The studio's menu. Every section is always in view: one row on wide screens, and below that a
- * second row of evenly spaced tabs, so nothing ever has to be scrolled sideways.
+ * second row of evenly spaced tabs, so nothing ever has to be scrolled sideways. On phones and
+ * tablets the studio runs as an app instead, with an app bar on top and tabs along the bottom.
  */
 export function StudioNav() {
   const path = usePathname();
@@ -48,53 +36,63 @@ export function StudioNav() {
   const links = guest ? LINKS.filter((l) => "collaborator" in l) : LINKS;
   const isActive = (l: (typeof LINKS)[number]) => (l.exact ? path === l.href : path.startsWith(l.href));
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85">
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
-        <Link href="/studio" className="flex shrink-0 items-baseline gap-2 font-semibold tracking-tight whitespace-nowrap text-ink">
-          <span className="text-[17px]">Jollof Pages</span>
-          <span className="text-[13px] font-normal text-soft">Studio</span>
-        </Link>
-        <nav className="ml-2 hidden min-w-0 items-center gap-0.5 xl:flex" aria-label="Studio">
+    <>
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 app:hidden">
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
+          <Link href="/studio" className="flex shrink-0 items-baseline gap-2 font-semibold tracking-tight whitespace-nowrap text-ink">
+            <span className="text-[17px]">Jollof Pages</span>
+            <span className="text-[13px] font-normal text-soft">Studio</span>
+          </Link>
+          <nav className="ml-2 hidden min-w-0 items-center gap-0.5 xl:flex" aria-label="Studio">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={isActive(l) ? "page" : undefined}
+                className={cn("inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm whitespace-nowrap text-ink-2 hover:bg-muted [&_svg]:size-4", isActive(l) && "bg-primary-soft text-primary")}
+              >
+                <l.icon aria-hidden />
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle className="size-9 justify-center rounded text-ink-2 hover:bg-muted [&_svg]:size-[18px]" />
+            <AccountMenu guest={guest} />
+          </div>
+        </div>
+        <nav className={cn("grid border-t border-border xl:hidden", links.length > 4 ? "grid-cols-4 sm:grid-cols-8" : "grid-cols-2")} aria-label="Studio sections">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               aria-current={isActive(l) ? "page" : undefined}
-              className={cn("inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm whitespace-nowrap text-ink-2 hover:bg-muted [&_svg]:size-4", isActive(l) && "bg-primary-soft text-primary")}
+              className={cn(
+                "relative flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[11.5px] text-ink-2 hover:bg-muted [&_svg]:size-[18px]",
+                isActive(l) && "text-primary after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-primary",
+              )}
             >
               <l.icon aria-hidden />
-              {l.label}
+              <span className="max-w-full truncate">{l.short ?? l.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-1">
-          <ThemeToggle className="size-9 justify-center rounded text-ink-2 hover:bg-muted [&_svg]:size-[18px]" />
-          <AccountMenu guest={guest} />
-        </div>
-      </div>
-      <nav className={cn("grid border-t border-border xl:hidden", links.length > 4 ? "grid-cols-4 sm:grid-cols-8" : "grid-cols-2")} aria-label="Studio sections">
-        {links.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            aria-current={isActive(l) ? "page" : undefined}
-            className={cn(
-              "relative flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[11.5px] text-ink-2 hover:bg-muted [&_svg]:size-[18px]",
-              isActive(l) && "text-primary after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-primary",
-            )}
-          >
-            <l.icon aria-hidden />
-            <span className="max-w-full truncate">{l.short ?? l.label}</span>
-          </Link>
-        ))}
-      </nav>
-    </header>
+      </header>
+      <AppChrome guest={guest} />
+    </>
   );
+}
+
+/** Forgets the session and everything cached for it; the caller then goes to /login. */
+export function signOut() {
+  adminCheck = null;
+  pb().authStore.clear();
+  forgetMySite();
 }
 
 // whether the signed-in account may open the admin, asked once per page load
 let adminCheck: Promise<boolean> | null = null;
-function useIsAdmin(skip: boolean): boolean {
+export function useIsAdmin(skip: boolean): boolean {
   const [admin, setAdmin] = useState(false);
   useEffect(() => {
     if (skip) return;
@@ -184,9 +182,7 @@ export function AccountMenu({ guest = isCollaboratorOnly() }: { guest?: boolean 
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
-            adminCheck = null;
-            pb().authStore.clear();
-            forgetMySite();
+            signOut();
             router.replace("/login");
           }}
         >

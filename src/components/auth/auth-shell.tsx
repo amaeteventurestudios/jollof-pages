@@ -31,7 +31,16 @@ export function AuthShell({
         <span className="auth-blob b3" aria-hidden />
         <span className="auth-grain" aria-hidden />
 
-        <Link href="/" className="auth-rise inline-flex items-center gap-2.5 self-start text-lg font-semibold tracking-tight">
+        {/* phones and tablets: the app's own icon and name, as on a native app's welcome screen */}
+        <div className="auth-app-icon auth-rise" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+            <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
+          </svg>
+        </div>
+        <p className="auth-app-name auth-rise d1">Jollof Pages</p>
+
+        <Link href="/" className="auth-brand auth-rise inline-flex items-center gap-2.5 self-start text-lg font-semibold tracking-tight">
           <span className="grid size-9 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
             <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
@@ -41,14 +50,14 @@ export function AuthShell({
           Jollof Pages
         </Link>
 
-        <div className="mt-8 max-w-2xl lg:mt-auto">
+        <div className="auth-copy mt-8 max-w-2xl lg:mt-auto">
           <h2 className="auth-rise d1 wide text-[clamp(2rem,1.2rem+3.2vw,4rem)] font-semibold leading-[0.98] tracking-[-0.03em]">
             {title}{" "}
             <span className="auth-shine font-[family-name:var(--font-fraunces)] font-normal italic tracking-[-0.02em]">{accent}</span>
           </h2>
-          <p className="auth-rise d2 mt-5 max-w-md break-words text-[1.0625rem] leading-relaxed text-white/80 sm:text-lg">{lead}</p>
+          <p className="auth-lead auth-rise d2 mt-5 max-w-md break-words text-[1.0625rem] leading-relaxed text-white/80 sm:text-lg">{lead}</p>
           {points && (
-            <ul className="auth-rise d3 mt-6 flex flex-wrap gap-2">
+            <ul className="auth-points auth-rise d3 mt-6 flex flex-wrap gap-2">
               {points.map((p, i) => (
                 <li key={i} className="rounded-full bg-white/12 px-3.5 py-1.5 text-sm text-white/90 ring-1 ring-white/20 backdrop-blur">
                   {p}
@@ -61,7 +70,7 @@ export function AuthShell({
         <BookStage />
       </section>
 
-      <section className="flex items-center justify-center px-1 py-6 sm:px-6 lg:px-12 lg:py-10">
+      <section className="auth-pane flex items-center justify-center px-1 py-6 sm:px-6 lg:px-12 lg:py-10">
         <div className="w-full max-w-[28rem]">{children}</div>
       </section>
     </main>

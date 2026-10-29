@@ -83,6 +83,19 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/*
+ * App mode: on phones and tablets the studio and its sign-in pages run as an app. The media
+ * query matches APP_QUERY in src/lib/app-mode.ts; <html> carries .studio-app only on those pages,
+ * so the public website keeps its own phone layout.
+ */
+@custom-variant app {
+  @media (max-width: 1023.98px), (pointer: coarse) and (max-width: 1366px) {
+    &:where(.studio-app, .studio-app *) {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -345,4 +358,80 @@
 }
 .manuscript .ProseMirror .find-and-replace-result-current {
   background: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
+/* ---------- app mode (phones and tablets, see the `app` variant above) ---------- */
+:root {
+  /* the top app bar, which the status bar and browser bar take on too */
+  --app-bar: #ad3a17;
+  --app-bar-ink: #ffffff;
+  --app-tab-h: 3.5rem;
+}
+:root[data-theme="dark"] {
+  --app-bar: #1f1b19;
+  --app-bar-ink: #efe8e4;
+}
+
+@media (max-width: 1023.98px), (pointer: coarse) and (max-width: 1366px) {
+  html.studio-app,
+  html.studio-app body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  html.studio-app body {
+    -webkit-touch-callout: none;
+  }
+  html.studio-app body:has(.app-tabbar) {
+    padding-bottom: calc(var(--app-tab-h) + env(safe-area-inset-bottom));
+  }
+  /* 16px keeps iOS from zooming into a field; app chrome is never selected like web text */
+  html.studio-app :is(input, select, textarea):is(.text-sm, .text-xs, [class*="text-[1"]) {
+    font-size: 16px;
+  }
+  html.studio-app :is(.app-bar, .app-tabbar, nav, [role="tablist"]) {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  /* finger-sized controls */
+  html.studio-app [data-slot="button"] {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+  html.studio-app [data-slot="dropdown-item"] {
+    min-height: 3rem;
+    font-size: 1rem;
+    padding-block: 0.625rem;
+  }
+  /* menus open as action sheets from the bottom of the screen */
+  html.studio-app [data-radix-popper-content-wrapper]:has(> [data-slot="dropdown-content"]) {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    transform: none !important;
+    min-width: 0 !important;
+    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.4);
+  }
+  html.studio-app [data-slot="dropdown-content"] {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: 80dvh !important;
+    overflow-y: auto;
+    border-radius: 0;
+    border-inline: 0;
+    border-bottom: 0;
+    padding: 0.5rem 0.5rem calc(0.75rem + env(safe-area-inset-bottom));
+    animation: app-sheet-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* there is no hover on a touch screen, so hover tips stay out of the way */
+  html.studio-app [data-radix-popper-content-wrapper]:has(> [data-slot="tooltip-content"]) {
+    display: none !important;
+  }
+}
+
+@keyframes app-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }

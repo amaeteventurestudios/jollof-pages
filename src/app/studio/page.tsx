@@ -80,7 +80,7 @@ export default function StudioHome() {
             <h1 className="text-[clamp(1.75rem,3vw,2.5rem)] leading-tight tracking-[-0.02em]">Your books</h1>
             <p className="mt-1 text-soft">Draft, format and publish from one place.</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 app:grid app:w-full app:grid-cols-1 app:sm:flex">
             <Button variant="outline" onClick={() => setDialog("isbn")}>
               <BookPlus /> Add a published book
             </Button>
@@ -92,7 +92,7 @@ export default function StudioHome() {
                 <Library /> Box set
               </Button>
             )}
-            <Button onClick={() => setDialog("new")}>
+            <Button onClick={() => setDialog("new")} className="app:order-first app:h-12 app:text-base">
               <Plus /> New book
             </Button>
           </div>

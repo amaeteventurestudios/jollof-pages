@@ -5,7 +5,7 @@ import { useEditorState, type Editor } from "@tiptap/react";
 import { searchDocument, type SearchOptions } from "@tiptap/extension-find-and-replace";
 import { Fragment, type Node as PMNode, type Schema } from "@tiptap/pm/model";
 import { Transform } from "@tiptap/pm/transform";
-import { ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Sparkles, Type, X } from "lucide-react";
+import { BookOpenText, ChevronDown, ChevronUp, FileDiff, MessageSquare, Quote, Search, Sparkles, Type, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_EDITOR_SETTINGS, EDITOR_FONTS, type EditorSettings } from "@/lib/editor-settings";
@@ -19,7 +19,7 @@ import { CommentsPanel, type Comment } from "./comments-panel";
 import { AssistantPanel } from "./assistant-panel";
 import { cn } from "@/lib/utils";
 
-export type RailPanel = "assistant" | "settings" | "find" | "quotes" | "changes" | "comments";
+export type RailPanel = "assistant" | "settings" | "find" | "quotes" | "changes" | "comments" | "preview";
 
 export interface ChapterEdit {
   id: string;
@@ -46,6 +46,8 @@ interface RailProps {
   comments: Comment[] | null;
   activeComment: string | null;
   onActiveComment: (id: string | null) => void;
+  /** the page preview, which phones and tablets open from the toolbar instead of a side column */
+  preview?: React.ReactNode;
 }
 
 const TOOLS: { id: RailPanel; label: string; short: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -55,13 +57,14 @@ const TOOLS: { id: RailPanel; label: string; short: string; icon: React.Componen
   { id: "quotes", label: "Smart quotes", short: "Quotes", icon: Quote },
   { id: "changes", label: "Track changes", short: "Changes", icon: FileDiff },
   { id: "comments", label: "Comments", short: "Notes", icon: MessageSquare },
+  { id: "preview", label: "Preview", short: "Preview", icon: BookOpenText },
 ];
 
 /** Writing tools down the right of the editor, each opening a panel, as in Atticus. */
 export function ToolRail(props: RailProps) {
   const { open, onOpen, editor, role, comments, activeId } = props;
   // commenters cannot change the text, so the tools that do are left out
-  const tools = TOOLS.filter((t) => role !== "commenter" || t.id !== "quotes");
+  const tools = TOOLS.filter((t) => (role !== "commenter" || t.id !== "quotes") && (t.id !== "preview" || props.preview));
   const tool = tools.find((t) => t.id === open);
   const changes = useEditorState({ editor, selector: ({ editor: e }) => (e ? listChanges(e.state.doc).length : 0) }) ?? 0;
   const openComments = (comments ?? []).filter((c) => !c.resolved && c.chapter === activeId).length;
@@ -73,16 +76,27 @@ export function ToolRail(props: RailProps) {
           className={cn(
             "flex shrink-0 flex-col border-l border-border bg-card max-xl:absolute max-xl:inset-y-0 max-xl:right-14 max-xl:z-20 max-xl:shadow-xl",
             open === "assistant" ? "w-96 max-sm:w-[calc(100vw-3.5rem)]" : "w-80",
+            // phones and tablets: each tool is a full-screen sheet over the page
+            "app:fixed app:inset-0! app:z-50 app:w-full! app:border-0 app:shadow-none app:animate-in app:slide-in-from-bottom app:duration-300",
           )}
           aria-label={tool.label}
         >
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3 app:hidden">
             <h2 className="font-medium">{tool.label}</h2>
             <Button variant="ghost" size="icon-sm" aria-label={`Close ${tool.label.toLowerCase()}`} onClick={() => onOpen(null)}>
               <X />
             </Button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <div className="app-bar hidden shrink-0 bg-[var(--app-bar)] pt-[env(safe-area-inset-top)] text-[var(--app-bar-ink)] app:block">
+            <div className="relative flex h-14 items-center justify-center px-2">
+              <h2 className="text-[17px] font-semibold tracking-tight">{tool.label}</h2>
+              <button type="button" onClick={() => onOpen(null)} className="absolute right-2 h-11 px-3 text-[17px] font-semibold active:opacity-70">
+                Done
+              </button>
+            </div>
+          </div>
+          {open === "preview" && <div className="min-h-0 flex-1 overflow-hidden pb-[env(safe-area-inset-bottom)]">{props.preview}</div>}
+          <div className={cn("min-h-0 flex-1 overflow-y-auto p-4 app:pb-[calc(1rem+env(safe-area-inset-bottom))]", open === "preview" && "hidden")}>
             {open === "assistant" && <AssistantPanel editor={editor} bookId={props.bookId} chapterId={activeId} role={role} />}
             {open === "settings" && <SettingsPanel settings={props.settings} onChange={props.onSettings} />}
             {open === "find" && <FindPanel {...props} />}
@@ -105,7 +119,10 @@ export function ToolRail(props: RailProps) {
           </div>
         </aside>
       )}
-      <nav aria-label="Writing tools" className="flex w-14 shrink-0 flex-col items-center gap-1 border-l border-border bg-card py-2">
+      <nav
+        aria-label="Writing tools"
+        className="flex w-14 shrink-0 flex-col items-center gap-1 border-l border-border bg-card py-2 app:fixed app:inset-x-0 app:bottom-0 app:z-30 app:w-auto app:flex-row app:gap-0 app:overflow-x-auto app:border-t app:border-l-0 app:py-0 app:pb-[env(safe-area-inset-bottom)]"
+      >
         {tools.map((t) => (
           <button
             key={t.id}
@@ -116,11 +133,13 @@ export function ToolRail(props: RailProps) {
             onClick={() => onOpen(open === t.id ? null : t.id)}
             className={cn(
               "relative flex w-12 flex-col items-center gap-0.5 rounded-md py-1.5 text-ink-2 transition hover:bg-paper-2 hover:text-ink",
+              "app:h-[var(--app-tab-h)] app:min-w-14 app:flex-1 app:justify-center app:gap-1 app:rounded-none app:py-0",
+              t.id === "preview" && "hidden app:flex",
               open === t.id && "bg-primary-soft text-primary hover:bg-primary-soft hover:text-primary",
             )}
           >
             <t.icon className="size-[18px]" />
-            <span className="text-[10.5px] leading-none">{t.short}</span>
+            <span className="text-[10.5px] leading-none app:text-[11px] app:font-medium">{t.short}</span>
             {!!badge[t.id] && (
               <span className="tabular absolute top-0 right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-none font-semibold text-primary-foreground">
                 {badge[t.id]}
