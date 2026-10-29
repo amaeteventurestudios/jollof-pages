@@ -110,6 +110,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   }
   const theme = themeFor(bookFormat(book));
   const blockCss = editorBlockCss(theme);
+  const previewCss = editorBlockCss(theme, ".jp-preview .ProseMirror");
   setEditorBookStyles(theme);
 
   // autosave: one pending content save at a time, flushed when switching chapters
@@ -510,6 +511,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             readOnly={role === "commenter"}
             onCommentClick={openComment}
             onTool={setRail}
+            previewCss={previewCss}
           />
         )}
       </section>

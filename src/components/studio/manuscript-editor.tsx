@@ -36,14 +36,17 @@ import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
 import { ImagePickerDialog, assetUrl } from "./image-library";
 import type { DocNode } from "@/lib/doc/types";
-import { blockTemplate, boxDef, BOXES, type BlockDef, type BookBoxStyles } from "@/lib/blocks";
+import { BLOCKS, blockTemplate, boxDef, BOXES, type BlockDef, type BookBoxStyles } from "@/lib/blocks";
 import { BoxStylePanel, PresetPicker, boxLookAtCursor } from "./box-style-panel";
 import { BlockHandle } from "./block-handle";
 import { SelectionToolbar } from "./selection-toolbar";
 import { EditorContextMenu, type EditorOpen, type EditorTool } from "./context-menu";
 import { AiReview } from "./ai-review";
+import { SlashMenu, insertSaved } from "./slash-menu";
 import { ORNAMENTS } from "@/lib/ornaments";
 import { EmojiDialog, InsertBlockDialog } from "./insert-block";
+
+const BLOCKS_BY_ID = new Map(BLOCKS.map((b) => [b.id, b]));
 
 interface Props {
   chapterId: string;
@@ -76,6 +79,8 @@ interface Props {
   onBookStyles?: (next: BookBoxStyles) => void;
   /** opens a panel of the tool rail (the menus' Comment and AI items) */
   onTool?: (t: EditorTool) => void;
+  /** the book's block styles scoped to .jp-preview, for the Insert menu's previews */
+  previewCss?: string;
 }
 
 /** Calls back when a menu asks the editor to open one of its dialogs. */
@@ -92,7 +97,7 @@ function useEditorOpen(editor: Editor, on: (what: EditorOpen) => void) {
   }, [editor]);
 }
 
-export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss, accent, book, onBookStyles, onTool }: Props) {
+export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss, accent, book, onBookStyles, onTool, previewCss }: Props) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -131,7 +136,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {blockCss && <style>{blockCss}</style>}
-      {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} />}
+      {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} previewCss={previewCss} fontFamily={fontFamily} />}
       {editor && !readOnly && <BlockBar editor={editor} bookId={bookId} accent={accent ?? "#b0412e"} book={book ?? {}} onBookStyles={onBookStyles} />}
       {live && (live.problem || !live.synced) && (
         <p role="status" className="border-b border-border bg-paper-2 px-4 py-1.5 text-[13px] text-ink-2">
@@ -163,6 +168,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
               <BlockHandle editor={editor} />
               <SelectionToolbar editor={editor} onTool={onTool} />
               <AiReview editor={editor} bookId={bookId} chapterId={chapterId} onTool={onTool} />
+              <SlashMenu editor={editor} />
             </>
           ) : (
             <EditorContent editor={editor} />
@@ -193,7 +199,7 @@ function ToolButton({ on, active, label, children, disabled }: { on: () => void;
   );
 }
 
-function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
+function Toolbar({ editor, bookId, previewCss, fontFamily }: { editor: Editor; bookId: string; previewCss?: string; fontFamily?: string }) {
   const s = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -240,6 +246,21 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
     };
     dom.addEventListener("keydown", onKey);
     return () => dom.removeEventListener("keydown", onKey);
+  }, [editor]);
+
+  // slash commands insert through the same path as the Insert menu
+  const pickRef = useRef<(b: BlockDef) => void>(() => undefined);
+  useEffect(() => {
+    pickRef.current = pick;
+  });
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const h = (e: Event) => {
+      const b = BLOCKS_BY_ID.get((e as CustomEvent<string>).detail);
+      if (b) pickRef.current(b);
+    };
+    dom.addEventListener("jp-pick", h);
+    return () => dom.removeEventListener("jp-pick", h);
   }, [editor]);
 
   function pick(b: BlockDef) {
@@ -414,7 +435,14 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
             .run()
         }
       />
-      <InsertBlockDialog open={inserting} onOpenChange={setInserting} onPick={pick} />
+      <InsertBlockDialog
+        open={inserting}
+        onOpenChange={setInserting}
+        onPick={pick}
+        onPickSaved={(b) => insertSaved(editor, b)}
+        previewCss={previewCss}
+        fontFamily={fontFamily}
+      />
       <EmojiDialog open={emoji} onOpenChange={setEmoji} onPick={(e) => editor.chain().focus().insertContent(e).run()} />
     </div>
   );

@@ -38,8 +38,11 @@ import {
   Feather,
   GraduationCap,
   Shapes,
+  BookmarkPlus,
 } from "lucide-react";
 import { nameOf } from "./block-handle";
+import { useBlockLibrary } from "./block-library";
+import { PromptDialog } from "./prompt-dialog";
 import { runAi } from "./ai-review";
 import { AI_ACTIONS, AI_GROUPS, type AiGroup } from "@/lib/ai-actions";
 import { BOXES } from "@/lib/blocks";
@@ -98,6 +101,8 @@ interface Ctx {
 export function EditorContextMenu({ editor, onTool, children }: { editor: Editor; onTool?: (t: EditorTool) => void; children: React.ReactNode }) {
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [note, setNote] = useState("");
+  const lib = useBlockLibrary();
+  const [saving, setSaving] = useState<Block | null>(null);
   // the selection before a right-button press: on a Mac the press selects the word under the pointer
   const before = useRef<{ from: number; to: number } | null>(null);
 
@@ -312,6 +317,7 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
                 </Sub>
               )}
               <Item icon={CopyPlus} label="Duplicate" on={blockOps.duplicate} />
+              <Item icon={BookmarkPlus} label="Save as a reusable block…" on={() => setSaving(b)} />
               {!!b.node.textContent && <Item icon={Copy} label="Copy its text" on={blockOps.copy} />}
               <Item icon={ArrowUp} label="Move up" disabled={index === 0} on={() => blockOps.move(-1)} />
               <Item icon={ArrowDown} label="Move down" disabled={index >= siblings - 1} on={() => blockOps.move(1)} />
@@ -331,6 +337,21 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
           )}
         </CM.Content>
       </CM.Portal>
+      <PromptDialog
+        open={!!saving}
+        title="Save as a reusable block"
+        label="Name"
+        placeholder="e.g. Chapter checklist"
+        initial={saving ? nameOf(saving.node) : ""}
+        onClose={() => setSaving(null)}
+        onSubmit={(v) => {
+          if (!saving || !v.trim()) return;
+          lib.saveBlock(v.trim(), saving.node.toJSON()).then(
+            () => flash("Saved. Find it under My blocks in Insert, or type / and its name."),
+            () => flash("Could not save the block"),
+          );
+        }}
+      />
       {note && (
         <p role="status" className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md bg-ink px-3 py-2 text-sm text-paper shadow-lg">
           {note}

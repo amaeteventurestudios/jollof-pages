@@ -18,6 +18,9 @@ export const WHATS_NEW: NewsItem[] = [
       "Select words for a small toolbar with bold, italic, headings, links, comments and AI.",
       "Right-click anywhere in a chapter for cut, copy, formatting, notes, inserts and block tools. Shift + right-click still opens your browser's menu.",
       "What's new, keyboard shortcuts, a tour, help and bug reports now sit at the bottom of the tool rail.",
+      "AI tools in the right-click menu for writing, fiction and teaching. Every suggestion shows what changed, and nothing goes in until you accept it.",
+      "Insert blocks by what you want to do, with previews in your book's style. Type / on the page to insert by name or plain words.",
+      "Star favourite blocks, see the ones you used last, and save any block to reuse in all your books.",
     ],
   },
   {
@@ -65,6 +68,8 @@ export const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
       ["Mod+Z", "Undo"],
       ["Mod+Shift+Z", "Redo"],
       ["Mod+A", "Select all"],
+      ["/", "Insert a block by name"],
+      ["Mod+Enter", "Accept an AI suggestion"],
       ["Shift+Right-click", "Your browser's own menu (spelling)"],
     ],
   },
