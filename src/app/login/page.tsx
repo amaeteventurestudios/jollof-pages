@@ -3,9 +3,8 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AuthHeading, AuthShell } from "@/components/auth/auth-shell";
+import { GoogleButton, needsSite } from "@/components/auth/google-button";
 import { pb, errorMessage } from "@/lib/pb";
 
 function LoginForm() {
@@ -19,68 +18,74 @@ function LoginForm() {
   const target = next && /^\/(studio|invite)(\/|$)/.test(next) ? next : "/studio";
 
   return (
-    <form
-      className="grid gap-5"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setError("");
-        try {
-          await pb().collection("users").authWithPassword(email, password);
-          router.replace(target);
-        } catch (err) {
-          const msg = errorMessage(err);
-          setError(/failed to authenticate/i.test(msg) ? "That email and password do not match." : `Could not sign in: ${msg}`);
-          setBusy(false);
-        }
-      }}
-    >
-      <div className="grid gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 text-base" />
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 text-base" />
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <Button type="submit" size="lg" disabled={busy}>
-        {busy ? "Signing in…" : "Open the studio"}
-      </Button>
-    </form>
+    <div className="auth-card p-6 sm:p-9">
+      <AuthHeading title="Welcome back" sub="Sign in to pick up where you left off." />
+      <GoogleButton
+        onError={setError}
+        onSignedIn={async () => {
+          // a brand-new Google account still has to choose its pen name and website
+          router.replace((await needsSite()) ? "/signup?google=1" : target);
+        }}
+      />
+      <form
+        className="grid gap-5"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          try {
+            await pb().collection("users").authWithPassword(email, password);
+            router.replace(target);
+          } catch (err) {
+            const msg = errorMessage(err);
+            setError(/failed to authenticate/i.test(msg) ? "That email and password do not match." : `Could not sign in: ${msg}`);
+            setBusy(false);
+          }
+        }}
+      >
+        <label className="auth-rise d3 grid gap-2">
+          <span className="text-sm font-medium">Email</span>
+          <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-field" />
+        </label>
+        <label className="auth-rise d3 grid gap-2">
+          <span className="text-sm font-medium">Password</span>
+          <input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" className="auth-field" />
+        </label>
+        {error && (
+          <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={busy} className="auth-go auth-rise d4 mt-1">
+          {busy ? "Signing in…" : "Open the studio"}
+          {!busy && (
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          )}
+        </button>
+      </form>
+      <p className="auth-rise d5 mt-7 text-center text-sm text-muted-foreground">
+        New to Jollof Pages?{" "}
+        <Link href="/signup" className="font-semibold text-primary underline-offset-4 hover:underline">
+          Create your studio
+        </Link>
+      </p>
+    </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <main className="grid min-h-screen bg-paper md:grid-cols-2">
-      <section className="flex flex-col justify-between bg-[#2b2622] p-8 text-[#ebe5e3] md:p-12">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          Jollof Pages
-        </Link>
-        <div className="max-w-md py-16">
-          <p className="text-[clamp(2rem,4vw,3.25rem)] leading-[1.02] tracking-[-0.02em]">Write it here. Publish it everywhere.</p>
-          <p className="mt-6 text-lg text-[#ebe5e3]/80">Your private studio for drafting, formatting for print and ebook, and publishing to your own author site.</p>
-        </div>
-        <p className="text-sm text-[#ebe5e3]/70">
-          New here?{" "}
-          <Link href="/signup" className="font-medium text-[#ebe5e3] underline underline-offset-4">
-            Create your studio
-          </Link>
-        </p>
-      </section>
-      <section className="flex items-center justify-center p-8">
-        <div className="w-full max-w-sm">
-          <h1 className="mb-8 text-3xl tracking-tight">Sign in</h1>
-          <Suspense>
-            <LoginForm />
-          </Suspense>
-        </div>
-      </section>
-    </main>
+    <AuthShell
+      title="Write it here."
+      accent="Publish it everywhere."
+      lead="Your private studio for drafting, formatting for print and ebook, and publishing to your own author site."
+      points={["Write", "Format for print and Kindle", "Publish your author site"]}
+    >
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+    </AuthShell>
   );
 }

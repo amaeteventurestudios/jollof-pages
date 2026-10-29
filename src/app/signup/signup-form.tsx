@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AuthHeading } from "@/components/auth/auth-shell";
+import { GoogleButton, needsSite } from "@/components/auth/google-button";
 import { pb } from "@/lib/pb";
 import { subdomainProblem, suggestSubdomain } from "@/lib/sites";
 
@@ -19,6 +18,8 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // signed in with Google: only the pen name and the website are left to choose
+  const [google, setGoogle] = useState<string | null>(null);
   const local = sub ? subdomainProblem(sub) : "";
   const subNote = local || (remote?.name === sub ? remote.problem || "available" : "");
 
@@ -33,68 +34,119 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
     return () => clearTimeout(t);
   }, [sub]);
 
+  // back from the sign-in page with a fresh Google account
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("google") && pb().authStore.isValid) void afterGoogle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function afterGoogle() {
+    if (!(await needsSite())) return router.replace("/studio");
+    const me = pb().authStore.record;
+    setGoogle(String(me?.email ?? ""));
+    setName((n) => n || String(me?.name ?? ""));
+  }
+
+  async function finish(res: Response) {
+    const body = (await res.json()) as { ok?: boolean; checkoutUrl?: string; error?: string };
+    if (!res.ok) throw new Error(body.error || "Could not create the account.");
+    return body;
+  }
+
   return (
-    <form
-      className="grid gap-5"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setError("");
-        try {
-          const res = await fetch("/api/accounts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, subdomain: sub }),
-          });
-          const body = (await res.json()) as { ok?: boolean; checkoutUrl?: string; error?: string };
-          if (!res.ok) throw new Error(body.error || "Could not create the account.");
-          await pb().collection("users").authWithPassword(email, password);
-          if (body.checkoutUrl) window.location.assign(body.checkoutUrl);
-          else router.replace("/studio");
-        } catch (err) {
-          setError(err instanceof Error ? err.message : String(err));
-          setBusy(false);
+    <>
+      <AuthHeading
+        title={google ? "Almost there" : "Create your studio"}
+        sub={
+          google ? (
+            <>
+              Signed in with Google as <strong className="text-foreground">{google}</strong>. Pick your pen name and your website.
+            </>
+          ) : (
+            "Start writing in minutes. Your author site comes with it."
+          )
         }
-      }}
-    >
-      <div className="grid gap-1.5">
-        <Label htmlFor="name">Author or pen name</Label>
-        <Input id="name" required maxLength={120} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className="h-11 text-base" />
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="sub">Your website</Label>
-        <div className="flex h-11 items-center rounded-md border border-input bg-card pr-3 focus-within:ring-2 focus-within:ring-ring">
-          <input
-            id="sub"
-            required
-            value={sub}
-            onChange={(e) => setTyped(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-            className="h-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
-            aria-describedby="sub-note"
-          />
-          <span className="text-base text-soft">.{root}</span>
+      />
+      {!google && <GoogleButton label="Sign up with Google" onError={setError} onSignedIn={afterGoogle} />}
+      <form
+        className="grid gap-5"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          try {
+            let body;
+            if (google) {
+              body = await finish(
+                await fetch("/api/accounts/google", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: pb().authStore.token },
+                  body: JSON.stringify({ name, subdomain: sub }),
+                }),
+              );
+            } else {
+              body = await finish(
+                await fetch("/api/accounts", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name, email, password, subdomain: sub }),
+                }),
+              );
+              await pb().collection("users").authWithPassword(email, password);
+            }
+            if (body.checkoutUrl) window.location.assign(body.checkoutUrl);
+            else router.replace("/studio");
+          } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
+            setBusy(false);
+          }
+        }}
+      >
+        <label className="auth-rise d3 grid gap-2">
+          <span className="text-sm font-medium">Author or pen name</span>
+          <input required maxLength={120} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tola Ekanem" className="auth-field" />
+        </label>
+        <div className="auth-rise d3 grid gap-2">
+          <label htmlFor="sub" className="text-sm font-medium">
+            Your website
+          </label>
+          <div className="auth-field flex items-center pr-4">
+            <input
+              id="sub"
+              required
+              value={sub}
+              onChange={(e) => setTyped(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              placeholder="yourname"
+              className="h-full min-w-0 flex-1 bg-transparent text-base outline-none"
+              aria-describedby="sub-note"
+            />
+            <span className="text-base text-muted-foreground">.{root}</span>
+          </div>
+          <p id="sub-note" className={`min-h-5 text-sm ${subNote === "available" ? "text-ok" : "text-destructive"}`} role="status">
+            {subNote === "available" ? `${sub}.${root} is yours to take.` : subNote}
+          </p>
         </div>
-        <p id="sub-note" className={subNote === "available" ? "text-sm text-primary" : "text-sm text-destructive"} role="status">
-          {subNote === "available" ? `${sub}.${root} is yours to take.` : subNote}
-        </p>
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 text-base" />
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" required minLength={10} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 text-base" />
-        <p className="text-sm text-soft">At least 10 characters.</p>
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <Button type="submit" size="lg" disabled={busy || subNote !== "available"}>
-        {busy ? "Creating your studio…" : paid ? `Continue to payment (${price})` : "Create my studio"}
-      </Button>
-    </form>
+        {!google && (
+          <>
+            <label className="auth-rise d4 grid gap-2">
+              <span className="text-sm font-medium">Email</span>
+              <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="auth-field" />
+            </label>
+            <label className="auth-rise d4 grid gap-2">
+              <span className="text-sm font-medium">Password</span>
+              <input type="password" required minLength={10} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 10 characters" className="auth-field" />
+            </label>
+          </>
+        )}
+        {error && (
+          <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={busy || subNote !== "available"} className="auth-go auth-rise d5 mt-1">
+          {busy ? "Creating your studio…" : paid ? `Continue to payment (${price})` : "Create my studio"}
+        </button>
+      </form>
+    </>
   );
 }
