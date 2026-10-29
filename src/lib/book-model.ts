@@ -1,6 +1,7 @@
 import { elementKind, type ElementKind } from "./elements";
 import { capitalize, chapterLabel, numberWord, type InteriorTheme } from "./themes";
-import { chapterOptions, type Author, type Book, type Chapter, type ChapterOptions, type Section } from "./types";
+import { chapterOptions, type Author, type Book, type BookFormat, type Chapter, type ChapterOptions, type Section } from "./types";
+import { isLibraryBackground } from "./background-ref";
 import { collectImages } from "./doc/types";
 import { withoutSuggestions } from "./doc/suggestions";
 
@@ -92,13 +93,48 @@ export function chapterImage(c: Pick<Chapter, "options">): string | null {
   return o.image && !o.hideImage ? o.image : null;
 }
 
-/** Every image a set of chapters uses: manuscript images plus chapter opening images. */
-export function bookImages(chapters: Pick<Chapter, "content" | "options">[]): string[] {
+/** Every image a set of chapters uses: manuscript images, chapter opening images and uploaded backgrounds. */
+export function bookImages(chapters: Pick<Chapter, "content" | "options">[], format?: Pick<BookFormat, "pageBackground"> | null): string[] {
   const out = new Set<string>();
+  const uploaded = (v: string | undefined) => !!v && v !== "none" && !isLibraryBackground(v);
   for (const c of chapters) {
     for (const src of collectImages(c.content)) out.add(src);
     const img = chapterImage(c);
     if (img) out.add(img);
+    const bg = chapterOptions(c).background;
+    if (uploaded(bg)) out.add(bg!);
   }
+  if (uploaded(format?.pageBackground?.src)) out.add(format!.pageBackground!.src);
   return [...out];
+}
+
+export interface ResolvedBackground {
+  /** "bg:<library id>" or an image URL */
+  src: string;
+  strength: number;
+  /** only behind the element's first page (in ebooks: behind its heading) */
+  openerOnly: boolean;
+}
+
+/**
+ * The background behind one element: its own, else the book's, else the theme's opener background
+ * on chapter-like sections. "none" on an element turns the others off.
+ */
+export function elementBackground(e: BookElement, format: Pick<BookFormat, "pageBackground">, theme: InteriorTheme): ResolvedBackground | null {
+  const o = e.options;
+  if (o.background === "none") return null;
+  if (o.background) return { src: o.background, strength: clampStrength(o.backgroundStrength ?? 0.8), openerOnly: !!o.backgroundOpener };
+  const pb = format.pageBackground;
+  if (pb?.src) return { src: pb.src, strength: clampStrength(pb.strength), openerOnly: pb.where === "openers" };
+  if (theme.openerBackground && !e.kind.smart && !e.kind.hideTitle && !e.kind.layout) return { src: `bg:${theme.openerBackground}`, strength: 0.75, openerOnly: true };
+  return null;
+}
+
+function clampStrength(n: number | undefined): number {
+  return Math.min(1, Math.max(0.1, Number(n) || 0.8));
+}
+
+/** Elements meant for this edition: ebook-only sections are left out of print and the other way round. */
+export function forEdition(elements: BookElement[], edition: "ebook" | "print"): BookElement[] {
+  return elements.filter((e) => !e.options.only || e.options.only === edition);
 }

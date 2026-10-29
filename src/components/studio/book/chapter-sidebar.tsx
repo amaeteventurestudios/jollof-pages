@@ -4,10 +4,12 @@ import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, us
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ELEMENT_KINDS, SECTION_LABELS, elementKind } from "@/lib/elements";
 import { orderedElements } from "@/lib/book-model";
-import { getTheme } from "@/lib/themes";
+import { themeFor } from "@/lib/themes";
 import { bookFormat, type Chapter, type Section } from "@/lib/types";
 import { fmt } from "@/lib/progress";
 import { cn } from "@/lib/utils";
@@ -56,11 +58,12 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-  const theme = getTheme(bookFormat(ws.book).theme);
+  const theme = themeFor(bookFormat(ws.book));
   const labels = new Map(orderedElements(ws.chapters, theme).map((e) => [e.chapter.id, e.label]));
   const sections: Section[] = ["front", "body", "back"];
   // editors and commenters work inside the chapters; only the author and co-writers shape the book
   const fixed = ws.role !== "owner" && ws.role !== "cowriter";
+  const [adding, setAdding] = useState<Section | null>(null);
 
   async function onDragEnd(section: Section, e: DragEndEvent) {
     const { active, over } = e;
@@ -87,19 +90,14 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
                   <AiSuggest kind="outline" bookId={ws.book.id} align="left" label="Outline" onPick={(t) => onAdd("chapter", [t])} onPickAll={(all) => onAdd("chapter", all)} />
                 )}
                 {!fixed && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger aria-label={`Add to ${SECTION_LABELS[section]}`} className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink app:grid app:size-11 app:place-items-center">
-                      <Plus className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
-                      {ELEMENT_KINDS.filter((k) => k.section === section).map((k) => (
-                        <DropdownMenuItem key={k.id} onSelect={() => onAdd(k.id)} className="flex-col items-start gap-0">
-                          <span>{k.label}</span>
-                          <span className="text-[13px] text-soft">{k.hint}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <button
+                    type="button"
+                    onClick={() => setAdding(section)}
+                    aria-label={`Add to ${SECTION_LABELS[section]}`}
+                    className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink app:grid app:size-11 app:place-items-center"
+                  >
+                    <Plus className="size-4" />
+                  </button>
                 )}
               </div>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => onDragEnd(section, e)}>
@@ -126,9 +124,75 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
             <Plus className="size-4.5" />
             Add new chapter
           </button>
-          <p className="mt-1.5 text-center text-xs text-soft">Other pages, like a foreword or glossary, are under the + by each section.</p>
+          <button type="button" onClick={() => setAdding("front")} className="mt-1.5 block w-full text-center text-xs text-soft underline-offset-2 hover:text-primary hover:underline">
+            {ELEMENT_KINDS.length} kinds of page: prologue, map, recipe, glossary… Add one
+          </button>
         </div>
       )}
+      <SectionPicker
+        open={adding !== null}
+        section={adding ?? "front"}
+        onSection={setAdding}
+        onClose={() => setAdding(null)}
+        onPick={(id) => {
+          setAdding(null);
+          onAdd(id);
+        }}
+      />
     </div>
+  );
+}
+
+/** Every kind of page a book can have, by part of the book, searchable. */
+function SectionPicker({ open, section, onSection, onClose, onPick }: { open: boolean; section: Section; onSection: (s: Section) => void; onClose: () => void; onPick: (kind: string) => void }) {
+  const [q, setQ] = useState("");
+  const shown = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return ELEMENT_KINDS.filter((k) => (s ? `${k.label} ${k.hint}`.toLowerCase().includes(s) : k.section === section));
+  }, [q, section]);
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) {
+          setQ("");
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="max-w-2xl grid-cols-1 gap-3 [&>*]:min-w-0">
+        <DialogTitle>Add a page</DialogTitle>
+        <DialogDescription>{ELEMENT_KINDS.length} kinds of page. Each one is laid out for print and the ebook.</DialogDescription>
+        <label className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3">
+          <Search className="size-4 text-soft" aria-hidden />
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search: prologue, map, recipe…" className="min-w-0 flex-1 bg-transparent text-sm outline-none" aria-label="Search pages" />
+        </label>
+        {!q && (
+          <div className="flex gap-1.5" role="tablist" aria-label="Part of the book">
+            {(["front", "body", "back"] as Section[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                role="tab"
+                aria-selected={section === s}
+                onClick={() => onSection(s)}
+                className={cn("rounded-full border px-3 py-1 text-[13px]", section === s ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary")}
+              >
+                {SECTION_LABELS[s]} · {ELEMENT_KINDS.filter((k) => k.section === s).length}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="grid max-h-[55vh] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
+          {shown.map((k) => (
+            <button key={k.id} type="button" onClick={() => onPick(k.id)} className="rounded-lg border border-border bg-card p-3 text-left transition hover:border-primary hover:shadow-sm">
+              <span className="block text-sm font-medium">{k.label}</span>
+              <span className="block text-[12.5px] leading-snug text-soft">{k.hint}</span>
+            </button>
+          ))}
+          {!shown.length && <p className="col-span-2 py-6 text-center text-sm text-soft">No page matches “{q}”.</p>}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

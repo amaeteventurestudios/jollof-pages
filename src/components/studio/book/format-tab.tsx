@@ -1,7 +1,13 @@
 "use client";
 
-import { coverGeometry, estimatePages, HARDCOVER, HARDCOVER_TRIMS, hardcoverTrim, inches, maxPages, minPages, PAPER_LABELS, pageGeometry, TRIM_SIZES, type Binding, type PaperType } from "@/lib/kdp";
-import { getTheme, THEMES, THEME_FONTS_HREF } from "@/lib/themes";
+import { BLEED, coverGeometry, estimatePages, HARDCOVER, HARDCOVER_TRIMS, hardcoverTrim, inches, maxPages, minOutside, minPages, PAPER_LABELS, pageGeometry, TRIM_SIZES, type Binding, type PaperType } from "@/lib/kdp";
+import { useState } from "react";
+import { getTheme, themeFor, THEME_FONTS_HREFS, type InteriorTheme, type ThemeCustom } from "@/lib/themes";
+import { FONTS, type FontRole } from "@/lib/fonts";
+import { ImagePickerDialog, assetUrl } from "@/components/studio/image-library";
+import { BackgroundPicker, DropCapPicker, OrnamentPicker, ThemeGallery, ThemeSwatch } from "./design-pickers";
+import { BACKGROUNDS } from "@/lib/backgrounds";
+import type { CustomMargins, PageBackground } from "@/lib/types";
 import { bookFormat, printEdition, type BookFormat } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/progress";
@@ -31,65 +37,227 @@ export function FormatTab({ ws }: { ws: Workspace }) {
   const f = bookFormat(ws.book);
   const set = (patch: Partial<BookFormat>) => ws.saveBook({ format: { ...f, ...patch } });
   const { pages, estimated } = usePageCount(ws);
-  const g = pageGeometry(f.trim, pages, f.bleed);
+  const g = pageGeometry(f.trim, pages, f.bleed, "paperback", f.margins);
   const cover = coverGeometry(f.trim, pages, f.paper);
   const max = maxPages(g.trim, f.paper);
-  const theme = getTheme(f.theme);
+  const theme = themeFor(f);
+  const custom = f.custom;
+  const setCustom = (patch: ThemeCustom) => set({ custom: { ...(f.custom ?? {}), ...patch } });
+  const bg = f.pageBackground?.src ? f.pageBackground : null;
+  const setBackground = (patch: Partial<PageBackground> | null) =>
+    set({ pageBackground: patch === null ? undefined : { src: "", strength: 0.7, where: "openers", ...(f.pageBackground ?? {}), ...patch } });
+  const [pickingBg, setPickingBg] = useState(false);
   const hard = usePageCount(ws, "hardcover");
   const hc = printEdition(f, "hardcover");
-  const hg = pageGeometry(hc.trim, hard.pages, f.bleed, "hardcover");
+  const hg = pageGeometry(hc.trim, hard.pages, f.bleed, "hardcover", f.margins);
   const hcover = coverGeometry(hc.trim, hard.pages, hc.paper, "hardcover");
   const sameTrim = hc.trim === f.trim;
+  const units = f.units ?? "in";
+  const minOut = minOutside(f.bleed);
+  const bleedAdd = f.bleed ? BLEED : 0;
+  const ga = pageGeometry(f.trim, pages, f.bleed);
+  const setMargin = (patch: Partial<CustomMargins>) => {
+    const next: CustomMargins = { ...(f.margins ?? {}), ...patch };
+    for (const k of Object.keys(next) as (keyof CustomMargins)[]) if (next[k] === undefined) delete next[k];
+    set({ margins: Object.keys(next).length ? next : undefined });
+  };
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-8 sm:px-8 lg:grid-cols-[1fr_22rem]">
-      <link rel="stylesheet" href={THEME_FONTS_HREF} />
+      {THEME_FONTS_HREFS.map((href) => (
+        <link key={href} rel="stylesheet" href={href} />
+      ))}
       <div className="grid gap-10">
         <section>
           <h2 className="text-lg font-medium">Interior theme</h2>
-          <p className="mt-1 text-sm text-soft">One theme styles the print PDF, the ebook and the preview.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="radiogroup" aria-label="Interior theme">
-            {THEMES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="radio"
-                aria-checked={t.id === f.theme}
-                onClick={() => set({ theme: t.id })}
-                className={cn("rounded-md bg-card p-4 text-left ring-2 ring-transparent transition hover:ring-paper-3", t.id === f.theme && "ring-primary hover:ring-primary")}
-              >
-                <span className="block text-[13px] text-soft">{t.name}</span>
-                <span className="mt-3 block" style={{ fontFamily: t.headingCss, textAlign: t.headingAlign }}>
-                  <span className="block text-[12px] tracking-[0.12em] uppercase" style={{ color: t.accent }}>
-                    {t.chapterLabel === "word" ? "Chapter One" : "1"}
-                  </span>
-                  <span className="block text-xl leading-tight" style={{ fontStyle: t.headingItalic ? "italic" : "normal", fontWeight: t.headingWeight }}>
-                    Know your reader
-                  </span>
-                </span>
-                <span className="mt-3 block text-[14px] leading-snug text-ink-2" style={{ fontFamily: t.bodyCss }}>
-                  Every book begins as a promise to a particular reader.
-                </span>
-                <span className="mt-3 block text-[13px] text-soft">{t.description}</span>
+          <p className="mt-1 text-sm text-soft">93 themes. One theme styles the print PDF, the ebook and the preview. Pick one, then make it yours below.</p>
+          <div className="mt-4">
+            <ThemeGallery value={f.theme} onChange={(id) => set({ theme: id, custom: {} })} />
+          </div>
+        </section>
+
+        <section className="rounded-xl bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-medium">Make it yours</h2>
+              <p className="mt-1 text-sm text-soft">Change any part of {getTheme(f.theme).name}. Picking another theme starts fresh.</p>
+            </div>
+            {custom && Object.keys(custom).length > 0 && (
+              <button type="button" onClick={() => set({ custom: {} })} className="h-8 rounded-full border border-border px-3 text-[13px] hover:border-primary">
+                Reset to the theme
               </button>
-            ))}
+            )}
+          </div>
+          <div className="mt-5 grid gap-6 xl:grid-cols-[16rem_1fr]">
+            <div className="mx-auto w-56 xl:mx-0">
+              <ThemeSwatch t={theme} sample="Know your reader" />
+            </div>
+            <div className="grid gap-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-1.5 text-sm">
+                  <span className="font-medium">Accent colour</span>
+                  <span className="flex items-center gap-2">
+                    <input type="color" value={theme.accent} onChange={(e) => setCustom({ accent: e.target.value })} className="h-9 w-14 rounded border border-input bg-card" />
+                    <span className="tabular text-[13px] text-soft">{theme.accent}</span>
+                  </span>
+                </label>
+                <FontSelect label="Heading font" value={theme.headingFont} onChange={(v) => setCustom({ headingFont: v })} />
+                <FontSelect label="Body font" value={theme.bodyFont} onChange={(v) => setCustom({ bodyFont: v })} roles={["serif", "sans"]} />
+                <FontSelect label="Chapter label font" value={theme.labelFont ?? ""} onChange={(v) => setCustom({ labelFont: v })} allowSame />
+                <Choice
+                  label="Chapter label"
+                  value={theme.chapterLabel}
+                  onChange={(v) => setCustom({ chapterLabel: v as InteriorTheme["chapterLabel"] })}
+                  options={[
+                    ["word", "Chapter One"],
+                    ["number", "Number"],
+                    ["none", "No label"],
+                  ]}
+                />
+                <Choice
+                  label="Label style"
+                  value={theme.labelStyle}
+                  onChange={(v) => setCustom({ labelStyle: v as InteriorTheme["labelStyle"] })}
+                  options={[
+                    ["smallcaps", "Small capitals"],
+                    ["upper", "Spaced capitals"],
+                    ["large", "Large"],
+                  ]}
+                />
+                <Choice
+                  label="Title position"
+                  value={theme.headingAlign}
+                  onChange={(v) => setCustom({ headingAlign: v as InteriorTheme["headingAlign"] })}
+                  options={[
+                    ["center", "Centred"],
+                    ["left", "Left"],
+                  ]}
+                />
+                <Choice
+                  label="Title lettering"
+                  value={`${theme.headingCase}-${theme.headingItalic ? "i" : "r"}`}
+                  onChange={(v) => setCustom({ headingCase: v.startsWith("upper") ? "upper" : "normal", headingItalic: v.endsWith("-i") })}
+                  options={[
+                    ["normal-r", "Regular"],
+                    ["normal-i", "Italic"],
+                    ["upper-r", "Capitals"],
+                    ["upper-i", "Italic capitals"],
+                  ]}
+                />
+                <Choice
+                  label="Lines by the title"
+                  value={theme.headingRule}
+                  onChange={(v) => setCustom({ headingRule: v as InteriorTheme["headingRule"] })}
+                  options={[
+                    ["none", "None"],
+                    ["short", "Short flourish"],
+                    ["above", "Above"],
+                    ["below", "Below"],
+                    ["both", "Above and below"],
+                  ]}
+                />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">Drop cap</h3>
+                <div className="mt-2">
+                  <DropCapPicker theme={theme} value={theme.dropCap} onChange={(v) => setCustom({ dropCap: v })} />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">Scene-break ornament</h3>
+                <p className="text-[13px] text-soft">60 ornaments. Any single scene break can use a different one: click it in the editor.</p>
+                <div className="mt-2">
+                  <OrnamentPicker value={theme.ornament} accent={theme.accent} onChange={(id) => setCustom({ ornament: id })} />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         <section>
-          <h2 className="text-lg font-medium">Trim size</h2>
-          <p className="mt-1 text-sm text-soft">The finished size of the paperback. 6&quot; x 9&quot; is the most common for non-fiction.</p>
+          <h2 className="text-lg font-medium">Page background</h2>
+          <p className="mt-1 text-sm text-soft">
+            {BACKGROUNDS.length} backgrounds, or your own picture. The painted ones run across both facing pages. Each chapter can have its own too, from the chapter settings in Write. On black and white paper, backgrounds print in grey.
+          </p>
+          <div className="mt-4">
+            <BackgroundPicker value={bg?.src ?? ""} onChange={(v) => setBackground(v ? { src: v } : null)} onUpload={() => setPickingBg(true)} />
+          </div>
+          {bg?.src && (
+            <div className="mt-4 flex flex-wrap items-center gap-5">
+              <label className="flex items-center gap-3 text-sm">
+                <span className="font-medium">Strength</span>
+                <input type="range" min={10} max={100} step={5} value={Math.round(bg.strength * 100)} onChange={(e) => setBackground({ strength: Number(e.target.value) / 100 })} className="w-40 accent-[var(--primary)]" />
+                <span className="tabular w-10 text-soft">{Math.round(bg.strength * 100)}%</span>
+              </label>
+              <Choice
+                label="Where"
+                inline
+                value={bg.where}
+                onChange={(v) => setBackground({ where: v as "all" | "openers" })}
+                options={[
+                  ["openers", "First page of each chapter"],
+                  ["all", "Every page"],
+                ]}
+              />
+            </div>
+          )}
+          <ImagePickerDialog
+            open={pickingBg}
+            onOpenChange={setPickingBg}
+            bookId={ws.book.id}
+            title="Background picture"
+            description="Fills the page behind the text, faded so the words stay easy to read. Use a large picture."
+            onPick={(a) => setBackground({ src: assetUrl(a) })}
+          />
+        </section>
+
+        <section>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-medium">Trim size</h2>
+              <p className="mt-1 text-sm text-soft">The finished size of the paperback. Every size Amazon KDP prints is here; 6&quot; x 9&quot; is the most common for non-fiction.</p>
+            </div>
+            <div className="flex rounded-full border border-border p-0.5 text-[13px]" role="radiogroup" aria-label="Units">
+              {(["in", "mm"] as const).map((u) => (
+                <button key={u} type="button" role="radio" aria-checked={units === u} onClick={() => set({ units: u })} className={cn("h-7 rounded-full px-3", units === u ? "bg-primary text-primary-foreground" : "hover:text-primary")}>
+                  {u}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="mt-4 flex flex-wrap items-end gap-3" role="radiogroup" aria-label="Trim size">
             {TRIM_SIZES.map((t) => (
-              <button key={t.id} type="button" role="radio" aria-checked={t.id === f.trim} onClick={() => set({ trim: t.id })} className="group flex flex-col items-center gap-2">
+              <button key={t.id} type="button" role="radio" aria-checked={t.id === f.trim} onClick={() => set({ trim: t.id })} className="group flex w-[4.75rem] flex-col items-center gap-2">
                 <span
                   className={cn("block bg-card ring-2 ring-transparent transition group-hover:ring-paper-3", t.id === f.trim && "bg-primary-soft ring-primary group-hover:ring-primary")}
-                  style={{ width: t.width * 9, height: t.height * 9 }}
+                  style={{ width: t.width * 7, height: t.height * 7 }}
                   aria-hidden
                 />
-                <span className={cn("text-[13px] text-ink-2", t.id === f.trim && "font-medium text-primary")}>{t.label}</span>
+                <span className={cn("text-center text-[12.5px] leading-tight text-ink-2", t.id === f.trim && "font-medium text-primary")}>{trimLabel(t.width, t.height, units)}</span>
               </button>
             ))}
+          </div>
+          <div className="mt-8">
+            <h3 className="font-medium">Page margins</h3>
+            <p className="mt-1 text-sm text-soft">
+              Automatic margins grow with the page count and always pass KDP. Pick your own and they still never go below KDP&apos;s minimum for this book ({len(g.minimums.inside, units)} inside at {pages} pages, {len(minOut, units)} elsewhere).
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <MarginSelect label="Inside (gutter)" hint="Toward the binding, for text." min={g.minimums.inside} value={f.margins?.inside} auto={ga.margins.inside} units={units} onChange={(v) => setMargin({ inside: v })} />
+              <MarginSelect label="Outside" hint="Toward the page edge." min={minOut} value={f.margins?.outside} auto={ga.margins.outside - bleedAdd} units={units} onChange={(v) => setMargin({ outside: v })} />
+              <MarginSelect label="Top" min={minOut} value={f.margins?.top} auto={ga.margins.top - bleedAdd} units={units} onChange={(v) => setMargin({ top: v })} />
+              <MarginSelect label="Bottom" min={minOut} value={f.margins?.bottom} auto={ga.margins.bottom - bleedAdd} units={units} onChange={(v) => setMargin({ bottom: v })} />
+              <MarginSelect
+                label="Picture gutter"
+                hint="How far full-page pictures stay from the binding."
+                min={0}
+                value={f.margins?.pictureGutter}
+                auto={0}
+                autoLabel="None: into the gutter"
+                units={units}
+                onChange={(v) => setMargin({ pictureGutter: v })}
+              />
+            </div>
           </div>
         </section>
 
@@ -170,6 +338,20 @@ export function FormatTab({ ws }: { ws: Workspace }) {
             onChange={(v) => set({ chaptersOnRight: v })}
             label="Start chapters on a right-hand page"
             hint="Adds a blank page where needed, as most printed books do."
+          />
+          {!f.chaptersOnRight && (
+            <Toggle
+              checked={f.firstChapterOnRight !== false}
+              onChange={(v) => set({ firstChapterOnRight: v })}
+              label="Start the first chapter on a right-hand page"
+              hint="Only chapter one; the rest follow straight on. Adds a blank page if needed."
+            />
+          )}
+          <Toggle
+            checked={!f.countFrontMatter}
+            onChange={(v) => set({ countFrontMatter: !v })}
+            label="Begin counting pages at chapter one"
+            hint="Page 1 is the first chapter and the front matter gets i, ii, iii. Turn off to count the front matter in the same numbers."
           />
           <Toggle
             checked={f.dropCaps}
@@ -292,5 +474,83 @@ function PageDiagram({ width, height, m }: { width: number; height: number; m: {
       })}
       <rect x={W} y={0} width={6} height={H} fill="var(--ink)" opacity={0.15} />
     </svg>
+  );
+}
+
+function FontSelect({ label, value, onChange, roles, allowSame }: { label: string; value: string; onChange: (v: string) => void; roles?: FontRole[]; allowSame?: boolean }) {
+  const groups: [string, FontRole[]][] = [
+    ["Book faces", ["serif"]],
+    ["Clean faces", ["sans"]],
+    ["Display", ["display"]],
+    ["Script and handwriting", ["script", "hand"]],
+    ["Typewriter", ["mono"]],
+  ];
+  return (
+    <label className="grid min-w-0 gap-1.5 text-sm">
+      <span className="font-medium">{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="h-9 w-full min-w-0 rounded-md border border-input bg-card px-2" style={{ fontFamily: value ? `'${value}'` : undefined }}>
+        {allowSame && <option value="">Same as headings</option>}
+        {groups.map(([name, rs]) => {
+          const list = FONTS.filter((f) => rs.some((r) => r === f.role) && (!roles || roles.includes(f.role)));
+          return list.length ? (
+            <optgroup key={name} label={name}>
+              {list.map((f) => (
+                <option key={f.family} value={f.family}>
+                  {f.family}
+                </option>
+              ))}
+            </optgroup>
+          ) : null;
+        })}
+      </select>
+    </label>
+  );
+}
+
+function Choice({ label, value, onChange, options, inline }: { label: string; value: string; onChange: (v: string) => void; options: [string, string][]; inline?: boolean }) {
+  return (
+    <label className={cn("text-sm", inline ? "flex items-center gap-3" : "grid min-w-0 gap-1.5")}>
+      <span className="font-medium">{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className={cn("h-9 rounded-md border border-input bg-card px-2", !inline && "w-full min-w-0")}>
+        {options.map(([v, l]) => (
+          <option key={v} value={v}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+const MM = 25.4;
+
+function len(inches: number, units: "in" | "mm"): string {
+  return units === "mm" ? `${(inches * MM).toFixed(1).replace(/\.0$/, "")} mm` : `${+inches.toFixed(3)}"`;
+}
+
+function trimLabel(w: number, h: number, units: "in" | "mm"): string {
+  return units === "mm" ? `${Math.round(w * MM)} x ${Math.round(h * MM)} mm` : `${w}" x ${h}"`;
+}
+
+/** One margin: automatic, or a size from KDP's minimum up to 1.5 inches in eighths. */
+function MarginSelect({ label, hint, min, value, auto, autoLabel, units, onChange }: { label: string; hint?: string; min: number; value: number | undefined; auto: number; autoLabel?: string; units: "in" | "mm"; onChange: (v: number | undefined) => void }) {
+  const steps: number[] = [];
+  for (let v = Math.ceil(min * 8) / 8; v <= 1.5 + 1e-9; v += 0.125) steps.push(+v.toFixed(3));
+  if (min > 0 && !steps.includes(+min.toFixed(3))) steps.unshift(+min.toFixed(3));
+  const shown = value === undefined ? "" : String(Math.max(value, min));
+  return (
+    <label className="grid min-w-0 content-start gap-1.5 text-sm">
+      <span className="font-medium">{label}</span>
+      <select value={shown} onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))} className="h-9 w-full min-w-0 rounded-md border border-input bg-card px-2">
+        <option value="">{autoLabel ?? `Automatic (${len(auto, units)})`}</option>
+        {steps.map((v) => (
+          <option key={v} value={String(v)}>
+            {len(v, units)}
+            {Math.abs(v - min) < 1e-6 && min > 0 ? " (KDP minimum)" : ""}
+          </option>
+        ))}
+      </select>
+      {hint && <span className="text-[12.5px] text-soft">{hint}</span>}
+    </label>
   );
 }

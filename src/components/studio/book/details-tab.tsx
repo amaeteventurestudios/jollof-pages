@@ -10,6 +10,7 @@ import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { BOOK_STATUSES, type Author, type Book, type BookStatus } from "@/lib/types";
 import type { Workspace } from "./workspace";
 import { AiSuggest } from "../ai-suggest";
+import { toWebp } from "@/lib/webp";
 
 export function Field({ id, label, hint, action, children }: { id: string; label: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -233,7 +234,7 @@ function AuthorForm({ ws, authors, setAuthors, current }: { ws: Workspace; autho
     e.preventDefault();
     try {
       const data: Record<string, unknown> = { ...form };
-      if (photo) data.photo = photo;
+      if (photo) data.photo = await toWebp(photo);
       let rec: Author;
       if (current) rec = await pb().collection("authors").update<Author>(current.id, data);
       else {

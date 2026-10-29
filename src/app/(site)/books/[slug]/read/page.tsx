@@ -10,7 +10,7 @@ import { Pattern } from "@/components/site/patterns";
 import { orderedElements } from "@/lib/book-model";
 import { elementHtml } from "@/lib/render-element";
 import { themeCss } from "@/lib/theme-css";
-import { getTheme, THEME_FONTS_HREF } from "@/lib/themes";
+import { themeFor, THEME_FONTS_HREFS } from "@/lib/themes";
 import { bookFormat } from "@/lib/types";
 
 export const revalidate = 60;
@@ -31,7 +31,7 @@ export default async function ReadSample({ params }: { params: Params }) {
   const chapter = await getSampleChapter(book.id);
   const name = site?.publisher_name || "Jollof Pages";
   const f = bookFormat(book);
-  const theme = getTheme(f.theme);
+  const theme = themeFor(f);
   const links = (book.buy_links ?? []).filter((l) => l.url);
   let html = "";
   if (chapter) {
@@ -41,7 +41,9 @@ export default async function ReadSample({ params }: { params: Params }) {
   }
   return (
     <>
-      <link rel="stylesheet" href={THEME_FONTS_HREF} />
+      {THEME_FONTS_HREFS.map((href) => (
+        <link key={href} rel="stylesheet" href={href} />
+      ))}
       <style>{themeCss(theme, { scope: ".reader", dropCaps: f.dropCaps, lineHeight: 1.6 })}</style>
       {sub && <SiteDesignStyle design={site?.design} />}
       <SiteHeader name={name} author={!!sub} />

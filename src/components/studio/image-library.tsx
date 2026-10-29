@@ -8,6 +8,7 @@ import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { userId } from "@/lib/studio";
 import type { Book } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { toWebp } from "@/lib/webp";
 
 export interface Asset {
   id: string;
@@ -46,7 +47,7 @@ async function uploadAssets(files: File[], bookId?: string): Promise<Asset[]> {
         .create<Asset>({
           owner: userId(),
           book: bookId || "",
-          file,
+          file: await toWebp(file),
           alt: file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " "),
         }),
     );

@@ -1,0 +1,42 @@
+# Interior fonts (SIL OFL 1.1, Google Fonts): family|css2 axes|file prefix. Keep in step with src/lib/fonts.ts.
+EB Garamond|ital,wght@0,400;0,600;0,700;1,400;1,600|EBGaramond
+Literata|ital,wght@0,400;0,700;1,400|Literata
+Source Serif 4|ital,wght@0,400;0,700;1,400|SourceSerif4
+Crimson Pro|ital,wght@0,400;0,700;1,400|CrimsonPro
+Lora|ital,wght@0,400;0,700;1,400|Lora
+Libre Baskerville|ital,wght@0,400;0,700;1,400|LibreBaskerville
+Merriweather|ital,wght@0,400;0,700;1,400|Merriweather
+Alegreya|ital,wght@0,400;0,700;1,400|Alegreya
+Spectral|ital,wght@0,400;0,700;1,400|Spectral
+Cardo|ital,wght@0,400;0,700;1,400|Cardo
+Cormorant Garamond|ital,wght@0,400;0,700;1,400|CormorantGaramond
+Newsreader|ital,wght@0,400;0,700;1,400|Newsreader
+Gelasio|ital,wght@0,400;0,700;1,400|Gelasio
+PT Serif|ital,wght@0,400;0,700;1,400|PTSerif
+Vollkorn|ital,wght@0,400;0,700;1,400|Vollkorn
+Old Standard TT|ital,wght@0,400;0,700;1,400|OldStandardTT
+IM Fell English|ital@0;1|IMFellEnglish
+Andika|ital,wght@0,400;0,700;1,400|Andika
+Playfair Display|ital,wght@0,400;0,700;1,400|PlayfairDisplay
+Fraunces|ital,wght@0,400;0,700;1,400|Fraunces
+DM Serif Display|ital@0;1|DMSerifDisplay
+Bodoni Moda|ital,wght@0,400;0,700;1,400|BodoniModa
+Cinzel|wght@400;700|Cinzel
+Abril Fatface|wght@400|AbrilFatface
+Cormorant SC|wght@400;700|CormorantSC
+Inter|wght@400;600;700|Inter
+Montserrat|ital,wght@0,400;0,700;1,400|Montserrat
+Poppins|ital,wght@0,400;0,700;1,400|Poppins
+Josefin Sans|ital,wght@0,400;0,700;1,400|JosefinSans
+Raleway|ital,wght@0,400;0,700;1,400|Raleway
+Oswald|wght@400;700|Oswald
+Bebas Neue|wght@400|BebasNeue
+Space Grotesk|wght@400;700|SpaceGrotesk
+Nunito|ital,wght@0,400;0,700;1,400|Nunito
+Fredoka|wght@400;700|Fredoka
+Great Vibes|wght@400|GreatVibes
+Caveat|wght@400;700|Caveat
+Kalam|wght@400;700|Kalam
+Special Elite|wght@400|SpecialElite
+Courier Prime|ital,wght@0,400;0,700;1,400|CourierPrime
+Noto Emoji|wght@400|NotoEmoji

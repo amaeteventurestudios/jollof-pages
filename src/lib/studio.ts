@@ -5,7 +5,7 @@ import { bookImages, sortChapters, type ExportInput } from "./book-model";
 import { countWords, type DocNode } from "./doc/types";
 import { defaultContent, elementKind, STARTER_ELEMENTS } from "./elements";
 import { slugify, today } from "./slug";
-import { DEFAULT_FORMAT, DEFAULT_GOAL, type Author, type Book, type Chapter, type Section, type SiteSettings, type WritingLog } from "./types";
+import { bookFormat, DEFAULT_FORMAT, DEFAULT_GOAL, type Author, type Book, type Chapter, type Section, type SiteSettings, type WritingLog } from "./types";
 import type { BinaryAsset } from "./export/epub";
 
 export function userId(): string {
@@ -283,12 +283,14 @@ async function fetchBinary(url: string): Promise<BinaryAsset | null> {
   }
 }
 
+/** The book's pictures for the EPUB and Word files, with WebP turned into JPEG or PNG so every reader can show them. */
 export async function fetchImages(input: ExportInput): Promise<Map<string, BinaryAsset>> {
   const out = new Map<string, BinaryAsset>();
-  const srcs = bookImages(input.chapters);
+  const srcs = bookImages(input.chapters, bookFormat(input.book));
+  const { compatibleImage } = await import("./webp");
   for (const src of srcs) {
     const bin = await fetchBinary(src);
-    if (bin) out.set(src, bin);
+    if (bin) out.set(src, await compatibleImage(bin.bytes, bin.mediaType));
   }
   return out;
 }
@@ -296,7 +298,10 @@ export async function fetchImages(input: ExportInput): Promise<Map<string, Binar
 export async function fetchCover(book: Book): Promise<BinaryAsset | null> {
   if (!book.cover) return null;
   const { fileUrl } = await import("./pb");
-  return fetchBinary(fileUrl(book, book.cover));
+  const bin = await fetchBinary(fileUrl(book, book.cover));
+  if (!bin) return null;
+  const { compatibleImage } = await import("./webp");
+  return compatibleImage(bin.bytes, bin.mediaType);
 }
 
 export function download(bytes: Uint8Array | Blob, filename: string, type = "application/octet-stream") {

@@ -6,6 +6,9 @@ import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
+import HorizontalRule from "@tiptap/extension-horizontal-rule";
+import { TableKit } from "@tiptap/extension-table";
+import { boxDef } from "@/lib/blocks";
 import Typography from "@tiptap/extension-typography";
 
 /** Inline footnote. The note text lives in an attribute so exports can place it per format. */
@@ -16,13 +19,22 @@ export const Footnote = Node.create({
   atom: true,
   selectable: true,
   addAttributes() {
-    return { text: { default: "" } };
+    // endnote: collected at the end of the chapter instead of the foot of the page
+    return { text: { default: "" }, endnote: { default: false } };
   },
   parseHTML() {
-    return [{ tag: "span[data-footnote]", getAttrs: (el) => ({ text: (el as HTMLElement).getAttribute("data-text") ?? (el as HTMLElement).textContent ?? "" }) }];
+    return [
+      {
+        tag: "span[data-footnote]",
+        getAttrs: (el) => ({ text: (el as HTMLElement).getAttribute("data-text") ?? (el as HTMLElement).textContent ?? "", endnote: (el as HTMLElement).hasAttribute("data-endnote") }),
+      },
+    ];
   },
   renderHTML({ HTMLAttributes }) {
-    return ["span", mergeAttributes({ "data-footnote": "", "data-text": HTMLAttributes.text, class: "footnote-ref", title: HTMLAttributes.text })];
+    return [
+      "span",
+      mergeAttributes({ "data-footnote": "", "data-text": HTMLAttributes.text, class: HTMLAttributes.endnote ? "footnote-ref endnote-ref" : "footnote-ref", title: HTMLAttributes.text }, HTMLAttributes.endnote ? { "data-endnote": "" } : {}),
+    ];
   },
 });
 
@@ -37,6 +49,157 @@ export const Callout = Node.create({
   },
   renderHTML({ HTMLAttributes }) {
     return ["div", mergeAttributes(HTMLAttributes, { class: "callout" }), 0];
+  },
+});
+
+/**
+ * A styled block from the catalog in src/lib/blocks.ts: notes, tips, letters, diary entries, pull
+ * quotes, sidebars and so on. `label` overrides the catalog's heading; `src` is the picture for
+ * "text over a picture".
+ */
+export const Box = Node.create({
+  name: "box",
+  group: "block",
+  content: "block+",
+  defining: true,
+  addAttributes() {
+    return {
+      variant: { default: "note", parseHTML: (el) => el.getAttribute("data-variant") || "note" },
+      label: { default: null, parseHTML: (el) => el.getAttribute("data-label") },
+      src: { default: null, parseHTML: (el) => el.getAttribute("data-src") },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "div[data-box]" }];
+  },
+  renderHTML({ node }) {
+    const def = boxDef(node.attrs.variant);
+    const label = node.attrs.label ?? def.box?.label ?? "";
+    return [
+      "div",
+      {
+        "data-box": "",
+        "data-variant": def.id,
+        ...(node.attrs.label != null ? { "data-label": node.attrs.label } : {}),
+        ...(node.attrs.src ? { "data-src": node.attrs.src, style: `background-image: linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)), url("${String(node.attrs.src).replace(/"/g, "")}")` } : {}),
+        "data-shown-label": label,
+        class: `blk blk-${def.id}${def.box?.labelAtEnd ? " blk-label-end" : ""}`,
+      },
+      0,
+    ];
+  },
+});
+
+/** A text-message conversation. Each bubble is a chatMessage; `group` shows sender names. */
+export const Chat = Node.create({
+  name: "chat",
+  group: "block",
+  content: "chatMessage+",
+  defining: true,
+  addAttributes() {
+    return { group: { default: false, parseHTML: (el) => el.hasAttribute("data-group") } };
+  },
+  parseHTML() {
+    return [{ tag: "div[data-chat]" }];
+  },
+  renderHTML({ node }) {
+    return ["div", { "data-chat": "", ...(node.attrs.group ? { "data-group": "" } : {}), class: "chat" }, 0];
+  },
+});
+
+export const ChatMessage = Node.create({
+  name: "chatMessage",
+  content: "inline*",
+  defining: true,
+  addAttributes() {
+    return {
+      from: { default: "them", parseHTML: (el) => (el.getAttribute("data-from") === "me" ? "me" : "them") },
+      name: { default: "", parseHTML: (el) => el.getAttribute("data-name") ?? "" },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "p[data-msg]" }];
+  },
+  renderHTML({ node }) {
+    return ["p", { "data-msg": "", "data-from": node.attrs.from, "data-name": node.attrs.name, class: `msg msg-${node.attrs.from}` }, 0];
+  },
+});
+
+export const Columns = Node.create({
+  name: "columns",
+  group: "block",
+  content: "column{2,3}",
+  defining: true,
+  isolating: true,
+  addAttributes() {
+    return { count: { default: 2, parseHTML: (el) => Number(el.getAttribute("data-count")) || 2 } };
+  },
+  parseHTML() {
+    return [{ tag: "div[data-columns]" }];
+  },
+  renderHTML({ node }) {
+    return ["div", { "data-columns": "", "data-count": node.attrs.count, class: `cols cols-${node.attrs.count}` }, 0];
+  },
+});
+
+export const Column = Node.create({
+  name: "column",
+  content: "block+",
+  isolating: true,
+  parseHTML() {
+    return [{ tag: "div[data-column]" }];
+  },
+  renderHTML() {
+    return ["div", { "data-column": "", class: "col" }, 0];
+  },
+});
+
+export const PageBreak = Node.create({
+  name: "pageBreak",
+  group: "block",
+  atom: true,
+  selectable: true,
+  parseHTML() {
+    return [{ tag: "div[data-page-break]" }];
+  },
+  renderHTML() {
+    return ["div", { "data-page-break": "", class: "page-break" }];
+  },
+});
+
+export const Spacer = Node.create({
+  name: "spacer",
+  group: "block",
+  atom: true,
+  selectable: true,
+  addAttributes() {
+    return { size: { default: 2, parseHTML: (el) => Number(el.getAttribute("data-size")) || 2 } };
+  },
+  parseHTML() {
+    return [{ tag: "div[data-spacer]" }];
+  },
+  renderHTML({ node }) {
+    return ["div", { "data-spacer": "", "data-size": node.attrs.size, class: "spacer", style: `height: ${Number(node.attrs.size) * 1.5}em` }];
+  },
+});
+
+/** Scene break with an optional ornament of its own; empty means the theme's. */
+export const SceneBreak = HorizontalRule.extend({
+  addAttributes() {
+    return { ornament: { default: null, parseHTML: (el) => el.getAttribute("data-ornament") } };
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["hr", mergeAttributes(HTMLAttributes.ornament ? { "data-ornament": HTMLAttributes.ornament } : {})];
+  },
+});
+
+/** Images can sit left, right, full width or small. */
+export const BookImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      layout: { default: "center", parseHTML: (el) => el.getAttribute("data-layout") || "center", renderHTML: (a) => ({ "data-layout": a.layout }) },
+    };
   },
 });
 
@@ -73,6 +236,7 @@ export function manuscriptExtensions(placeholder = "Start writing…", o: { live
   return [
     StarterKit.configure({
       ...(o.live ? { undoRedo: false } : {}),
+      horizontalRule: false,
       heading: { levels: [2, 3, 4] },
       codeBlock: false,
       code: false,
@@ -81,10 +245,19 @@ export function manuscriptExtensions(placeholder = "Start writing…", o: { live
     Placeholder.configure({ placeholder }),
     CharacterCount,
     TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
-    Image.configure({ inline: false, allowBase64: false }),
+    BookImage.configure({ inline: false, allowBase64: false }),
+    SceneBreak,
     Typography,
     Footnote,
     Callout,
+    Box,
+    Chat,
+    ChatMessage,
+    Columns,
+    Column,
+    PageBreak,
+    Spacer,
+    TableKit.configure({ table: { resizable: false } }),
     SuggestionInsert,
     SuggestionDelete,
   ];

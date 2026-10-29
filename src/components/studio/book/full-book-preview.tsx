@@ -6,7 +6,7 @@ import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, X } from "lucide-
 import { elementHtml } from "@/lib/render-element";
 import { orderedElements } from "@/lib/book-model";
 import { themeCss } from "@/lib/theme-css";
-import { getTheme, THEME_FONTS_HREF } from "@/lib/themes";
+import { themeFor, THEME_FONTS_HREFS } from "@/lib/themes";
 import { getTrim, hardcoverTrim, pageGeometry, type Binding } from "@/lib/kdp";
 import { bookFormat, type Book, type Chapter } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -70,13 +70,13 @@ export function FullBookPreview({ book, chapters, startChapterId, onClose }: { b
   const [binding, setBinding] = useState<Binding>("paperback");
   const format = base;
   const editionTrim = binding === "hardcover" ? hardcoverTrim(base.hardcoverTrim || base.trim).id : base.trim;
-  const theme = getTheme(format.theme);
+  const theme = themeFor(format);
   const elements = orderedElements(chapters, theme).filter((e) => format.printToc || e.kind.id !== "contents");
   const htmls = elements.map((e) => elementHtml(e, { book, author: book.expand?.author ?? null, alsoBy: [] }, elements, theme));
   const css = themeCss(theme, { scope: ".jp-preview", dropCaps: format.dropCaps, lineHeight: format.lineHeight });
 
   const trim = getTrim(editionTrim);
-  const g = pageGeometry(editionTrim, (binding === "hardcover" ? book.hardcover_page_count : book.page_count) || 200, false, binding);
+  const g = pageGeometry(editionTrim, (binding === "hardcover" ? book.hardcover_page_count : book.page_count) || 200, false, binding, format.margins);
   const W = trim.width * PPI;
   const H = trim.height * PPI;
   const m = { top: g.margins.top * PPI, bottom: g.margins.bottom * PPI, inside: g.margins.inside * PPI, outside: g.margins.outside * PPI };
@@ -242,7 +242,9 @@ export function FullBookPreview({ book, chapters, startChapterId, onClose }: { b
 
   const body = (
     <div className="fixed inset-0 z-[70] flex flex-col bg-[#eceff5] text-ink dark:bg-[#15171c]" role="dialog" aria-modal="true" aria-label="Full book preview">
-      <link rel="stylesheet" href={THEME_FONTS_HREF} />
+      {THEME_FONTS_HREFS.map((href) => (
+        <link key={href} rel="stylesheet" href={href} />
+      ))}
       <style>{`${css}
 .jp-fbp-flow img { max-height: ${Math.floor(innerH * 0.9)}px; object-fit: contain; }
 .jp-fbp-flow figure, .jp-fbp-flow .chapter-head, .jp-fbp-flow img { break-inside: avoid; }

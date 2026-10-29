@@ -5,6 +5,8 @@ describe("KDP print rules", () => {
   it("offers the common non-fiction trims", () => {
     for (const id of ["5x8", "5.25x8", "5.5x8.5", "6x9", "8.5x11"]) expect(TRIM_SIZES.some((t) => t.id === id)).toBe(true);
     expect(getTrim("nope").id).toBe("6x9");
+    expect(TRIM_SIZES).toHaveLength(17);
+    for (const id of ["5.06x7.81", "6.69x9.61", "7.44x9.69", "7.5x9.25", "8x10", "8.27x11.69"]) expect(TRIM_SIZES.some((t) => t.id === id)).toBe(true);
   });
 
   it("widens the gutter with the page count", () => {

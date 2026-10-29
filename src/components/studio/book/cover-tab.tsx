@@ -17,6 +17,7 @@ import { slugify } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
+import { toWebp } from "@/lib/webp";
 
 function dataUrlToBlob(url: string): Blob {
   const [head, b64] = url.split(",");
@@ -150,7 +151,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
     try {
       const rec = await pb()
         .collection("assets")
-        .create({ owner: userId(), book: book.id, file, alt: side === "front" ? "Cover image" : "Back cover image" });
+        .create({ owner: userId(), book: book.id, file: await toWebp(file), alt: side === "front" ? "Cover image" : "Back cover image" });
       const url = fileUrl(rec, rec.file);
       update(side === "back" ? { backImageUrl: url } : { imageUrl: url, template: design.template === "framed" ? "art" : design.template });
     } catch (e) {

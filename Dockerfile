@@ -9,7 +9,7 @@ RUN npm ci
 FROM node:22-bookworm-slim AS tools
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates unzip xz-utils && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY scripts/setup-tools.sh scripts/setup-tools.sh
+COPY scripts/setup-tools.sh scripts/fonts.txt scripts/
 RUN bash scripts/setup-tools.sh && rm -rf pocketbase
 
 FROM node:22-bookworm-slim AS build
