@@ -17,6 +17,7 @@ import path from "node:path";
 import { chromium, type Browser } from "playwright";
 import { VIDEO_GUIDES } from "../../src/lib/video-guides";
 import { Director, OVERLAY_SCRIPT, Recorder, type Cue } from "./director";
+import { Narrator } from "./narrator";
 import { SCENES } from "./scenes";
 
 const ROOT = path.resolve(__dirname, "../..");
@@ -50,8 +51,8 @@ function vtt(cues: Cue[]) {
   return "WEBVTT\n\n" + cues.map((c, i) => `${i + 1}\n${ts(c.start)} --> ${ts(c.end)}\n${c.text}\n`).join("\n");
 }
 
-/** Turns timestamped screencast frames into an H.264 MP4 and a poster frame. */
-function encode(id: string, frames: { t: number; data: Buffer }[], t0: number, end: number, poster = 0.45) {
+/** Turns timestamped screencast frames into an H.264 MP4, with the voiceover if there is one, and a poster frame. */
+function encode(id: string, frames: { t: number; data: Buffer }[], t0: number, end: number, voice: { start: number; file: string }[], poster = 0.45) {
   const dir = mkdtempSync(path.join(tmpdir(), `jpv-${id}-`));
   try {
     const kept = frames.filter((f) => f.t >= t0 - 0.05);
@@ -65,7 +66,16 @@ function encode(id: string, frames: { t: number; data: Buffer }[], t0: number, e
     lines.push(`file 'f${String(kept.length - 1).padStart(5, "0")}.jpg'`);
     writeFileSync(path.join(dir, "list.txt"), lines.join("\n"));
     const mp4 = path.join(OUT, `${id}.mp4`);
-    execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(dir, "list.txt"), "-vf", "fps=30,scale=1920:-2:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-preset", "slow", "-crf", "27", "-movflags", "+faststart", mp4]);
+    // each spoken line is placed at the moment its caption appeared
+    const audio = voice.length
+      ? [
+          ...voice.flatMap((v) => ["-i", v.file]),
+          "-filter_complex",
+          voice.map((v, i) => `[${i + 1}:a]adelay=${Math.round(v.start * 1000)}:all=1[a${i}]`).join(";") + ";" + voice.map((_, i) => `[a${i}]`).join("") + `amix=inputs=${voice.length}:normalize=0,apad[aout]`,
+          "-map", "0:v", "-map", "[aout]", "-c:a", "aac", "-b:a", "96k", "-shortest",
+        ]
+      : [];
+    execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", path.join(dir, "list.txt"), ...audio, "-vf", "fps=30,scale=1920:-2:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-preset", "slow", "-crf", "27", "-movflags", "+faststart", mp4]);
     // the poster is a frame part way in, well after the title card
     execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", (end * poster).toFixed(2), "-i", mp4, "-frames:v", "1", "-vf", "scale=960:-2", "-q:v", "4", path.join(OUT, `${id}.jpg`)]);
   } finally {
@@ -86,6 +96,15 @@ async function main() {
   const reset = process.env.VIDEO_RESET;
   let storageState = reset ? undefined : await signIn(browser);
   const failed: string[] = [];
+  const narrator = Narrator.fromEnv();
+  if (!narrator) console.log("No KOKORO_DIR / VOICE_PYTHON: recording without a voiceover.");
+  else {
+    // speak every caption up front, so recording never waits on the voice
+    const lines = [...readFileSync(path.join(__dirname, "scenes.ts"), "utf8").matchAll(/d\.say\(\s*"((?:[^"\\]|\\.)*)"/g)].map((m) => JSON.parse(`"${m[1]}"`) as string);
+    for (const g of guides) lines.push(`${g.title}. ${g.summary}`);
+    for (const line of lines) await narrator.clip(line);
+    console.log(`Voiceover ready: ${lines.length} lines`);
+  }
 
   for (const guide of guides) {
     const scene = SCENES[guide.id];
@@ -102,7 +121,7 @@ async function main() {
     context.setDefaultTimeout(10000);
     const page = await context.newPage();
     const rec = new Recorder(page);
-    const d = new Director(page, rec, BASE);
+    const d = new Director(page, rec, BASE, narrator);
     try {
       await d.goto(scene.start);
       if (scene.setup) await scene.setup(d);
@@ -114,7 +133,7 @@ async function main() {
       d.finish();
       const end = rec.now();
       await rec.stop();
-      encode(guide.id, rec.frames, rec.t0, end, scene.poster);
+      encode(guide.id, rec.frames, rec.t0, end, d.voice, scene.poster);
       writeFileSync(path.join(OUT, `${guide.id}.vtt`), vtt(d.cues));
       lengths[guide.id] = Math.round(end);
       console.log(`✓ ${guide.id} (${Math.round(end)} s)`);
@@ -127,6 +146,7 @@ async function main() {
     await context.close();
   }
   await browser.close();
+  narrator?.close();
   writeFileSync(LENGTHS, JSON.stringify(Object.fromEntries(Object.entries(lengths).sort()), null, 2) + "\n");
   if (failed.length) {
     console.error(`Failed: ${failed.join(" ")} (screenshots in ${tmpdir()}/jpv-fail-*.png)`);
