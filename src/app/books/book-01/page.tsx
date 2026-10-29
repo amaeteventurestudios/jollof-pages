@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/lib/toast";
 import { MOCK_BOOKS, MOCK_SCENES, MOCK_CONTINUITY_FLAGS } from "@/lib/mock/jollof-data";
 import {
-  BookOpen, AlertTriangle, CheckCircle, Download, Edit,
+  BookOpen, AlertTriangle, CheckCircle, Download, Edit, Palette,
   ChevronRight, Flag, Shield, FileText, TrendingUp
 } from "lucide-react";
 
@@ -53,6 +53,9 @@ export default function BookDashboardPage() {
               <p className="text-sm text-jollof-subtext leading-relaxed">{book.summary}</p>
             </div>
             <div className="flex flex-col sm:flex-row xl:flex-col gap-2 shrink-0 w-full sm:w-auto">
+              <Link href="/books/book-01/cover" className="w-full sm:w-auto">
+                <Button variant="primary" icon={Palette} size="sm" className="w-full sm:w-auto justify-center">Design cover</Button>
+              </Link>
               <Button variant="outline" icon={Download} size="sm" className="w-full sm:w-auto justify-center" onClick={handleExport}>Export</Button>
               <Button variant="secondary" icon={Edit} size="sm" className="w-full sm:w-auto justify-center" onClick={() => setEditOpen(true)}>Edit</Button>
             </div>

@@ -97,3 +97,19 @@ body {
     background: radial-gradient(ellipse at 50% -20%, rgba(120, 53, 15, 0.25) 0%, transparent 70%);
   }
 }
+
+/* Jollof Studio cover designer, in Jollof Pages colours. */
+.jp-cover-editor .jx-root {
+  --jx-bg: #0a0800;
+  --jx-surface: #161209;
+  --jx-surface-2: #1c1608;
+  --jx-border: #2a1f08;
+  --jx-text: #fef3c7;
+  --jx-muted: #a8956b;
+  --jx-accent: #f97316;
+  --jx-accent-hover: #ea580c;
+  --jx-accent-soft: #3d2e0e;
+  --jx-accent-fg: #0a0800;
+  --jx-canvas: #0f0d08;
+  --jx-focus: #f59e0b;
+}
