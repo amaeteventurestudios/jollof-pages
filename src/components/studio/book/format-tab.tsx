@@ -72,7 +72,7 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           <h2 className="text-lg font-medium">Interior theme</h2>
           <p className="mt-1 text-sm text-soft">93 themes. One theme styles the print PDF, the ebook and the preview. Pick one, then make it yours below.</p>
           <div className="mt-4">
-            <ThemeGallery value={f.theme} onChange={(id) => set({ theme: id, custom: {} })} />
+            <ThemeGallery value={f.theme} onChange={(id) => set({ theme: id, custom: { ...(f.custom?.boxes ? { boxes: f.custom.boxes } : {}), ...(f.custom?.boxPresets ? { boxPresets: f.custom.boxPresets } : {}) } })} />
           </div>
         </section>
 

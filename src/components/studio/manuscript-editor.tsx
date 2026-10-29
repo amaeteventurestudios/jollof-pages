@@ -22,6 +22,7 @@ import {
   Undo2,
   Plus,
   Smile,
+  Pencil,
 } from "lucide-react";
 import FindAndReplace from "@tiptap/extension-find-and-replace";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -35,7 +36,11 @@ import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
 import { ImagePickerDialog, assetUrl } from "./image-library";
 import type { DocNode } from "@/lib/doc/types";
-import { blockTemplate, BOXES, type BlockDef } from "@/lib/blocks";
+import { blockTemplate, boxDef, BOXES, type BlockDef, type BookBoxStyles } from "@/lib/blocks";
+import { BoxStylePanel, PresetPicker, boxLookAtCursor } from "./box-style-panel";
+import { BlockHandle } from "./block-handle";
+import { SelectionToolbar } from "./selection-toolbar";
+import { EditorContextMenu, type EditorOpen, type EditorTool } from "./context-menu";
 import { ORNAMENTS } from "@/lib/ornaments";
 import { EmojiDialog, InsertBlockDialog } from "./insert-block";
 
@@ -63,9 +68,30 @@ interface Props {
   onCommentClick?: (id: string) => void;
   /** theme styles for special blocks (theme-css editorBlockCss) */
   blockCss?: string;
+  /** the book's colour and its block styles, for the block style panel */
+  accent?: string;
+  book?: BookBoxStyles;
+  /** saves the book's block styles (defaults per kind and named presets) */
+  onBookStyles?: (next: BookBoxStyles) => void;
+  /** opens a panel of the tool rail (the menus' Comment and AI items) */
+  onTool?: (t: EditorTool) => void;
 }
 
-export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss }: Props) {
+/** Calls back when a menu asks the editor to open one of its dialogs. */
+function useEditorOpen(editor: Editor, on: (what: EditorOpen) => void) {
+  const ref = useRef(on);
+  useEffect(() => {
+    ref.current = on;
+  });
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const h = (e: Event) => ref.current((e as CustomEvent<EditorOpen>).detail);
+    dom.addEventListener("jp-open", h);
+    return () => dom.removeEventListener("jp-open", h);
+  }, [editor]);
+}
+
+export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss, accent, book, onBookStyles, onTool }: Props) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -105,7 +131,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
     <div className="flex min-h-0 flex-1 flex-col">
       {blockCss && <style>{blockCss}</style>}
       {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} />}
-      {editor && !readOnly && <BlockBar editor={editor} bookId={bookId} />}
+      {editor && !readOnly && <BlockBar editor={editor} bookId={bookId} accent={accent ?? "#b0412e"} book={book ?? {}} onBookStyles={onBookStyles} />}
       {live && (live.problem || !live.synced) && (
         <p role="status" className="border-b border-border bg-paper-2 px-4 py-1.5 text-[13px] text-ink-2">
           {live.problem || "Connecting to the shared copy of this chapter…"}
@@ -122,12 +148,23 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
         }}
       >
         <div
+          data-tour="manuscript"
           className="manuscript mx-auto max-w-[44rem] px-6 py-10 text-ink sm:px-10"
           data-para={settings.paragraphs}
           data-justify={settings.justified}
           style={{ fontFamily: editorFontCss(settings, fontFamily), fontSize: settings.size, lineHeight: settings.lineHeight }}
         >
-          <EditorContent editor={editor} />
+          {editor && !readOnly ? (
+            <>
+              <EditorContextMenu editor={editor} onTool={onTool}>
+                <EditorContent editor={editor} />
+              </EditorContextMenu>
+              <BlockHandle editor={editor} />
+              <SelectionToolbar editor={editor} onTool={onTool} />
+            </>
+          ) : (
+            <EditorContent editor={editor} />
+          )}
         </div>
       </div>
     </div>
@@ -181,6 +218,14 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
   const [imageLayout, setImageLayout] = useState("center");
   const [inserting, setInserting] = useState(false);
   const [emoji, setEmoji] = useState(false);
+  useEditorOpen(editor, (what) => {
+    if (what === "insert") setInserting(true);
+    else if (what === "emoji") setEmoji(true);
+    else if (what === "image") {
+      setImageLayout("center");
+      setPicking(true);
+    } else if (what === "link" || what === "footnote" || what === "endnote") setPrompt(what);
+  });
 
   // Ctrl+Shift+N (Cmd+Shift+N on a Mac) adds a footnote where the cursor is
   useEffect(() => {
@@ -230,6 +275,7 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setInserting(true)}
+          data-tour="insert"
           className="mr-1 inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
         >
           <Plus className="size-4" /> Insert
@@ -360,6 +406,8 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
           editor
             .chain()
             .focus()
+            // with words selected, the note goes after them rather than replacing them
+            .setTextSelection(editor.state.selection.to)
             .insertContent({ type: "footnote", attrs: { text: v, endnote: prompt === "endnote" } })
             .run()
         }
@@ -371,7 +419,19 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
 }
 
 /** Controls for the special block the cursor is in: bubble side, box style, table rows, picture layout, ornament. */
-function BlockBar({ editor, bookId }: { editor: Editor; bookId: string }) {
+function BlockBar({
+  editor,
+  bookId,
+  accent,
+  book,
+  onBookStyles,
+}: {
+  editor: Editor;
+  bookId: string;
+  accent: string;
+  book: BookBoxStyles;
+  onBookStyles?: (next: BookBoxStyles) => void;
+}) {
   const s = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -381,10 +441,15 @@ function BlockBar({ editor, bookId }: { editor: Editor; bookId: string }) {
       table: e.isActive("table"),
       image: e.isActive("image") ? (e.getAttributes("image") as { layout: string }) : null,
       hr: e.isActive("horizontalRule") ? (e.getAttributes("horizontalRule") as { ornament: string | null }) : null,
+      own: boxLookAtCursor(e),
     }),
   });
   const [naming, setNaming] = useState<null | "label" | "sender">(null);
+  const [styling, setStyling] = useState(false);
   const [picture, setPicture] = useState(false);
+  useEditorOpen(editor, (what) => {
+    if (what === "style") setStyling(true);
+  });
   if (!s.msg && !s.box && !s.table && !s.image && !s.hr) return null;
   const btn = "h-7 shrink-0 rounded border border-border bg-card px-2 text-[13px] hover:border-primary";
   const sel = "h-7 shrink-0 rounded border border-border bg-card px-1.5 text-[13px]";
@@ -439,9 +504,20 @@ function BlockBar({ editor, bookId }: { editor: Editor; bookId: string }) {
               {s.box.src ? "Change picture" : "Choose picture"}
             </button>
           )}
+          {s.own && boxDef(s.own.variant).id !== "overlay" && !boxDef(s.own.variant).box?.only && (
+            <>
+              <PresetPicker editor={editor} variant={s.own.variant} preset={s.own.preset} look={s.own.look} book={book} onBookStyles={onBookStyles} />
+              <button type="button" className={cn(btn, "inline-flex items-center gap-1", styling && "border-primary text-primary")} aria-expanded={styling} onClick={() => setStyling(!styling)}>
+                <Pencil className="size-3.5" aria-hidden /> Edit style
+              </button>
+            </>
+          )}
           <button type="button" className={btn} onClick={() => run((c) => c.lift("box"))}>
             Remove box
           </button>
+          {styling && s.own && (
+            <BoxStylePanel editor={editor} variant={s.own.variant} look={s.own.look} preset={s.own.preset} accent={accent} book={book} onBookStyles={onBookStyles} onClose={() => setStyling(false)} />
+          )}
         </>
       )}
       {s.table && (

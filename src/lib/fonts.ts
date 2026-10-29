@@ -61,6 +61,12 @@ export const FONTS: BookFont[] = [
   { family: "Great Vibes", role: "script", fallback: "cursive", axes: "wght@400", file: "GreatVibes" },
   { family: "Caveat", role: "hand", fallback: "cursive", axes: W, file: "Caveat" },
   { family: "Kalam", role: "hand", fallback: "cursive", axes: W, file: "Kalam" },
+  { family: "Reenie Beanie", role: "hand", fallback: "cursive", axes: "wght@400", file: "ReenieBeanie" },
+  { family: "Indie Flower", role: "hand", fallback: "cursive", axes: "wght@400", file: "IndieFlower" },
+  { family: "Patrick Hand", role: "hand", fallback: "cursive", axes: "wght@400", file: "PatrickHand" },
+  { family: "Shadows Into Light", role: "hand", fallback: "cursive", axes: "wght@400", file: "ShadowsIntoLight" },
+  { family: "Gloria Hallelujah", role: "hand", fallback: "cursive", axes: "wght@400", file: "GloriaHallelujah" },
+  { family: "Dancing Script", role: "script", fallback: "cursive", axes: W, file: "DancingScript" },
   { family: "Special Elite", role: "mono", fallback: "'Courier New', monospace", axes: "wght@400", file: "SpecialElite" },
   { family: "Courier Prime", role: "mono", fallback: "'Courier New', monospace", axes: B, file: "CourierPrime" },
   // emoji in print, as line drawings (colour emoji are left to ebook readers)

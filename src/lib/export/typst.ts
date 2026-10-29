@@ -2,8 +2,9 @@ import { authorName, elementBackground, forEdition, orderedElements, tocText, ty
 import { pageGeometry, type Binding } from "../kdp";
 import { isSubhead, type DocMark, type DocNode } from "../doc/types";
 import { themeFor, type InteriorTheme } from "../themes";
-import { boxDef, paleTint, type BoxFont, type BoxStyle } from "../blocks";
+import { boxDef, boxStyle, isDark, paleTint, type BookBoxStyles, type BoxFont, type BoxStyle } from "../blocks";
 import { HAND_FONT, TYPEWRITER_FONT } from "../fonts";
+import { openingParagraph, paraFormat } from "../paragraph";
 import { getOrnament, ornamentSvg } from "../ornaments";
 import { backgroundArt, textOverBackground } from "../backgrounds";
 import { isLibraryBackground, libraryId } from "../background-ref";
@@ -64,6 +65,8 @@ export interface DocTypstOptions {
   outlineSubheads?: boolean;
   /** Typst for a scene break, given the break's own ornament id (undefined: the theme's) */
   ornament?: (id: string | undefined) => string;
+  /** the author's block styles (the theme's `boxes` and `boxPresets`) */
+  book?: BookBoxStyles;
 }
 
 const BOX_FONTS: Record<BoxFont, string> = {
@@ -76,31 +79,40 @@ const BOX_FONTS: Record<BoxFont, string> = {
 
 /** Arguments for the preamble's jp-box function, from the block catalog. */
 function boxArgs(st: BoxStyle, label: string): string {
-  const c = st.accent ? "accent" : "rgb(207, 200, 187)";
-  const fill = st.fill ? (st.fill === "accent" ? "accent-tint" : `rgb(${str(st.fill)})`) : "none";
+  const colour = (v: string) => (v === "accent" ? "accent" : `rgb(${str(v)})`);
+  const c = st.line ? colour(st.line) : st.accent ? "accent" : "rgb(207, 200, 187)";
+  const fill = st.fill && st.fill !== "none" ? (st.fill === "accent" ? "accent-tint" : `rgb(${str(st.fill)})`) : "none";
+  const w = st.weight ?? 1;
+  const pt = (n: number) => `${+(n * w).toFixed(2)}pt`;
   const stroke =
     {
-      left: `(left: 3pt + ${c})`,
-      box: `0.6pt + ${c}`,
-      rules: `(top: 0.6pt + ${c}, bottom: 0.6pt + ${c})`,
-      dashed: `(paint: ${c}, thickness: 0.8pt, dash: "dashed")`,
-      double: `2pt + ${c}`,
-      top: `(top: 2.4pt + ${c})`,
+      left: `(left: ${pt(3)} + ${c})`,
+      box: `${pt(0.6)} + ${c}`,
+      rules: `(top: ${pt(0.6)} + ${c}, bottom: ${pt(0.6)} + ${c})`,
+      dashed: `(paint: ${c}, thickness: ${pt(0.8)}, dash: "dashed")`,
+      double: `${pt(2)} + ${c}`,
+      top: `(top: ${pt(2.4)} + ${c})`,
       none: "none",
     }[st.border ?? "none"] ?? "none";
-  const framed = (st.fill || (st.border && st.border !== "none")) && st.border !== "rules";
+  const framed = ((st.fill && st.fill !== "none") || (st.border && st.border !== "none")) && st.border !== "rules";
   const inset = framed ? "(x: 1em, y: 0.85em)" : st.border === "rules" ? "(x: 0em, y: 0.7em)" : "0pt";
   const args = [
     `fill: ${fill}`,
     `stroke: ${stroke}`,
     `inset: ${inset}`,
-    `font: ${BOX_FONTS[st.font ?? "body"]}`,
+    `font: ${st.fontFamily ? `(${str(st.fontFamily)}, "Libertinus Serif", "Noto Emoji")` : BOX_FONTS[st.font ?? "body"]}`,
     `italic: ${!!st.italic}`,
     `align-to: ${st.align ?? "left"}`,
     `size: ${st.size ?? 1}em`,
     `lines: ${st.lines ?? 0}`,
     `checklist: ${!!st.checklist}`,
   ];
+  if (st.leading) args.push(`leading: ${leading(st.leading)}`);
+  if (st.bold) args.push("bold: true");
+  if (st.corners !== undefined) args.push(`radius: ${["0pt", "2pt", "7pt"][st.corners] ?? "2pt"}`);
+  if (st.text) args.push(`ink: ${colour(st.text)}`);
+  else if (st.fill && st.fill.startsWith("#") && isDark(st.fill)) args.push(`ink: rgb("#f6f2ea")`);
+  if (st.labelColor) args.push(`label-fill: ${colour(st.labelColor)}`);
   if (label) args.push(`label: ${str(label)}`, `label-end: ${!!st.labelAtEnd}`);
   return args.join(", ");
 }
@@ -134,24 +146,33 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
     }
   }
 
+  // an author can move the chapter's opening (lead-in, no indent) to a later paragraph
+  const markedIdx = doc?.type === "doc" ? openingParagraph(doc.content) : -1;
+  const opener = markedIdx >= 0 ? doc!.content![markedIdx] : null;
+
   function paragraph(n: DocNode): string {
     const kids = n.content ?? [];
     if (!kids.length) return "#v(1em)";
+    const pf = paraFormat(n.attrs);
+    const opening = depth === 0 && (opener ? n === opener : firstPara);
     let body: string;
     const first = kids[0];
-    if (depth === 0 && leadInPending && first.type === "text" && !(first.marks ?? []).length) {
+    // print has no drop caps yet, so a forced drop cap opens with small capitals instead
+    const lead = (opening && leadInPending) || pf.leadIn || pf.dropCap;
+    if (lead && first.type === "text" && !(first.marks ?? []).length) {
       const words = (first.text ?? "").split(/(\s+)/);
       // first three words in small caps, the rest as usual
-      const lead = words.slice(0, 5).join("");
+      const head = words.slice(0, 5).join("");
       const rest = words.slice(5).join("");
-      body = `#sc[#${str(lead)}]` + (rest ? `#${str(rest)}` : "") + inline(kids.slice(1));
+      body = `#sc[#${str(head)}]` + (rest ? `#${str(rest)}` : "") + inline(kids.slice(1));
     } else body = inline(kids);
-    if (depth === 0) leadInPending = false;
+    if (opening) leadInPending = false;
+    if (pf.tracking) body = `#text(tracking: ${pf.tracking}em)[${body}]`;
     // the opener is set in its own paragraph, so the first text paragraph must not indent
-    if (firstPara && depth === 0) {
-      firstPara = false;
-      body = `#par(first-line-indent: 0em)[${body}]`;
-    }
+    if (opening) firstPara = false;
+    const indent = opening || pf.noIndent || pf.dropCap ? "0em" : pf.indent !== undefined ? `${pf.indent}em` : null;
+    if (indent) body = `#par(first-line-indent: ${indent})[${body}]`;
+    if (pf.left) body = `#pad(left: ${pf.left}em)[${body}]`;
     const a = n.attrs?.textAlign;
     if (a === "center" || a === "right") return `#align(${a})[${body}]`;
     return body;
@@ -180,7 +201,7 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
         return paragraph(n);
       case "heading": {
         const level = Math.min(Math.max(Number(n.attrs?.level ?? 2), 2), 4);
-        leadInPending = false;
+        if (!opener) leadInPending = false;
         // sub-chapters join the printed contents when the book asks for them
         return `#heading(level: ${level}, outlined: ${depth === 0 && !!opts.outlineSubheads && isSubhead(n)})[${inline(n.content)}]`;
       }
@@ -190,7 +211,7 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
         return `#callout[${nested(n.content)}]`;
       case "box": {
         const def = boxDef(String(n.attrs?.variant ?? ""));
-        const st = def.box ?? {};
+        const st = boxStyle(def.id, opts.book, n.attrs?.look, n.attrs?.preset);
         if (st.only === "ebook") return "";
         // print-only blocks are plain text in print; their dashed frame is an editor hint
         if (st.only) return nested(n.content);
@@ -363,13 +384,16 @@ function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, 
 ${sceneBreak(theme)}
 
 // special blocks (src/lib/blocks.ts)
-#let jp-box(fill: none, stroke: none, inset: 0pt, font: auto, italic: false, align-to: left, size: 1em, lines: 0, checklist: false, label: none, label-end: false, body) = block(above: 1.3em, below: 1.3em, width: 100%, inset: inset, fill: fill, stroke: stroke, radius: 2pt, breakable: true, {
+#let jp-box(fill: none, stroke: none, inset: 0pt, font: auto, italic: false, align-to: left, size: 1em, lines: 0, checklist: false, radius: 2pt, ink: auto, label-fill: accent, leading: auto, bold: false, label: none, label-end: false, body) = block(above: 1.3em, below: 1.3em, width: 100%, inset: inset, fill: fill, stroke: stroke, radius: radius, breakable: true, {
   set par(first-line-indent: 0em, justify: false)
   set text(size: size, style: if italic { "italic" } else { "normal" })
+  set text(fill: ink) if ink != auto
+  set text(weight: 700) if bold
+  set par(leading: leading) if leading != auto
   set text(font: font) if font != auto
   set align(align-to)
   set list(marker: box(width: 0.65em, height: 0.65em, stroke: 0.6pt + accent, radius: 1pt)) if checklist
-  if label != none and not label-end { block(below: 0.55em, text(font: head-font, size: 0.72em, tracking: 0.12em, style: "normal", fill: accent, upper(label))) }
+  if label != none and not label-end { block(below: 0.55em, text(font: head-font, size: 0.72em, tracking: 0.12em, style: "normal", fill: label-fill, upper(label))) }
   body
   if lines > 0 { for i in range(lines) { v(1.35em); line(length: 100%, stroke: 0.4pt + luma(165)) } }
   if label != none and label-end { v(0.6em); text(style: "italic", label) }
@@ -509,6 +533,7 @@ function elementTypst(input: ExportInput, e: BookElement, format: BookFormat, th
       imagePath,
       outlineSubheads: format.tocSubheads && e.inToc && e.kind.id !== "part",
       ornament: (own) => (own ? `#${ornamentTypst(own, theme)}` : "#scene-break()"),
+      book: theme,
     });
   if (fullImage)
     // the picture is the page's background (see buildTypst); the box keeps the page from collapsing

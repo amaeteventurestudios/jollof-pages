@@ -3,7 +3,7 @@ import { backgroundStyle, chapterHeadHtml, ornamentHtml } from "../render-elemen
 import { authorName, bookImages, elementBackground, forEdition, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { docToHtml, escapeHtml } from "../doc/html";
 import { collectOrnaments, subheads } from "../doc/types";
-import { themeCss } from "../theme-css";
+import { paletteOf, themeCss } from "../theme-css";
 import { sceneBreakGlyph, themeFor } from "../themes";
 import { bookFormat } from "../types";
 import { ornamentSvg } from "../ornaments";
@@ -182,6 +182,7 @@ ${input.alsoBy.length ? input.alsoBy.map((b) => `<p class="first">${escapeHtml(b
           mode: "epub",
           imageHref: (src) => imageHref.get(src) ?? src,
           sceneBreak: sceneBreakGlyph(theme),
+          palette: paletteOf(theme),
           notePrefix: `n${i + 1}`,
           ornament: (own) => ornamentHtml(theme, own, true, (id) => ornamentHref.get(id) ?? null),
           target: "ebook",

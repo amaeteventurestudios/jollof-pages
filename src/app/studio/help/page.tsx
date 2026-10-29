@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BookOpenCheck, Check, ChevronDown, ClipboardCopy, FileText, Inbox, Lightbulb, LifeBuoy, Loader2, MessageSquare, Paperclip, Search, Send, X } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Button } from "@/components/ui/button";
@@ -186,8 +186,19 @@ function QuickLink({ href, icon: Icon, title, text }: { href: string; icon: Reac
   );
 }
 
+// ?topic=bug (the editor's Report a bug) opens the form on that topic
+function linkedTopic() {
+  if (typeof window === "undefined") return null;
+  const t = new URLSearchParams(window.location.search).get("topic");
+  return SUPPORT_TOPICS.some((x) => x.id === t) ? t : null;
+}
+
 function ContactForm({ onSent }: { onSent: () => void }) {
-  const [topic, setTopic] = useState<string>("question");
+  const [topic, setTopic] = useState<string>(() => linkedTopic() ?? "question");
+  const section = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (linkedTopic()) section.current?.scrollIntoView({ block: "start" });
+  }, []);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -223,7 +234,7 @@ function ContactForm({ onSent }: { onSent: () => void }) {
   }
 
   return (
-    <section id="contact" aria-labelledby="contact-h" className="mt-12 scroll-mt-20 border border-border bg-card p-6 sm:p-8">
+    <section ref={section} id="contact" aria-labelledby="contact-h" className="mt-12 scroll-mt-20 border border-border bg-card p-6 sm:p-8">
       <h2 id="contact-h" className="text-2xl tracking-tight">
         Open a support ticket
       </h2>

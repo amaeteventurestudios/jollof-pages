@@ -1,5 +1,7 @@
 import { isSubhead, type DocMark, type DocNode } from "./types";
-import { boxDef } from "../blocks";
+import { boxDef, boxLabelColor, boxStyle, cleanLook, hasLook, presetOf } from "../blocks";
+import { boxCss, type BoxPalette } from "../theme-css";
+import { openingParagraph, paraCss, paraFormat } from "../paragraph";
 
 export interface HtmlOptions {
   /** "epub" adds epub:type attributes and produces XHTML-safe void tags */
@@ -14,6 +16,8 @@ export interface HtmlOptions {
   ornament?: (id: string | undefined) => string;
   /** which edition this is for: blocks marked for the other one are left out (default ebook) */
   target?: "ebook" | "print";
+  /** the theme's colours and fonts, for blocks the author restyled one by one */
+  palette?: BoxPalette;
 }
 
 export interface HtmlResult {
@@ -70,10 +74,16 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
     return out;
   }
 
-  function align(n: DocNode): string {
+  function align(n: DocNode, extra = ""): string {
     const a = n.attrs?.textAlign;
-    return a === "center" || a === "right" || a === "justify" ? ` style="text-align:${a}"` : "";
+    const css = [a === "center" || a === "right" || a === "justify" ? `text-align:${a}` : "", extra].filter(Boolean).join("; ");
+    return css ? ` style="${css}"` : "";
   }
+
+  // an author can move the chapter's opening (drop cap, no indent) to a later paragraph
+  const markedIdx = doc?.type === "doc" ? openingParagraph(doc.content) : -1;
+  const opener = markedIdx >= 0 ? doc!.content![markedIdx] : null;
+  let openerSeen = !opener;
 
   const target = opts.target ?? "ebook";
   const endnotes: string[] = [];
@@ -104,9 +114,12 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
       case "paragraph": {
         const body = inline(n.content);
         if (!body) return epub ? `<p class="blank">${"&#160;"}</p>` : "<p>&nbsp;</p>";
-        const cls = !firstDone && depth === 0 ? ' class="first"' : "";
-        if (depth === 0) firstDone = true;
-        return `<p${cls}${align(n)}>${body}</p>`;
+        const pf = paraFormat(n.attrs);
+        if (n === opener) openerSeen = true;
+        const isFirst = n === opener || (openerSeen && !firstDone && depth === 0) || pf.dropCap;
+        const classes = [isFirst ? "first" : "", pf.leadIn ? "lead-in" : ""].filter(Boolean).join(" ");
+        if (depth === 0 && openerSeen) firstDone = true;
+        return `<p${classes ? ` class="${classes}"` : ""}${align(n, paraCss(pf))}>${body}</p>`;
       }
       case "heading": {
         const level = Math.min(Math.max(Number(n.attrs?.level ?? 2), 2), 4);
@@ -123,14 +136,21 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
         const def = boxDef(String(n.attrs?.variant ?? ""));
         const st = def.box ?? {};
         if (st.only) return st.only === target ? nested(n.content) : "";
+        // a block the author restyled carries its whole style inline, over its kind's rules
+        const look = cleanLook(n.attrs?.look);
+        const preset = presetOf(opts.palette?.book, n.attrs?.preset, def.id);
+        // a preset alone is a class (theme CSS); the block's own changes go inline
+        const own = hasLook(look) && opts.palette ? boxStyle(def.id, opts.palette.book, look, preset?.id) : null;
         const labelText = n.attrs?.label != null ? String(n.attrs.label) : (st.label ?? "");
         // the ebook/print badge is an editor hint, not part of the book
-        const label = labelText && !st.only ? `<p class="blk-label">${escapeHtml(labelText)}</p>` : "";
+        const labelStyle = own?.labelColor && opts.palette ? ` style="color: ${boxLabelColor(own, opts.palette.accent)}"` : "";
+        const label = labelText && !st.only ? `<p class="blk-label"${labelStyle}>${escapeHtml(labelText)}</p>` : "";
         const src = typeof n.attrs?.src === "string" && n.attrs.src ? (opts.imageHref ? opts.imageHref(n.attrs.src) : n.attrs.src) : "";
-        const style = src ? ` style="background-image: url('${escapeHtml(src).replace(/'/g, "%27")}')"` : "";
+        const css = [own && def.id !== "overlay" ? boxCss(own, opts.palette!, true) : "", src ? `background-image: url('${escapeHtml(src).replace(/'/g, "%27")}');` : ""].filter(Boolean).join(" ");
+        const style = css ? ` style="${css.replace(/"/g, "'")}"` : "";
         const lines = st.lines ? `<div class="blk-lines" style="height:${(st.lines * 1.9).toFixed(1)}em"></div>` : "";
         const body = nested(n.content);
-        return `<div class="blk blk-${def.id}"${style}>${st.labelAtEnd ? "" : label}${body}${lines}${st.labelAtEnd ? label : ""}</div>`;
+        return `<div class="blk blk-${def.id}${own ? " blk-own" : preset ? ` blk-p-${preset.id}` : ""}"${style}>${st.labelAtEnd ? "" : label}${body}${lines}${st.labelAtEnd ? label : ""}</div>`;
       }
       case "chat":
         return `<div class="chat${n.attrs?.group ? " chat-group" : ""}">${nested(n.content)}</div>`;

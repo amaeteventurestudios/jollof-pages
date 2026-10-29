@@ -8,6 +8,7 @@
 import { fontCss, FONT_HREFS } from "./fonts";
 import { getOrnament } from "./ornaments";
 import type { BookFormat } from "./types";
+import type { BoxLook, BoxPreset } from "./blocks";
 
 export type ChapterLabel = "word" | "number" | "none";
 export type DropCapStyle = "classic" | "accent" | "tall" | "boxed" | "outline" | "circle" | "script" | "none";
@@ -79,6 +80,10 @@ export interface InteriorTheme {
   accent: string;
   /** a library background (src/lib/backgrounds.ts) behind chapter openings, if the theme has one */
   openerBackground?: string;
+  /** the author's style for every block of a kind, by block id (src/lib/blocks.ts) */
+  boxes?: Record<string, BoxLook>;
+  /** the author's named block styles */
+  boxPresets?: BoxPreset[];
 }
 
 type Look = Pick<InteriorTheme, "chapterLabel" | "labelStyle" | "headingAlign" | "headingItalic" | "headingWeight" | "headingSize" | "headingCase" | "headingRule" | "indent" | "leadIn">;
@@ -291,6 +296,8 @@ export type ThemeCustom = Partial<
     | "ornament"
     | "dropCap"
     | "accent"
+    | "boxes"
+    | "boxPresets"
   >
 >;
 

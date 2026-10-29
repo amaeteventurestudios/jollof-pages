@@ -21,6 +21,7 @@ import { createChapter, logWords, refreshBookWordCount, saveChapter } from "@/li
 import { elementKind } from "@/lib/elements";
 import { themeFor } from "@/lib/themes";
 import { editorBlockCss } from "@/lib/theme-css";
+import { setEditorBookStyles } from "../editor-extensions";
 import { bookFormat, chapterOptions, type Chapter, type ChapterOptions } from "@/lib/types";
 import { fmt } from "@/lib/progress";
 import { errorMessage, pb } from "@/lib/pb";
@@ -109,6 +110,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   }
   const theme = themeFor(bookFormat(book));
   const blockCss = editorBlockCss(theme);
+  setEditorBookStyles(theme);
 
   // autosave: one pending content save at a time, flushed when switching chapters
   const pendingRef = useRef<{ id: string; doc: DocNode; words: number } | null>(null);
@@ -248,6 +250,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   return (
     <div className="flex min-h-0 flex-1 app:pb-[calc(var(--app-tab-h)+env(safe-area-inset-bottom))]">
       <aside
+        data-tour="chapters"
         aria-label="Chapters"
         className={cn(
           "w-72 shrink-0 border-r border-border bg-card",
@@ -493,6 +496,12 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             onChange={onChange}
             fontFamily={theme.bodyCss}
             blockCss={blockCss}
+            accent={theme.accent}
+            book={theme}
+            onBookStyles={(next) => {
+              const f = bookFormat(book);
+              void ws.saveBook({ format: { ...f, custom: { ...(f.custom ?? {}), ...next } } });
+            }}
             settings={settings}
             onEditor={setEditor}
             onFind={openFind}
@@ -500,6 +509,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             tracking={role === "editor"}
             readOnly={role === "commenter"}
             onCommentClick={openComment}
+            onTool={setRail}
           />
         )}
       </section>
@@ -527,7 +537,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
       </div>
 
       {showPreview && (
-        <aside className="relative hidden shrink-0 border-l border-border bg-card lg:block" style={{ width: previewWidth }} aria-label="Preview">
+        <aside data-tour="preview" className="relative hidden shrink-0 border-l border-border bg-card lg:block" style={{ width: previewWidth }} aria-label="Preview">
           <div
             role="separator"
             aria-orientation="vertical"

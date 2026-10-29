@@ -5,6 +5,7 @@
  * The catalog drives the editor's Insert menu, the EPUB/web CSS and the Typst print rules.
  */
 import type { DocNode } from "./doc/types";
+import { FONTS as BOOK_FONTS } from "./fonts";
 
 export type BlockGroup = "Callouts" | "Teaching" | "Story and voice" | "Quotes" | "Layout" | "Reference" | "Ebook and print" | "Text and notes";
 
@@ -35,6 +36,98 @@ export interface BoxStyle {
   only?: "ebook" | "print";
   /** the label sits at the end, like a signature or an attribution */
   labelAtEnd?: boolean;
+  /** border colour (hex); "accent" is the theme colour. Unset: accent when `accent`, else a soft grey */
+  line?: string;
+  /** border thickness: 1 thin (the catalog's), 2 medium, 3 thick */
+  weight?: number;
+  /** corner rounding: 0 square, 1 slight, 2 round */
+  corners?: number;
+  /** text colour (hex) */
+  text?: string;
+  /** heading colour (hex); "accent" is the theme colour */
+  labelColor?: string;
+  /** a particular typeface from src/lib/fonts.ts, over `font` */
+  fontFamily?: string;
+  /** line spacing as a multiple of the text size */
+  leading?: number;
+  bold?: boolean;
+}
+
+/** A named style for a kind of block, kept with the book so many blocks can share it. */
+export interface BoxPreset {
+  id: string;
+  name: string;
+  variant: string;
+  look: BoxLook;
+}
+
+/** The book's block styles: one default per kind and any named presets. */
+export interface BookBoxStyles {
+  boxes?: Record<string, BoxLook>;
+  boxPresets?: BoxPreset[];
+}
+
+/**
+ * What an author can change on a box, on one block (the node's `look` attribute) or on every block
+ * of a kind in the book (the theme's `boxes`). Each field replaces the catalog's value.
+ */
+export type BoxLook = Pick<BoxStyle, "fill" | "border" | "line" | "weight" | "corners" | "text" | "labelColor" | "font" | "italic" | "align" | "size" | "fontFamily" | "leading" | "bold">;
+
+export const LOOK_KEYS = ["fill", "border", "line", "weight", "corners", "text", "labelColor", "font", "italic", "align", "size", "fontFamily", "leading", "bold"] as const satisfies readonly (keyof BoxLook)[];
+
+const HEX = /^#[0-9a-f]{6}$/i;
+const BORDERS = ["left", "box", "rules", "dashed", "double", "top", "none"] as const;
+const FONTS = ["body", "heading", "hand", "mono", "sans"] as const;
+
+/** Keeps only valid look fields, so stored JSON can never inject CSS or Typst. */
+export function cleanLook(raw: unknown): BoxLook {
+  if (!raw || typeof raw !== "object") return {};
+  const r = raw as Record<string, unknown>;
+  const out: BoxLook = {};
+  const colour = (v: unknown, extra: string[]) => (typeof v === "string" && (HEX.test(v) || extra.includes(v)) ? v : undefined);
+  const fill = colour(r.fill, ["accent", "none"]);
+  if (fill) out.fill = fill;
+  if (BORDERS.includes(r.border as (typeof BORDERS)[number])) out.border = r.border as BoxStyle["border"];
+  const line = colour(r.line, ["accent"]);
+  if (line) out.line = line;
+  if ([1, 2, 3].includes(r.weight as number)) out.weight = r.weight as number;
+  if ([0, 1, 2].includes(r.corners as number)) out.corners = r.corners as number;
+  const text = colour(r.text, []);
+  if (text) out.text = text;
+  const label = colour(r.labelColor, ["accent"]);
+  if (label) out.labelColor = label;
+  if (FONTS.includes(r.font as BoxFont)) out.font = r.font as BoxFont;
+  if (typeof r.italic === "boolean") out.italic = r.italic;
+  if (r.align === "left" || r.align === "center" || r.align === "right") out.align = r.align;
+  if (typeof r.size === "number" && r.size >= 0.6 && r.size <= 2.5) out.size = Math.round(r.size * 100) / 100;
+  if (typeof r.fontFamily === "string" && BOOK_FONTS.some((f) => f.family === r.fontFamily && f.role !== "symbol")) out.fontFamily = r.fontFamily;
+  if (typeof r.leading === "number" && r.leading >= 0.9 && r.leading <= 2.6) out.leading = Math.round(r.leading * 100) / 100;
+  if (typeof r.bold === "boolean") out.bold = r.bold;
+  return out;
+}
+
+export function cleanPresets(raw: unknown): BoxPreset[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((p): p is Record<string, unknown> => !!p && typeof p === "object")
+    .map((p) => ({ id: String(p.id ?? "").replace(/[^a-z0-9_-]/gi, "").slice(0, 40), name: String(p.name ?? "").slice(0, 60), variant: String(p.variant ?? ""), look: cleanLook(p.look) }))
+    .filter((p) => p.id && p.name && BOXES.some((b) => b.id === p.variant))
+    .slice(0, 200);
+}
+
+export function hasLook(look: BoxLook | null | undefined): boolean {
+  return !!look && Object.keys(look).length > 0;
+}
+
+export function presetOf(book: BookBoxStyles | null | undefined, id: unknown, variant?: string): BoxPreset | null {
+  if (typeof id !== "string" || !id) return null;
+  return cleanPresets(book?.boxPresets).find((p) => p.id === id && (!variant || p.variant === variant)) ?? null;
+}
+
+/** A block's style: the catalog, the book's style for that kind, the block's preset, then its own. */
+export function boxStyle(variant: string | undefined, book?: BookBoxStyles | null, own?: unknown, preset?: unknown): BoxStyle {
+  const def = boxDef(variant);
+  return { ...(def.box ?? {}), ...cleanLook(book?.boxes?.[def.id]), ...(presetOf(book, preset, def.id)?.look ?? {}), ...cleanLook(own) };
 }
 
 export interface BlockDef {
@@ -204,6 +297,25 @@ export function paleTint(hex: string, mix = 0.9): string {
 }
 
 export function boxFill(style: BoxStyle, accent: string): string | null {
-  if (!style.fill) return null;
+  if (!style.fill || style.fill === "none") return null;
   return style.fill === "accent" ? paleTint(accent) : style.fill;
+}
+
+/** The border colour of a box, given the theme accent. */
+export function boxLine(style: BoxStyle, accent: string): string {
+  if (style.line) return style.line === "accent" ? accent : style.line;
+  return style.accent ? accent : "#cfc8bb";
+}
+
+/** The heading colour of a box, given the theme accent. */
+export function boxLabelColor(style: BoxStyle, accent: string): string {
+  return !style.labelColor || style.labelColor === "accent" ? accent : style.labelColor;
+}
+
+/** Whether a hex colour is dark enough to need light text on it. */
+export function isDark(hex: string): boolean {
+  const m = hex.replace("#", "").match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const [r, g, b] = [m[1], m[2], m[3]].map((x) => parseInt(x, 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b < 140;
 }
