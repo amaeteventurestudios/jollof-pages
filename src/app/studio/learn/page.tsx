@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Clock, GraduationCap, LifeBuoy, Lightbulb } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
+import { VideoLibrary, VideoPlayer, VideoStrip } from "@/components/studio/video-guides";
 import { Button } from "@/components/ui/button";
 import { TUTORIALS, loadDone, saveDone } from "@/lib/tutorials";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,8 @@ export default function LearnPage() {
   const index = TUTORIALS.findIndex((t) => t.id === openId);
   const t = TUTORIALS[index];
   const pct = Math.round((done.size / TUTORIALS.length) * 100);
+  // /studio/learn#video=<id> opens that video, so the help page and emails can link to one
+  const [playing, setPlaying] = useState<string | null>(() => /^#video=([\w-]+)$/.exec(window.location.hash)?.[1] ?? null);
 
   function mark(id: string, value: boolean) {
     const next = new Set(done);
@@ -40,7 +43,13 @@ export default function LearnPage() {
               <GraduationCap className="size-4" /> Learn
             </p>
             <h1 className="mt-2 text-[clamp(1.75rem,3vw,2.5rem)] leading-tight tracking-[-0.02em]">From first chapter to published book</h1>
-            <p className="mt-1 max-w-2xl text-soft">Ten short guides, about forty minutes in all. Tick each one off as you go; your progress is kept on this device.</p>
+            <p className="mt-1 max-w-2xl text-soft">
+              Ten short guides, about forty minutes in all. Tick each one off as you go; your progress is kept on this device. Prefer to watch?{" "}
+              <a href="#videos" className="text-primary underline">
+                There is a video for every feature
+              </a>
+              .
+            </p>
           </div>
           <div className="min-w-56">
             <p className="flex justify-between text-sm">
@@ -103,6 +112,7 @@ export default function LearnPage() {
                 </p>
               </div>
             </header>
+            <VideoStrip tutorial={t.id} onPlay={setPlaying} />
             <ol className="grid gap-0 px-6 py-6 sm:px-10">
               {t.steps.map((s, i) => (
                 <li key={s.title} className="relative grid grid-cols-[2.5rem_1fr] gap-3 pb-6 last:pb-0">
@@ -147,6 +157,9 @@ export default function LearnPage() {
             </footer>
           </article>
         </div>
+
+        <VideoLibrary onPlay={setPlaying} />
+        <VideoPlayer id={playing} onChange={setPlaying} />
 
         <p className="mt-10 flex items-center gap-2 text-soft">
           <LifeBuoy className="size-4 text-primary" />
