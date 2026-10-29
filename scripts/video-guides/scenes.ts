@@ -656,11 +656,13 @@ export const SCENES: Record<string, Scene> = {
       await d.say("Stuck? Search the common questions first.", 1600);
       await d.type(d.page.getByPlaceholder(/Search/), "gutter");
       await d.wait(1200);
-      await d.say("Still stuck? Send a message. We answer within one working day.");
-      await d.scrollTo(d.page.getByRole("heading", { name: "Contact support" }));
+      await d.say("Still stuck? Open a ticket. We answer within one working day.");
+      await d.click(d.page.getByRole("link", { name: /Open a ticket/ }), { after: 900 });
       await d.type(d.page.getByPlaceholder(/blank page/), "How do I add a map before chapter one?", { delay: 30 });
-      await d.say("Replies show up under <b>Your messages</b>.");
-      await d.scrollTo(d.page.getByRole("heading", { name: "Your messages" }));
+      await d.say("Say what you were doing, and add a screenshot if you can.");
+      await d.point(d.page.getByText("Add screenshots or a PDF"), { ring: true });
+      await d.say("Our answers show up under <b>Your tickets</b>, with a copy by email.");
+      await d.scrollTo(d.page.getByRole("heading", { name: "Your tickets" }));
     },
   },
 };

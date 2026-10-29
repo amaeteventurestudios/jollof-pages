@@ -4,6 +4,7 @@
  * caption bar into the page, so every video shows what is clicked and why.
  */
 import type { CDPSession, Locator, Page } from "playwright";
+import type { Narrator } from "./narrator";
 
 export interface Cue {
   start: number;
@@ -98,13 +99,23 @@ export class Recorder {
 
 export class Director {
   cues: Cue[] = [];
+  voice: { start: number; file: string }[] = [];
   private open?: Cue;
 
   constructor(
     public page: Page,
     public rec: Recorder,
     public base: string,
+    private narrator?: Narrator,
   ) {}
+
+  /** Starts the spoken line, if there is a voiceover, and says how long it runs in ms. */
+  private async speak(text: string) {
+    if (!this.narrator) return 0;
+    const clip = await this.narrator.clip(text);
+    this.voice.push({ start: this.rec.now(), file: clip.file });
+    return clip.seconds * 1000 + 450;
+  }
 
   wait(ms: number) {
     return this.page.waitForTimeout(ms);
@@ -115,13 +126,15 @@ export class Director {
     await this.wait(600);
   }
 
-  /** Shows a caption until the next one. Reading time is added from its length. */
+  /** Shows and speaks a caption until the next one. It stays up long enough to read and hear. */
   async say(text: string, hold?: number) {
     this.endCue();
+    if (this.narrator) await this.narrator.clip(text); // made before the caption shows, so no pause
     await this.page.evaluate((t) => window.__jpv.caption(t), text);
     this.open = { start: this.rec.now(), end: 0, text: text.replace(/<[^>]+>/g, "") };
+    const spoken = await this.speak(text);
     const words = text.replace(/<[^>]+>/g, "").split(/\s+/).length;
-    await this.wait(hold ?? Math.max(1800, words * 330));
+    await this.wait(Math.max(hold ?? Math.max(1800, words * 330), spoken));
   }
 
   async hush() {
@@ -142,7 +155,10 @@ export class Director {
   }
 
   async title(kicker: string, heading: string, line?: string, ms = 2600) {
+    const words = line ? `${heading}. ${line}` : heading;
+    if (this.narrator) await this.narrator.clip(words);
     await this.page.evaluate(([k, h, p]) => window.__jpv.title(k, h, p), [kicker, heading, line ?? ""] as const);
+    ms = Math.max(ms, await this.speak(words));
     this.cues.push({ start: this.rec.now(), end: this.rec.now() + ms / 1000, text: heading });
     await this.wait(ms);
     await this.page.evaluate(() => window.__jpv.title("", "", ""));

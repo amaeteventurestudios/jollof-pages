@@ -20,8 +20,15 @@ export function VideoPlayer({ id, onChange }: { id: string | null; onChange: (id
 
   // the captions are burned into the picture; the track is for screen readers and search
   useEffect(() => {
-    const t = ref.current?.textTracks[0];
+    const video = ref.current;
+    const t = video?.textTracks[0];
     if (t) t.mode = "hidden";
+    // the videos are narrated; if the browser won't start them with sound (say, opened from a
+    // link), they start muted and the volume button turns the voice on
+    video?.play().catch(() => {
+      video.muted = true;
+      video.play().catch(() => {});
+    });
   }, [id]);
 
   return (
@@ -43,7 +50,7 @@ export function VideoPlayer({ id, onChange }: { id: string | null; onChange: (id
                 Next <ArrowRight />
               </Button>
             </div>
-            <video key={v.id} ref={ref} src={videoSrc(v.id)} poster={videoPoster(v.id)} controls autoPlay playsInline preload="auto" className="aspect-[16/10] w-full bg-black">
+            <video key={v.id} ref={ref} src={videoSrc(v.id)} poster={videoPoster(v.id)} controls playsInline preload="auto" className="aspect-[16/10] w-full bg-black">
               <track kind="captions" src={videoCaptions(v.id)} srcLang="en" label="English" />
             </video>
           </>
