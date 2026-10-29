@@ -22,15 +22,36 @@ export interface TrimSize {
   hardcover: boolean;
 }
 
+// Every paperback size KDP prints, smallest first. "large" follows KDP: wider than 6.12 in or taller than 9 in.
+const trim = (w: number, h: number, hardcover = false): TrimSize => ({
+  id: `${w}x${h}`,
+  label: `${w}" x ${h}"`,
+  width: w,
+  height: h,
+  // about 6.5 words per square inch of page at 11pt, matching 350 words on a 6 x 9 page
+  wordsPerPage: Math.round((w * h * 6.5) / 5) * 5,
+  large: w > 6.12 || h > 9,
+  hardcover,
+});
+
 export const TRIM_SIZES: TrimSize[] = [
-  { id: "5x8", label: '5" x 8"', width: 5, height: 8, wordsPerPage: 250, large: false, hardcover: false },
-  { id: "5.25x8", label: '5.25" x 8"', width: 5.25, height: 8, wordsPerPage: 270, large: false, hardcover: false },
-  { id: "5.5x8.5", label: '5.5" x 8.5"', width: 5.5, height: 8.5, wordsPerPage: 300, large: false, hardcover: true },
-  { id: "6x9", label: '6" x 9"', width: 6, height: 9, wordsPerPage: 350, large: false, hardcover: true },
-  { id: "6.14x9.21", label: '6.14" x 9.21"', width: 6.14, height: 9.21, wordsPerPage: 360, large: true, hardcover: true },
-  { id: "7x10", label: '7" x 10"', width: 7, height: 10, wordsPerPage: 430, large: true, hardcover: true },
-  { id: "8.25x11", label: '8.25" x 11"', width: 8.25, height: 11, wordsPerPage: 535, large: true, hardcover: true },
-  { id: "8.5x11", label: '8.5" x 11"', width: 8.5, height: 11, wordsPerPage: 550, large: true, hardcover: false },
+  trim(5, 8),
+  trim(5.06, 7.81),
+  trim(5.25, 8),
+  trim(5.5, 8.5, true),
+  trim(6, 9, true),
+  trim(6.14, 9.21, true),
+  trim(6.69, 9.61),
+  trim(7, 10, true),
+  trim(7.44, 9.69),
+  trim(7.5, 9.25),
+  trim(8, 10),
+  trim(8.25, 6),
+  trim(8.25, 8.25),
+  trim(8.5, 8.5),
+  trim(8.25, 11, true),
+  trim(8.5, 11),
+  trim(8.27, 11.69),
 ];
 
 export const HARDCOVER_TRIMS = TRIM_SIZES.filter((t) => t.hardcover);
@@ -138,7 +159,7 @@ export interface PageGeometry {
  * Comfortable reading margins that always clear KDP's minimums. The gutter is KDP's minimum plus
  * a quarter inch, so text never disappears into the binding as the book grows.
  */
-export function pageGeometry(trimId: string | undefined, pageCount: number, bleed: boolean, binding: Binding = "paperback"): PageGeometry {
+export function pageGeometry(trimId: string | undefined, pageCount: number, bleed: boolean, binding: Binding = "paperback", custom?: Partial<Margins>): PageGeometry {
   const trim = getTrim(trimId);
   const big = trim.width >= 7;
   const outsideBase = big ? 0.75 : 0.6;
@@ -146,11 +167,14 @@ export function pageGeometry(trimId: string | undefined, pageCount: number, blee
   const bleedAdd = bleed ? BLEED : 0;
   const gutter = minGutter(pageCount);
   const minOut = minOutside(bleed);
+  const hcExtra = binding === "hardcover" ? HARDCOVER.extraGutter : 0;
+  // an author's own margins (measured from the trim) never go below KDP's minimums
+  const own = (v: number | undefined, min: number) => (v === undefined || !Number.isFinite(v) ? undefined : Math.max(v, min));
   const margins: Margins = {
-    inside: round(gutter + 0.25 + (binding === "hardcover" ? HARDCOVER.extraGutter : 0)),
-    outside: round(Math.max(outsideBase, minOut) + bleedAdd),
-    top: round(Math.max(vBase, minOut) + bleedAdd),
-    bottom: round(Math.max(vBase + 0.05, minOut) + bleedAdd),
+    inside: round((own(custom?.inside, gutter) ?? gutter + 0.25) + hcExtra),
+    outside: round((own(custom?.outside, minOut) ?? Math.max(outsideBase, minOut)) + bleedAdd),
+    top: round((own(custom?.top, minOut) ?? Math.max(vBase, minOut)) + bleedAdd),
+    bottom: round((own(custom?.bottom, minOut) ?? Math.max(vBase + 0.05, minOut)) + bleedAdd),
   };
   return {
     trim,

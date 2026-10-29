@@ -6,7 +6,7 @@ import { FullBookPreview } from "./full-book-preview";
 import { elementHtml } from "@/lib/render-element";
 import { orderedElements } from "@/lib/book-model";
 import { themeCss } from "@/lib/theme-css";
-import { getTheme, THEME_FONTS_HREF } from "@/lib/themes";
+import { themeFor, THEME_FONTS_HREFS } from "@/lib/themes";
 import { getTrim, hardcoverTrim, pageGeometry } from "@/lib/kdp";
 import { bookFormat, type Book, type Chapter } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -100,7 +100,7 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   const goLast = useRef(false);
 
   const format = bookFormat(book);
-  const theme = getTheme(format.theme);
+  const theme = themeFor(format);
   const elements = orderedElements(chapters, theme);
   const index = Math.max(
     0,
@@ -123,7 +123,7 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   const paperLabel = getTrim(format.trim).label;
   const hardLabel = getTrim(hardTrimId).label;
   const hasHardcover = format.hardcover;
-  const g = pageGeometry(editionTrim, (binding === "hardcover" ? book.hardcover_page_count : book.page_count) || 200, false, binding);
+  const g = pageGeometry(editionTrim, (binding === "hardcover" ? book.hardcover_page_count : book.page_count) || 200, false, binding, format.margins);
   const PPI = 72;
   const recto = page % 2 === 0;
   const screen = print
@@ -225,7 +225,9 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
 
   return (
     <div className="flex h-full flex-col">
-      <link rel="stylesheet" href={THEME_FONTS_HREF} />
+      {THEME_FONTS_HREFS.map((href) => (
+        <link key={href} rel="stylesheet" href={href} />
+      ))}
       <style>{`${css}
 .jp-flow img { max-height: ${Math.floor(innerH * 0.9)}px; object-fit: contain; }
 .jp-flow figure, .jp-flow .chapter-head, .jp-flow img { break-inside: avoid; }

@@ -1,5 +1,6 @@
 import { hardcoverPaper, hardcoverTrim, type Binding, type PaperType } from "./kdp";
 import type { DocNode } from "./doc/types";
+import type { ThemeCustom } from "./themes";
 
 export type BookStatus = "idea" | "drafting" | "revising" | "editing" | "ready" | "published";
 
@@ -23,6 +24,10 @@ export interface BookFormat {
   bleed: boolean;
   /** start every chapter on a right-hand page in print */
   chaptersOnRight: boolean;
+  /** start the first chapter on a right-hand page even when the others run on */
+  firstChapterOnRight?: boolean;
+  /** number the front matter in the same count as the body (1, 2, 3…), instead of starting at 1 on the first chapter */
+  countFrontMatter?: boolean;
   dropCaps: boolean;
   /** show a running header with author and chapter title in print */
   runningHeads: boolean;
@@ -36,6 +41,31 @@ export interface BookFormat {
   hardcover: boolean;
   /** hardcover trim; empty means the paperback trim, or the nearest hardcover size to it */
   hardcoverTrim: string;
+  /** the author's changes on top of the theme: fonts, colour, headings, ornament, drop cap */
+  custom?: ThemeCustom;
+  /** the author's own print margins in inches from the trim; KDP's minimums still apply. Missing = automatic */
+  margins?: CustomMargins;
+  /** how lengths are shown in the studio */
+  units?: "in" | "mm";
+  /** a background behind the book's pages, from the library ("bg:<id>") or an uploaded image URL */
+  pageBackground?: PageBackground;
+}
+
+export interface CustomMargins {
+  inside?: number;
+  outside?: number;
+  top?: number;
+  bottom?: number;
+  /** how far a full-page picture stays from the binding; 0 or missing runs it into the gutter */
+  pictureGutter?: number;
+}
+
+export interface PageBackground {
+  src: string;
+  /** 0.1 to 1: how strongly it shows; lower keeps text easy to read */
+  strength: number;
+  /** every page, or only the first page of each chapter */
+  where: "all" | "openers";
 }
 
 export const DEFAULT_FORMAT: BookFormat = {
@@ -144,6 +174,13 @@ export interface ChapterOptions {
   invert?: boolean;
   /** on a part: it opens one book of a box set ("Book One"), and chapter numbers start again */
   volume?: boolean;
+  /** a background for this section's pages ("bg:<id>" or an image URL); "none" turns off the book's */
+  background?: string;
+  backgroundStrength?: number;
+  /** only behind the section's first page */
+  backgroundOpener?: boolean;
+  /** this section appears only in the ebook, or only in print */
+  only?: "ebook" | "print";
 }
 
 export function chapterOptions(c: Pick<Chapter, "options">): ChapterOptions {

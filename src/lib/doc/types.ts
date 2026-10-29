@@ -24,7 +24,7 @@ export function plainText(node: DocNode | null | undefined, sep = " "): string {
   if (node.type === "footnote") return "";
   const inner = (node.content ?? []).map((c) => plainText(c, sep));
   const text = inner.join("");
-  return node.type === "paragraph" || node.type === "heading" ? text + sep : text;
+  return node.type === "paragraph" || node.type === "heading" || node.type === "chatMessage" || node.type === "tableCell" || node.type === "tableHeader" ? text + sep : text;
 }
 
 export function countWords(node: DocNode | null | undefined): number {
@@ -54,8 +54,16 @@ export function paragraphsToDoc(text: string): DocNode {
 /** Collect image nodes so exporters can fetch and embed them. */
 export function collectImages(node: DocNode | null | undefined, out: string[] = []): string[] {
   if (!node) return out;
-  if (node.type === "image" && typeof node.attrs?.src === "string") out.push(node.attrs.src);
+  if ((node.type === "image" || node.type === "box") && typeof node.attrs?.src === "string" && node.attrs.src) out.push(node.attrs.src);
   for (const c of node.content ?? []) collectImages(c, out);
+  return out;
+}
+
+/** Every scene-break ornament a document asks for by name (the theme's own is added by callers). */
+export function collectOrnaments(node: DocNode | null | undefined, out: Set<string> = new Set()): Set<string> {
+  if (!node) return out;
+  if (node.type === "horizontalRule" && typeof node.attrs?.ornament === "string" && node.attrs.ornament) out.add(node.attrs.ornament);
+  for (const c of node.content ?? []) collectOrnaments(c, out);
   return out;
 }
 

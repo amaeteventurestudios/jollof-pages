@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { htmlToElements, type ImportedElement } from "./docx";
 import { markdownToElements } from "./markdown";
 import { plainTextToMarkdown, rtfToHtml, stripGutenberg } from "./text-formats";
+import { toWebp } from "../webp";
 
 type Upload = (blob: Blob, contentType: string) => Promise<string>;
 
@@ -224,7 +225,14 @@ export async function odtToElements(buf: ArrayBuffer, upload?: Upload): Promise<
 }
 
 /** Pick the reader for a file by its name. */
-export async function fileToElements(file: File, upload?: Upload): Promise<ImportedElement[]> {
+export async function fileToElements(file: File, rawUpload?: Upload): Promise<ImportedElement[]> {
+  // pictures inside an imported manuscript are stored as WebP too
+  const upload: Upload | undefined = rawUpload
+    ? async (blob, type) => {
+        const f = await toWebp(new File([blob], "image", { type }));
+        return rawUpload(f, f.type);
+      }
+    : undefined;
   const name = file.name.toLowerCase();
   if (/\.(md|markdown)$/.test(name)) return markdownToElements(await file.text());
   if (name.endsWith(".txt")) return textToElements(await file.text());

@@ -20,6 +20,8 @@ import {
   Strikethrough,
   Underline,
   Undo2,
+  Plus,
+  Smile,
 } from "lucide-react";
 import FindAndReplace from "@tiptap/extension-find-and-replace";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -33,6 +35,9 @@ import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
 import { ImagePickerDialog, assetUrl } from "./image-library";
 import type { DocNode } from "@/lib/doc/types";
+import { blockTemplate, BOXES, type BlockDef } from "@/lib/blocks";
+import { ORNAMENTS } from "@/lib/ornaments";
+import { EmojiDialog, InsertBlockDialog } from "./insert-block";
 
 interface Props {
   chapterId: string;
@@ -56,9 +61,11 @@ interface Props {
   readOnly?: boolean;
   /** a comment highlight was clicked */
   onCommentClick?: (id: string) => void;
+  /** theme styles for special blocks (theme-css editorBlockCss) */
+  blockCss?: string;
 }
 
-export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick }: Props) {
+export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss }: Props) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -96,7 +103,9 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {blockCss && <style>{blockCss}</style>}
       {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} />}
+      {editor && !readOnly && <BlockBar editor={editor} bookId={bookId} />}
       {live && (live.problem || !live.synced) && (
         <p role="status" className="border-b border-border bg-paper-2 px-4 py-1.5 text-[13px] text-ink-2">
           {live.problem || "Connecting to the shared copy of this chapter…"}
@@ -167,13 +176,64 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
       canRedo: e.can().redo(),
     }),
   });
-  const [prompt, setPrompt] = useState<null | "link" | "footnote">(null);
+  const [prompt, setPrompt] = useState<null | "link" | "footnote" | "endnote">(null);
   const [picking, setPicking] = useState(false);
+  const [imageLayout, setImageLayout] = useState("center");
+  const [inserting, setInserting] = useState(false);
+  const [emoji, setEmoji] = useState(false);
+
+  // Ctrl+Shift+N (Cmd+Shift+N on a Mac) adds a footnote where the cursor is
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const onKey = (ev: KeyboardEvent) => {
+      if ((ev.ctrlKey || ev.metaKey) && ev.shiftKey && ev.key.toLowerCase() === "n") {
+        ev.preventDefault();
+        setPrompt("footnote");
+      }
+    };
+    dom.addEventListener("keydown", onKey);
+    return () => dom.removeEventListener("keydown", onKey);
+  }, [editor]);
+
+  function pick(b: BlockDef) {
+    const c = editor.chain().focus();
+    switch (b.kind) {
+      case "blockquote":
+        return c.toggleBlockquote().run();
+      case "bulletList":
+        return c.toggleBulletList().run();
+      case "orderedList":
+        return c.toggleOrderedList().run();
+      case "footnote":
+        return setPrompt("footnote");
+      case "endnote":
+        return setPrompt("endnote");
+      case "link":
+        return setPrompt("link");
+      case "emoji":
+        return setEmoji(true);
+      case "image":
+        setImageLayout(b.id === "image_left" ? "left" : b.id === "image_right" ? "right" : "full");
+        return setPicking(true);
+      default: {
+        const tpl = blockTemplate(b.id);
+        if (tpl) c.insertContent(tpl).run();
+      }
+    }
+  }
   const style = s.h2 ? "h2" : s.h3 ? "h3" : s.h4 ? "h4" : "p";
 
   return (
     <div className="relative border-b border-border bg-card">
       <div className="flex items-center gap-0.5 overflow-x-auto px-2 py-1.5">
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setInserting(true)}
+          className="mr-1 inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+        >
+          <Plus className="size-4" /> Insert
+        </button>
         <label className="sr-only" htmlFor="para-style">
           Paragraph style
         </label>
@@ -242,11 +302,20 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
         <ToolButton label="Link" active={s.link} on={() => (s.link ? editor.chain().focus().unsetLink().run() : setPrompt("link"))}>
           <Link2 />
         </ToolButton>
-        <ToolButton label="Footnote" on={() => setPrompt("footnote")}>
+        <ToolButton label="Footnote (Ctrl+Shift+N)" on={() => setPrompt("footnote")}>
           <NotebookPen />
         </ToolButton>
-        <ToolButton label="Image" on={() => setPicking(true)}>
+        <ToolButton
+          label="Image"
+          on={() => {
+            setImageLayout("center");
+            setPicking(true);
+          }}
+        >
           <ImagePlus />
+        </ToolButton>
+        <ToolButton label="Emoji" on={() => setEmoji(true)}>
+          <Smile />
         </ToolButton>
         <ImagePickerDialog
           open={picking}
@@ -258,7 +327,7 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
             editor
               .chain()
               .focus()
-              .setImage({ src: assetUrl(a), alt: a.alt })
+              .insertContent({ type: "image", attrs: { src: assetUrl(a), alt: a.alt, layout: imageLayout } })
               .run()
           }
         />
@@ -282,8 +351,8 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
         }}
       />
       <PromptDialog
-        open={prompt === "footnote"}
-        title="Add a footnote"
+        open={prompt === "footnote" || prompt === "endnote"}
+        title={prompt === "endnote" ? "Add an endnote" : "Add a footnote"}
         label="Note text"
         multiline
         onClose={() => setPrompt(null)}
@@ -291,9 +360,157 @@ function Toolbar({ editor, bookId }: { editor: Editor; bookId: string }) {
           editor
             .chain()
             .focus()
-            .insertContent({ type: "footnote", attrs: { text: v } })
+            .insertContent({ type: "footnote", attrs: { text: v, endnote: prompt === "endnote" } })
             .run()
         }
+      />
+      <InsertBlockDialog open={inserting} onOpenChange={setInserting} onPick={pick} />
+      <EmojiDialog open={emoji} onOpenChange={setEmoji} onPick={(e) => editor.chain().focus().insertContent(e).run()} />
+    </div>
+  );
+}
+
+/** Controls for the special block the cursor is in: bubble side, box style, table rows, picture layout, ornament. */
+function BlockBar({ editor, bookId }: { editor: Editor; bookId: string }) {
+  const s = useEditorState({
+    editor,
+    selector: ({ editor: e }) => ({
+      msg: e.isActive("chatMessage") ? (e.getAttributes("chatMessage") as { from: string; name: string }) : null,
+      group: e.isActive("chat") ? !!e.getAttributes("chat").group : false,
+      box: e.isActive("box") ? (e.getAttributes("box") as { variant: string; label: string | null; src: string | null }) : null,
+      table: e.isActive("table"),
+      image: e.isActive("image") ? (e.getAttributes("image") as { layout: string }) : null,
+      hr: e.isActive("horizontalRule") ? (e.getAttributes("horizontalRule") as { ornament: string | null }) : null,
+    }),
+  });
+  const [naming, setNaming] = useState<null | "label" | "sender">(null);
+  const [picture, setPicture] = useState(false);
+  if (!s.msg && !s.box && !s.table && !s.image && !s.hr) return null;
+  const btn = "h-7 shrink-0 rounded border border-border bg-card px-2 text-[13px] hover:border-primary";
+  const sel = "h-7 shrink-0 rounded border border-border bg-card px-1.5 text-[13px]";
+  const run = (f: (c: ReturnType<Editor["chain"]>) => ReturnType<Editor["chain"]>) => f(editor.chain().focus()).run();
+  const box = s.box ? BOXES.find((b) => b.id === s.box!.variant) : null;
+  return (
+    <div className="flex items-center gap-1.5 overflow-x-auto border-b border-border bg-paper-2 px-3 py-1.5 text-[13px]" role="toolbar" aria-label="Block settings">
+      {s.msg && (
+        <>
+          <span className="shrink-0 font-medium text-ink-2">Message</span>
+          <button type="button" className={btn} onClick={() => run((c) => c.updateAttributes("chatMessage", { from: s.msg!.from === "me" ? "them" : "me" }))}>
+            {s.msg.from === "me" ? "Sent by me: switch side" : "Received: switch side"}
+          </button>
+          {s.group && (
+            <button type="button" className={btn} onClick={() => setNaming("sender")}>
+              Sender: {s.msg.name || "none"}
+            </button>
+          )}
+          <button
+            type="button"
+            className={btn}
+            onClick={() => {
+              const { $from } = editor.state.selection;
+              const after = $from.after($from.depth);
+              const from = s.msg!.from === "me" ? "them" : "me";
+              editor.chain().focus().insertContentAt(after, { type: "chatMessage", attrs: { from, name: "" } }).setTextSelection(after + 1).run();
+            }}
+          >
+            Add a reply
+          </button>
+        </>
+      )}
+      {s.box && !s.msg && (
+        <>
+          <label className="sr-only" htmlFor="box-variant">
+            Block style
+          </label>
+          <select id="box-variant" className={sel} value={s.box.variant} onChange={(e) => run((c) => c.updateAttributes("box", { variant: e.target.value, label: null }))}>
+            {BOXES.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.label}
+              </option>
+            ))}
+          </select>
+          {box?.box?.label !== undefined && (
+            <button type="button" className={btn} onClick={() => setNaming("label")}>
+              Heading: {s.box.label ?? box?.box?.label ?? ""}
+            </button>
+          )}
+          {s.box.variant === "overlay" && (
+            <button type="button" className={btn} onClick={() => setPicture(true)}>
+              {s.box.src ? "Change picture" : "Choose picture"}
+            </button>
+          )}
+          <button type="button" className={btn} onClick={() => run((c) => c.lift("box"))}>
+            Remove box
+          </button>
+        </>
+      )}
+      {s.table && (
+        <>
+          <span className="shrink-0 font-medium text-ink-2">Table</span>
+          <button type="button" className={btn} onClick={() => run((c) => c.addRowAfter())}>
+            + Row
+          </button>
+          <button type="button" className={btn} onClick={() => run((c) => c.addColumnAfter())}>
+            + Column
+          </button>
+          <button type="button" className={btn} onClick={() => run((c) => c.deleteRow())}>
+            − Row
+          </button>
+          <button type="button" className={btn} onClick={() => run((c) => c.deleteColumn())}>
+            − Column
+          </button>
+          <button type="button" className={btn} onClick={() => run((c) => c.toggleHeaderRow())}>
+            Header row
+          </button>
+          <button type="button" className={btn} onClick={() => run((c) => c.deleteTable())}>
+            Delete table
+          </button>
+        </>
+      )}
+      {s.image && (
+        <>
+          <label htmlFor="img-layout" className="shrink-0 font-medium text-ink-2">
+            Picture
+          </label>
+          <select id="img-layout" className={sel} value={s.image.layout || "center"} onChange={(e) => run((c) => c.updateAttributes("image", { layout: e.target.value }))}>
+            <option value="center">Centred</option>
+            <option value="small">Small, centred</option>
+            <option value="full">Full width</option>
+            <option value="left">Left, small</option>
+            <option value="right">Right, small</option>
+          </select>
+        </>
+      )}
+      {s.hr && (
+        <>
+          <label htmlFor="hr-ornament" className="shrink-0 font-medium text-ink-2">
+            Scene break
+          </label>
+          <select id="hr-ornament" className={sel} value={s.hr.ornament ?? ""} onChange={(e) => run((c) => c.updateAttributes("horizontalRule", { ornament: e.target.value || null }))}>
+            <option value="">The theme&apos;s ornament</option>
+            {ORNAMENTS.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
+      <PromptDialog
+        open={naming !== null}
+        title={naming === "sender" ? "Who sent this message?" : "Block heading"}
+        label={naming === "sender" ? "Name" : "Heading"}
+        initial={naming === "sender" ? (s.msg?.name ?? "") : (s.box?.label ?? box?.box?.label ?? "")}
+        onClose={() => setNaming(null)}
+        onSubmit={(v) => (naming === "sender" ? run((c) => c.updateAttributes("chatMessage", { name: v })) : run((c) => c.updateAttributes("box", { label: v })))}
+      />
+      <ImagePickerDialog
+        open={picture}
+        onOpenChange={setPicture}
+        bookId={bookId}
+        title="Picture behind the text"
+        description="It is darkened a little so white text stays readable."
+        onPick={(a) => run((c) => c.updateAttributes("box", { src: assetUrl(a) }))}
       />
     </div>
   );

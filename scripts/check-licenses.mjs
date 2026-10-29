@@ -8,8 +8,8 @@ const ALLOWED = /^(MIT|ISC|BSD-2-Clause|BSD-3-Clause|0BSD|Apache-2\.0|BlueOak-1\
 
 // Reviewed exceptions. sharp's libvips binaries are LGPL-3.0, loaded as a separate shared library
 // by Next.js's image optimiser; LGPL allows that use and it is not GPL or AGPL. "BSD" is an
-// old-style BSD licence field.
-const REVIEWED = /^(@img\/sharp-libvips-|@img\/sharp-wasm32$|duck$)/;
+// old-style BSD licence field. extend@1 (used by geopattern) has no licence field; its README says MIT.
+const REVIEWED = /^(@img\/sharp-libvips-|@img\/sharp-wasm32$|duck$|extend$)/;
 
 const tree = JSON.parse(execFileSync("npm", ["ls", "--omit=dev", "--all", "--json", "--long"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }));
 const seen = new Map();

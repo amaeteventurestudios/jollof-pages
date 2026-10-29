@@ -14,9 +14,13 @@ import { loadEditorSettings, saveEditorSettings, type EditorSettings } from "@/l
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ImagePickerDialog, assetUrl } from "@/components/studio/image-library";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { BackgroundPicker } from "./design-pickers";
+import { BACKGROUNDS } from "@/lib/backgrounds";
 import { createChapter, logWords, refreshBookWordCount, saveChapter } from "@/lib/studio";
 import { elementKind } from "@/lib/elements";
-import { getTheme } from "@/lib/themes";
+import { themeFor } from "@/lib/themes";
+import { editorBlockCss } from "@/lib/theme-css";
 import { bookFormat, chapterOptions, type Chapter, type ChapterOptions } from "@/lib/types";
 import { fmt } from "@/lib/progress";
 import { errorMessage, pb } from "@/lib/pb";
@@ -103,7 +107,8 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
   }
-  const theme = getTheme(bookFormat(book).theme);
+  const theme = themeFor(bookFormat(book));
+  const blockCss = editorBlockCss(theme);
 
   // autosave: one pending content save at a time, flushed when switching chapters
   const pendingRef = useRef<{ id: string; doc: DocNode; words: number } | null>(null);
@@ -235,8 +240,10 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   const kind = active ? elementKind(active.kind) : null;
   const opts = active ? chapterOptions(active) : {};
   // sections with a title block of their own (not the title page, copyright, dedication or a part divider)
-  const headed = !!kind && !kind.smart && !kind.hideTitle && kind.id !== "part";
+  const headed = !!kind && !kind.smart && !kind.hideTitle && kind.id !== "part" && kind.layout !== "full_image";
   const [pickingImage, setPickingImage] = useState(false);
+  const [bgOpen, setBgOpen] = useState(false);
+  const [pickingBg, setPickingBg] = useState(false);
 
   return (
     <div className="flex min-h-0 flex-1 app:pb-[calc(var(--app-tab-h)+env(safe-area-inset-bottom))]">
@@ -337,6 +344,22 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                         <DropdownMenuSeparator />
                       </>
                     )}
+                    {kind.layout === "full_image" && (
+                      <>
+                        <DropdownMenuLabel>Full-page picture</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => setPickingImage(true)}>{opts.image ? "Change the picture…" : "Choose the picture…"}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuLabel>Look</DropdownMenuLabel>
+                    <DropdownMenuItem onSelect={() => setBgOpen(true)}>{opts.background && opts.background !== "none" ? "Change page background…" : "Page background…"}</DropdownMenuItem>
+                    <DropdownMenuCheckboxItem checked={opts.only === "ebook"} onCheckedChange={(v) => patchOptions({ only: v ? "ebook" : undefined })}>
+                      Ebook only (left out of print)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={opts.only === "print"} onCheckedChange={(v) => patchOptions({ only: v ? "print" : undefined })}>
+                      Print only (left out of the ebook)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
                     {active.kind === "part" && (
                       <>
                         <DropdownMenuLabel>Box set</DropdownMenuLabel>
@@ -387,6 +410,52 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                 description="Shown at the top of the chapter's first page, in print and in the ebook. Wide images work best."
                 onPick={(a) => patchOptions({ image: assetUrl(a), hideImage: false })}
               />
+              <Dialog open={bgOpen} onOpenChange={setBgOpen}>
+                <DialogContent className="max-w-4xl grid-cols-1 [&>*]:min-w-0">
+                  <DialogTitle>Background for “{active.title}”</DialogTitle>
+                  <DialogDescription>Pick one of {BACKGROUNDS.length} backgrounds or upload a picture. “Use the book&apos;s” follows the Format tab.</DialogDescription>
+                  <BackgroundPicker
+                    value={opts.background === "none" ? "" : (opts.background ?? "")}
+                    noneLabel="Use the book's"
+                    onChange={(v) => patchOptions({ background: v || undefined })}
+                    onUpload={() => setPickingBg(true)}
+                  />
+                  <div className="flex flex-wrap items-center gap-5 text-sm">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={opts.background === "none"} onChange={(e) => patchOptions({ background: e.target.checked ? "none" : undefined })} />
+                      No background on this section
+                    </label>
+                    {opts.background && opts.background !== "none" && (
+                      <>
+                        <label className="flex items-center gap-2">
+                          <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={!!opts.backgroundOpener} onChange={(e) => patchOptions({ backgroundOpener: e.target.checked })} />
+                          Only on the first page
+                        </label>
+                        <label className="flex items-center gap-2">
+                          Strength
+                          <input
+                            type="range"
+                            min={10}
+                            max={100}
+                            step={5}
+                            value={Math.round((opts.backgroundStrength ?? 0.8) * 100)}
+                            onChange={(e) => patchOptions({ backgroundStrength: Number(e.target.value) / 100 })}
+                            className="w-36 accent-[var(--primary)]"
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <ImagePickerDialog
+                open={pickingBg}
+                onOpenChange={setPickingBg}
+                bookId={book.id}
+                title="Background picture"
+                description="Fills the pages of this section behind the text, faded so the words stay readable."
+                onPick={(a) => patchOptions({ background: assetUrl(a) })}
+              />
             </>
           )}
         </div>
@@ -423,6 +492,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
             bookId={book.id}
             onChange={onChange}
             fontFamily={theme.bodyCss}
+            blockCss={blockCss}
             settings={settings}
             onEditor={setEditor}
             onFind={openFind}
