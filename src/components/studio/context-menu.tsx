@@ -32,8 +32,17 @@ import {
   Strikethrough,
   Trash2,
   Underline,
+  Volume2,
+  Wand2,
+  BookMarked,
+  Feather,
+  GraduationCap,
+  Shapes,
 } from "lucide-react";
 import { nameOf } from "./block-handle";
+import { runAi } from "./ai-review";
+import { AI_ACTIONS, AI_GROUPS, type AiGroup } from "@/lib/ai-actions";
+import { BOXES } from "@/lib/blocks";
 import { cn } from "@/lib/utils";
 
 /** Dialogs and panels the menus open. The editor toolbar and block bar listen for these. */
@@ -125,6 +134,21 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
   }
 
   const c = () => editor.chain().focus();
+  const [speaking, setSpeaking] = useState(false);
+  function readAloud() {
+    const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
+    if (!synth) return flash("This browser cannot read aloud");
+    if (speaking) {
+      synth.cancel();
+      setSpeaking(false);
+      return;
+    }
+    const { from, to } = editor.state.selection;
+    const u = new SpeechSynthesisUtterance(editor.state.doc.textBetween(from, to, " "));
+    u.onend = u.onerror = () => setSpeaking(false);
+    setSpeaking(true);
+    synth.speak(u);
+  }
   const flash = (t: string) => {
     setNote(t);
     setTimeout(() => setNote(""), 2400);
@@ -236,7 +260,14 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
               <Item icon={NotebookPen} label="Footnote…" on={() => openInEditor(editor, "footnote")} />
               <Item icon={BookOpenText} label="Endnote…" on={() => openInEditor(editor, "endnote")} />
               <Sep />
-              <Item icon={Sparkles} label="Ask the writing assistant" on={() => onTool?.("assistant")} />
+              <AiSub editor={editor} group="write" icon={Wand2} />
+              <AiSub editor={editor} group="fiction" icon={Feather} />
+              <AiSub editor={editor} group="nonfiction" icon={GraduationCap} />
+              <Item icon={Sparkles} label="Explain this" on={() => runAi(editor, "explain")} />
+              <Item icon={Volume2} label={speaking ? "Stop reading" : "Read aloud"} on={readAloud} />
+              <Item icon={BookMarked} label="Open the writing assistant" on={() => onTool?.("assistant")} />
+              <Sep />
+              <TransformSub editor={editor} />
             </>
           )}
           {ctx?.mode === "cursor" && (
@@ -252,7 +283,8 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
                 <Item icon={BookOpenText} label="Endnote…" on={() => openInEditor(editor, "endnote")} />
                 <Item icon={Smile} label="Emoji…" on={() => openInEditor(editor, "emoji")} />
               </Sub>
-              <Item icon={Sparkles} label="Continue writing with AI" on={() => onTool?.("assistant")} />
+              <Item icon={Sparkles} label="Continue writing with AI" on={() => runAi(editor, "continue")} />
+              <Item icon={Feather} label="Write a chapter transition" on={() => runAi(editor, "transition")} />
             </>
           )}
           {ctx && b && blockOps && (
@@ -260,6 +292,17 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
               <Sep />
               <CM.Label className="px-2 pt-1 pb-0.5 text-xs font-medium text-muted-foreground">{nameOf(b.node)}</CM.Label>
               {box && <Item icon={Pencil} label="Edit style…" on={() => openInEditor(editor, "style")} />}
+              {box && (
+                <Sub icon={Shapes} label="Change type">
+                  {BOX_GROUPS.map(([g, list]) => (
+                    <Sub key={g} label={g}>
+                      {list.map((x) => (
+                        <Item key={x.id} label={x.label} on={() => editor.chain().focus().setNodeSelection(b.pos).updateAttributes("box", { variant: x.id, label: null }).setTextSelection(b.pos + 2).run()} />
+                      ))}
+                    </Sub>
+                  ))}
+                </Sub>
+              )}
               {textBlock && (
                 <Sub label="Turn into">
                   <Item label="Body text" on={() => c().setTextSelection(b.pos + 1).setParagraph().run()} />
@@ -331,4 +374,49 @@ function Sub({ icon: Icon, label, children }: { icon?: React.ComponentType; labe
 
 function Sep() {
   return <CM.Separator className="-mx-1 my-1 h-px bg-border" />;
+}
+
+// block kinds a box can change into, by catalog group; ones with their own layout stay out
+const BOX_GROUPS = Object.entries(
+  BOXES.filter((x) => x.id !== "overlay" && !x.box?.only).reduce<Record<string, typeof BOXES>>((acc, x) => {
+    (acc[x.group] ??= []).push(x);
+    return acc;
+  }, {}),
+);
+
+/** One AI group as a submenu; tools with a choice (tone, tense…) open one more level. */
+function AiSub({ editor, group, icon }: { editor: Editor; group: AiGroup; icon: React.ComponentType }) {
+  const list = AI_ACTIONS.filter((a) => a.group === group && a.needs === "selection");
+  return (
+    <Sub icon={icon} label={AI_GROUPS[group]}>
+      {list.map((a) =>
+        a.options ? (
+          <Sub key={a.id} label={a.label}>
+            {a.options.map((o) => (
+              <Item key={o} label={o[0].toUpperCase() + o.slice(1)} on={() => runAi(editor, a.id, o)} />
+            ))}
+          </Sub>
+        ) : (
+          <Item key={a.id} label={a.label} on={() => runAi(editor, a.id)} />
+        ),
+      )}
+    </Sub>
+  );
+}
+
+/** Wrap the selected paragraphs in a special block, keeping the words as they are. */
+function TransformSub({ editor }: { editor: Editor }) {
+  return (
+    <Sub icon={Shapes} label="Transform into">
+      {BOX_GROUPS.map(([g, list]) => (
+        <Sub key={g} label={g}>
+          {list.map((x) => (
+            <Item key={x.id} label={x.label} on={() => editor.chain().focus().wrapIn("box", { variant: x.id }).run()} />
+          ))}
+        </Sub>
+      ))}
+      <CM.Separator className="-mx-1 my-1 h-px bg-border" />
+      <p className="max-w-56 px-2 py-1 text-[11px] leading-snug text-muted-foreground">Checklists, quizzes and takeaways written for you are under Nonfiction and teaching.</p>
+    </Sub>
+  );
 }

@@ -8,6 +8,7 @@ import { Bold, Ellipsis, Italic, Link2, MessageSquarePlus, Sparkles, Underline }
 import { PromptDialog } from "./prompt-dialog";
 import { cn } from "@/lib/utils";
 import { openContextMenu, type EditorTool } from "./context-menu";
+import { runAi } from "./ai-review";
 
 function Btn({ label, active, on, children }: { label: string; active?: boolean; on: (e: React.MouseEvent<HTMLButtonElement>) => void; children: React.ReactNode }) {
   return (
@@ -86,7 +87,7 @@ export function SelectionToolbar({ editor, onTool }: { editor: Editor; onTool?: 
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => onTool?.("assistant")}
+          onClick={() => runAi(editor, "rewrite")}
           className="inline-flex h-8 items-center gap-1 rounded px-2 text-[13px] font-medium text-primary hover:bg-primary-soft [&_svg]:size-4"
         >
           <Sparkles aria-hidden /> AI Rewrite

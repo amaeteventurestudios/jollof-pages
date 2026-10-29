@@ -41,6 +41,7 @@ import { BoxStylePanel, PresetPicker, boxLookAtCursor } from "./box-style-panel"
 import { BlockHandle } from "./block-handle";
 import { SelectionToolbar } from "./selection-toolbar";
 import { EditorContextMenu, type EditorOpen, type EditorTool } from "./context-menu";
+import { AiReview } from "./ai-review";
 import { ORNAMENTS } from "@/lib/ornaments";
 import { EmojiDialog, InsertBlockDialog } from "./insert-block";
 
@@ -161,6 +162,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
               </EditorContextMenu>
               <BlockHandle editor={editor} />
               <SelectionToolbar editor={editor} onTool={onTool} />
+              <AiReview editor={editor} bookId={bookId} chapterId={chapterId} onTool={onTool} />
             </>
           ) : (
             <EditorContent editor={editor} />
