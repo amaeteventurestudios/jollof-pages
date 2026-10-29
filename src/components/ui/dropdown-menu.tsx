@@ -13,6 +13,7 @@ function DropdownMenuContent({ className, sideOffset = 4, ...props }: React.Comp
   return (
     <DM.Portal>
       <DM.Content
+        data-slot="dropdown-content"
         sideOffset={sideOffset}
         className={cn(
           "z-50 min-w-[10rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
@@ -25,10 +26,10 @@ function DropdownMenuContent({ className, sideOffset = 4, ...props }: React.Comp
 }
 const itemCls =
   "relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none data-[highlighted]:bg-muted data-[disabled]:opacity-50 [&_svg]:size-4";
-const DropdownMenuItem = ({ className, ...p }: React.ComponentProps<typeof DM.Item>) => <DM.Item className={cn(itemCls, className)} {...p} />;
+const DropdownMenuItem = ({ className, ...p }: React.ComponentProps<typeof DM.Item>) => <DM.Item data-slot="dropdown-item" className={cn(itemCls, className)} {...p} />;
 function DropdownMenuRadioItem({ className, children, ...p }: React.ComponentProps<typeof DM.RadioItem>) {
   return (
-    <DM.RadioItem className={cn(itemCls, "pl-8", className)} {...p}>
+    <DM.RadioItem data-slot="dropdown-item" className={cn(itemCls, "pl-8", className)} {...p}>
       <span className="absolute left-2 flex size-3.5 items-center justify-center">
         <DM.ItemIndicator>
           <CheckIcon className="size-4" />
@@ -40,7 +41,7 @@ function DropdownMenuRadioItem({ className, children, ...p }: React.ComponentPro
 }
 function DropdownMenuCheckboxItem({ className, children, ...p }: React.ComponentProps<typeof DM.CheckboxItem>) {
   return (
-    <DM.CheckboxItem className={cn(itemCls, "pl-8", className)} {...p}>
+    <DM.CheckboxItem data-slot="dropdown-item" className={cn(itemCls, "pl-8", className)} {...p}>
       <span className="absolute left-2 flex size-3.5 items-center justify-center">
         <DM.ItemIndicator>
           <CheckIcon className="size-4" />

@@ -29,14 +29,14 @@ function Row({ c, label, active, onSelect, fixed }: { c: Chapter; label: string;
         {fixed ? (
           <span className="w-2" />
         ) : (
-          <button type="button" aria-label={`Reorder ${c.title}`} className="cursor-grab touch-none p-1.5 text-soft opacity-60 group-hover:opacity-100" {...attributes} {...listeners}>
+          <button type="button" aria-label={`Reorder ${c.title}`} className="cursor-grab touch-none p-1.5 text-soft opacity-60 group-hover:opacity-100 app:p-3 app:opacity-100" {...attributes} {...listeners}>
             <GripVertical className="size-3.5" />
           </button>
         )}
-        <button type="button" onClick={onSelect} aria-current={active ? "true" : undefined} className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2 text-left">
+        <button type="button" onClick={onSelect} aria-current={active ? "true" : undefined} className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2 text-left app:min-h-14 app:gap-3 app:py-2.5">
           <span className={cn("size-2 shrink-0 rounded-full", STATUS_DOT[c.status] ?? STATUS_DOT.draft)} title={`Status: ${c.status}`} />
           <span className="min-w-0 flex-1">
-            <span className={cn("block truncate text-sm", active ? "font-medium text-primary" : "text-ink")}>{c.title || kind.label}</span>
+            <span className={cn("block truncate text-sm app:text-base", active ? "font-medium text-primary" : "text-ink")}>{c.title || kind.label}</span>
             <span className="block truncate text-[13px] text-soft">
               {label || kind.label}
               {!kind.smart && c.word_count ? ` · ${fmt(c.word_count)} words` : ""}
@@ -88,7 +88,7 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
                 )}
                 {!fixed && (
                   <DropdownMenu>
-                    <DropdownMenuTrigger aria-label={`Add to ${SECTION_LABELS[section]}`} className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink">
+                    <DropdownMenuTrigger aria-label={`Add to ${SECTION_LABELS[section]}`} className="rounded p-1 text-soft hover:bg-paper-2 hover:text-ink app:grid app:size-11 app:place-items-center">
                       <Plus className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
@@ -117,7 +117,7 @@ export function ChapterSidebar({ ws, activeId, onSelect, onAdd }: { ws: Workspac
         })}
       </nav>
       {!fixed && (
-        <div className="border-t border-border bg-card p-3">
+        <div className="border-t border-border bg-card p-3 app:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => onAdd("chapter")}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { pb } from "@/lib/pb";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -58,8 +59,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   if (state === "unpaid") return <FinishPurchase />;
   if (state !== "ready")
     return (
-      <div className="grid min-h-screen place-items-center text-sm text-soft" role="status">
-        Opening your studio…
+      <div className="grid min-h-screen place-items-center text-sm text-soft app:bg-[var(--app-bar)] app:text-[var(--app-bar-ink)]" role="status">
+        <span className="app:hidden">Opening your studio…</span>
+        {/* phones and tablets: the app's launch screen */}
+        <span className="hidden flex-col items-center gap-4 app:flex">
+          <span aria-hidden className="grid size-20 place-items-center bg-[#fff7ef] text-primary shadow-[0_18px_40px_-16px_rgb(20_5_0/0.7)]">
+            <BookOpen className="size-10" strokeWidth={1.6} />
+          </span>
+          <span className="text-[15px] font-semibold tracking-[0.08em] uppercase">Jollof Pages</span>
+          <span className="sr-only">Opening your studio…</span>
+        </span>
       </div>
     );
   return <>{children}</>;
@@ -72,7 +81,7 @@ function FinishPurchase() {
   const [error, setError] = useState("");
   const email = String(pb().authStore.record?.email ?? "");
   return (
-    <main className="grid min-h-screen place-items-center bg-paper p-6">
+    <main className="grid min-h-screen place-items-center bg-paper p-6 app:pt-[calc(1.5rem+env(safe-area-inset-top))] app:pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
       <div className="w-full max-w-md">
         <h1 className="text-3xl tracking-tight">One step left</h1>
         <p className="mt-4 text-lg text-soft">

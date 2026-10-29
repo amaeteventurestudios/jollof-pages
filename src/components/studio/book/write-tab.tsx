@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, PanelLeft, Settings2, Timer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, ListTree, PanelLeft, Settings2, Timer } from "lucide-react";
+import { APP_QUERY } from "@/lib/app-mode";
 import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
 import { useLiveChapter } from "@/components/studio/use-live-chapter";
 import { useBookComments } from "./comments-panel";
@@ -36,7 +37,8 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(() => chapters.find((c) => c.kind === "chapter")?.id ?? chapters[0]?.id ?? null);
   const [showPreview, setShowPreview] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(true);
+  // phones and tablets open on the page itself; the chapter list is a sheet over it
+  const [showSidebar, setShowSidebar] = useState(() => !window.matchMedia(APP_QUERY).matches);
   const active = chapters.find((c) => c.id === activeId) ?? null;
   const [editor, setEditor] = useState<Editor | null>(null);
   const [rail, setRail] = useState<RailPanel | null>(null);
@@ -165,7 +167,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     await flush();
     setActiveId(id);
     setActiveComment(null);
-    if (window.matchMedia("(max-width: 767px)").matches) setShowSidebar(false);
+    if (window.matchMedia(`(max-width: 767px), ${APP_QUERY}`).matches) setShowSidebar(false);
   }
 
   /** adds a section, or one chapter per title (from the AI outline) */
@@ -181,6 +183,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
         setChapters((all) => [...all, created]);
         setActiveId(created.id);
       }
+      if (window.matchMedia(APP_QUERY).matches) setShowSidebar(false);
     } catch (e) {
       alert(`Could not add: ${errorMessage(e)}`);
     }
@@ -236,21 +239,37 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   const [pickingImage, setPickingImage] = useState(false);
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 app:pb-[calc(var(--app-tab-h)+env(safe-area-inset-bottom))]">
       <aside
+        aria-label="Chapters"
         className={cn(
           "w-72 shrink-0 border-r border-border bg-card",
           showSidebar ? "block" : "hidden",
           "max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:top-[96px] max-md:z-20 max-md:shadow-xl",
+          // phones and tablets: a full-screen sheet with its own app bar
+          showSidebar && "app:fixed app:inset-0! app:z-50 app:flex app:w-full app:flex-col app:border-0 app:shadow-none app:animate-in app:slide-in-from-bottom app:duration-300",
         )}
       >
-        <ChapterSidebar ws={ws} activeId={activeId} onSelect={select} onAdd={add} />
+        <div className="app-bar hidden shrink-0 bg-[var(--app-bar)] pt-[env(safe-area-inset-top)] text-[var(--app-bar-ink)] app:block">
+          <div className="relative flex h-14 items-center justify-center px-2">
+            <h2 className="text-[17px] font-semibold tracking-tight">Chapters</h2>
+            <button type="button" onClick={() => setShowSidebar(false)} className="absolute right-2 h-11 px-3 text-[17px] font-semibold active:opacity-70">
+              Done
+            </button>
+          </div>
+        </div>
+        <div className="h-full app:min-h-0 app:flex-1">
+          <ChapterSidebar ws={ws} activeId={activeId} onSelect={select} onAdd={add} />
+        </div>
       </aside>
 
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2">
-          <Button variant="ghost" size="icon-sm" aria-label={showSidebar ? "Hide chapters" : "Show chapters"} onClick={() => setShowSidebar((v) => !v)}>
+          <Button variant="ghost" size="icon-sm" aria-label={showSidebar ? "Hide chapters" : "Show chapters"} onClick={() => setShowSidebar((v) => !v)} className="app:hidden">
             <PanelLeft />
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowSidebar(true)} className="hidden app:inline-flex">
+            <ListTree /> Chapters
           </Button>
           {active && kind && (
             <>
@@ -260,14 +279,14 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                 readOnly={!structural}
                 onChange={(e) => setChapters((all) => all.map((c) => (c.id === active.id ? { ...c, title: e.target.value } : c)))}
                 onBlur={(e) => patch({ title: e.target.value.trim() || kind.label })}
-                className="min-w-40 flex-1 rounded bg-transparent px-1.5 py-1 text-lg font-medium tracking-tight hover:bg-paper focus:bg-paper"
+                className="min-w-40 flex-1 rounded bg-transparent px-1.5 py-1 text-lg font-medium tracking-tight hover:bg-paper focus:bg-paper app:order-first app:basis-full app:text-xl"
               />
               <select
                 aria-label="Status"
                 value={active.status}
                 disabled={!structural}
                 onChange={(e) => patch({ status: e.target.value as Chapter["status"] })}
-                className="h-8 rounded border border-input bg-card px-2 text-sm"
+                className="h-8 rounded border border-input bg-card px-2 text-sm app:h-11"
               >
                 <option value="draft">Draft</option>
                 <option value="revised">Revised</option>
@@ -280,7 +299,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
               </Button>
               {structural && (
                 <DropdownMenu>
-                  <DropdownMenuTrigger aria-label="Chapter settings" title="Chapter settings" className="rounded p-1.5 text-ink-2 hover:bg-muted data-[state=open]:bg-muted">
+                  <DropdownMenuTrigger aria-label="Chapter settings" title="Chapter settings" className="rounded p-1.5 text-ink-2 hover:bg-muted data-[state=open]:bg-muted app:ml-auto app:grid app:size-11 app:place-items-center">
                     <Settings2 className="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="max-h-[80vh] w-72 overflow-y-auto">
@@ -433,6 +452,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
           comments={comments}
           activeComment={activeComment}
           onActiveComment={setActiveComment}
+          preview={<Preview book={book} chapters={chapters} chapterId={activeId} onSelect={select} />}
         />
       </div>
 
