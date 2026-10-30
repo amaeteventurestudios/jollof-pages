@@ -24,6 +24,7 @@ export const WHATS_NEW: NewsItem[] = [
       "Right-click a chapter in the list to rename, duplicate, move, split, merge, outline or summarise it with AI, check its continuity, see its stats, download it or delete it.",
       "Select words and right-click to move them to another chapter or into a new one.",
       "Research tools on the right-click menu: cite a source as a footnote or endnote, leave research notes, mark facts to check, bookmark a place, find similar passages, add a term to the glossary and point to another chapter.",
+      "Edit styles (Styles above the page, or on the Format tab): justification, hyphenation, paragraph spacing, indent size, chapter openings and subtitles, endnotes on a Notes page, and an Index built from words you mark. Save a look by name, or copy one from another of your books.",
     ],
   },
   {

@@ -173,6 +173,10 @@
   outline: none;
   min-height: 60vh;
 }
+/* a word marked for the index */
+.manuscript .ProseMirror .ix-term {
+  border-bottom: 1.5px dotted var(--color-primary);
+}
 .manuscript .ProseMirror > * + * {
   margin-top: 0.9em;
 }

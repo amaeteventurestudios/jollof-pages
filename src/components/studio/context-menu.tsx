@@ -51,6 +51,8 @@ import {
   ScanSearch,
   BookA,
   Signpost,
+  ListPlus,
+  ListX,
 } from "lucide-react";
 import { nameOf } from "./block-handle";
 import { useBlockLibrary } from "./block-library";
@@ -135,6 +137,7 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
   const [saving, setSaving] = useState<Block | null>(null);
   const [citing, setCiting] = useState(false);
   const [glossing, setGlossing] = useState<string | null>(null);
+  const [indexing, setIndexing] = useState<string | null>(null);
   const note = (k: NoteKind | "") => {
     askForNote(k);
     onTool?.("comments");
@@ -310,6 +313,11 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
                 {(chapter?.similar || chapter?.glossary) && <Sep />}
                 {chapter?.similar && <Item icon={ScanSearch} label="Find similar passages" on={() => chapter.similar!(selectedText())} />}
                 {chapter?.glossary && <Item icon={BookA} label="Add to the glossary…" on={() => setGlossing(selectedText().trim().slice(0, 80))} />}
+                {editor.isActive("indexTerm") ? (
+                  <Item icon={ListX} label="Remove from the index" on={() => c().extendMarkRange("indexTerm").unsetMark("indexTerm").run()} />
+                ) : (
+                  <Item icon={ListPlus} label="Add to the index…" on={() => setIndexing(selectedText().trim().slice(0, 120))} />
+                )}
               </Sub>
               <Sep />
               <AiSub editor={editor} group="write" icon={Wand2} />
@@ -432,6 +440,16 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
         onAdd={(term, def) => {
           chapter?.glossary?.(term, def);
           flash(`\u201c${term}\u201d added to the glossary`);
+        }}
+      />
+      <PromptDialog
+        open={indexing !== null}
+        title="Add to the index"
+        label="Index entry (you can word it differently, e.g. Achebe, Chinua)"
+        initial={indexing ?? ""}
+        onClose={() => setIndexing(null)}
+        onSubmit={(v) => {
+          if (v.trim()) c().setMark("indexTerm", { term: v.trim().slice(0, 120) }).run();
         }}
       />
       <PromptDialog

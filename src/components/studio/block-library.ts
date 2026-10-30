@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { pb } from "@/lib/pb";
 import type { DocNode } from "@/lib/doc/types";
+import type { ThemeCustom } from "@/lib/themes";
 
 /** A block an author saved to reuse in any of their books. */
 export interface SavedBlock {
@@ -13,10 +14,21 @@ export interface SavedBlock {
   updated: string;
 }
 
+/** A book's look saved by name, to put on any other book (Edit styles). */
+export interface StylePreset {
+  id: string;
+  name: string;
+  theme: string;
+  custom: ThemeCustom;
+  fontSize?: number;
+  lineHeight?: number;
+}
+
 interface Prefs {
   /** block ids, or "saved:<id>" for a saved block */
   favourites: string[];
   recent: string[];
+  stylePresets: StylePreset[];
 }
 
 interface State {
@@ -25,7 +37,7 @@ interface State {
 }
 
 const RECENT = 8;
-let state: State = { prefs: { favourites: [], recent: [] }, saved: null };
+let state: State = { prefs: { favourites: [], recent: [], stylePresets: [] }, saved: null };
 let loadedFor: string | null = null;
 const listeners = new Set<() => void>();
 
@@ -37,7 +49,11 @@ function set(next: Partial<State>) {
 function cleanPrefs(raw: unknown): Prefs {
   const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.length < 60).slice(0, 60) : []);
-  return { favourites: ids(r.favourites), recent: ids(r.recent).slice(0, RECENT) };
+  const styles = (Array.isArray(r.stylePresets) ? r.stylePresets : [])
+    .filter((x): x is StylePreset => !!x && typeof x === "object" && typeof (x as StylePreset).id === "string" && typeof (x as StylePreset).name === "string" && typeof (x as StylePreset).theme === "string")
+    .slice(0, 40)
+    .map((x) => ({ ...x, custom: x.custom && typeof x.custom === "object" ? x.custom : {} }));
+  return { favourites: ids(r.favourites), recent: ids(r.recent).slice(0, RECENT), stylePresets: styles };
 }
 
 async function load() {
@@ -104,7 +120,12 @@ export function useBlockLibrary() {
       set({ saved: (state.saved ?? []).filter((b) => b.id !== id) });
       const key = `saved:${id}`;
       if (state.prefs.favourites.includes(key) || state.prefs.recent.includes(key))
-        void savePrefs({ favourites: state.prefs.favourites.filter((x) => x !== key), recent: state.prefs.recent.filter((x) => x !== key) });
+        void savePrefs({ ...state.prefs, favourites: state.prefs.favourites.filter((x) => x !== key), recent: state.prefs.recent.filter((x) => x !== key) });
     },
+    saveStyle: (p: Omit<StylePreset, "id">) => {
+      const id = Math.random().toString(36).slice(2, 10);
+      void savePrefs({ ...state.prefs, stylePresets: [...state.prefs.stylePresets.filter((x) => x.name !== p.name), { ...p, id }] });
+    },
+    removeStyle: (id: string) => void savePrefs({ ...state.prefs, stylePresets: state.prefs.stylePresets.filter((x) => x.id !== id) }),
   };
 }

@@ -264,7 +264,6 @@ function suggestionMark(name: "suggestion_insert" | "suggestion_delete", attr: s
 export const SuggestionInsert = suggestionMark("suggestion_insert", "data-suggestion-add", "suggestion-add");
 export const SuggestionDelete = suggestionMark("suggestion_delete", "data-suggestion-delete", "suggestion-delete");
 
-/** `live`: the chapter is edited through Yjs, which brings its own undo history. */
 /**
  * One paragraph's own settings from its handle menu (src/lib/paragraph.ts): the chapter opening,
  * a forced drop cap, indents, letter spacing and a small-caps first line.
@@ -311,6 +310,24 @@ export const ParagraphFormat = Extension.create({
   },
 });
 
+/** An index entry: the words stay as they are; the print and ebook Index page lists the term with its pages. */
+export const IndexTerm = Mark.create({
+  name: "indexTerm",
+  inclusive: false,
+  addAttributes() {
+    return {
+      term: { default: "", parseHTML: (el) => el.getAttribute("data-index-term") ?? "", renderHTML: (a) => ({ "data-index-term": String(a.term ?? "").slice(0, 120) }) },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "span[data-index-term]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["span", mergeAttributes(HTMLAttributes, { class: "ix-term", title: `Index: ${HTMLAttributes["data-index-term"] ?? ""}` }), 0];
+  },
+});
+
+/** `live`: the chapter is edited through Yjs, which brings its own undo history. */
 export function manuscriptExtensions(placeholder = "Start writing…", o: { live?: boolean } = {}): Extensions {
   return [
     StarterKit.configure({
@@ -340,5 +357,6 @@ export function manuscriptExtensions(placeholder = "Start writing…", o: { live
     TableKit.configure({ table: { resizable: false } }),
     SuggestionInsert,
     SuggestionDelete,
+    IndexTerm,
   ];
 }

@@ -18,6 +18,10 @@ export interface HtmlOptions {
   target?: "ebook" | "print";
   /** the theme's colours and fonts, for blocks the author restyled one by one */
   palette?: BoxPalette;
+  /** index entries are collected for the Index page, each linking back to `file` */
+  index?: { file: string; out: { term: string; href: string }[] };
+  /** endnotes go to the book's Notes page: `file` is that page, `back` this chapter's file, and the notes are added to `out` */
+  bookNotes?: { file: string; back: string; out: string[] };
 }
 
 export interface HtmlResult {
@@ -42,6 +46,7 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
   const prefix = opts.notePrefix ?? "fn";
   let firstDone = false;
   let sub = 0;
+  let ix = 0;
   const epub = opts.mode === "epub";
   const br = epub ? "<br/>" : "<br>";
 
@@ -67,6 +72,14 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
         case "link": {
           const href = safeUrl(m.attrs?.href);
           if (href) out = `<a href="${escapeHtml(href)}">${out}</a>`;
+          break;
+        }
+        case "indexTerm": {
+          const term = String(m.attrs?.term ?? "").trim() || text.trim();
+          if (!term || !opts.index) break;
+          const id = `${prefix}-ix${++ix}`;
+          opts.index.out.push({ term: term.slice(0, 120), href: `${opts.index.file}#${id}` });
+          out = `<span id="${id}">${out}</span>`;
           break;
         }
       }
@@ -203,10 +216,10 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
           const i = endnotes.length + 1;
           const text = escapeHtml(String(n.attrs?.text ?? ""));
           const id = `${prefix}-e${i}`;
-          endnotes.push(`<li id="${id}"><p>${text} <a href="#${id}-ref" aria-label="Back to text">↩</a></p></li>`);
-          return epub
-            ? `<a epub:type="noteref" href="#${id}" id="${id}-ref" class="noteref">${i}</a>`
-            : `<sup><a href="#${id}" id="${id}-ref" class="noteref">${i}</a></sup>`;
+          const book = opts.bookNotes;
+          endnotes.push(`<li id="${id}"><p>${text} <a href="${book ? book.back : ""}#${id}-ref" aria-label="Back to text">↩</a></p></li>`);
+          const to = `${book ? book.file : ""}#${id}`;
+          return epub ? `<a epub:type="noteref" href="${to}" id="${id}-ref" class="noteref">${i}</a>` : `<sup><a href="${to}" id="${id}-ref" class="noteref">${i}</a></sup>`;
         }
         const i = notes.length + 1;
         const text = escapeHtml(String(n.attrs?.text ?? ""));
@@ -223,6 +236,7 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
 
   const html = node(doc ?? { type: "doc" });
   let notesHtml = notes.length ? (epub ? `<section class="footnotes">${notes.join("")}</section>` : `<ol class="footnotes">${notes.join("")}</ol>`) : "";
-  if (endnotes.length) notesHtml += `<section class="endnotes"${epub ? ' epub:type="endnotes"' : ""}><h2>Notes</h2><ol>${endnotes.join("")}</ol></section>`;
+  if (endnotes.length && opts.bookNotes) opts.bookNotes.out.push(...endnotes);
+  else if (endnotes.length) notesHtml += `<section class="endnotes"${epub ? ' epub:type="endnotes"' : ""}><h2>Notes</h2><ol>${endnotes.join("")}</ol></section>`;
   return { html, notes: notesHtml };
 }

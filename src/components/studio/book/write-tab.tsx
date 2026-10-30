@@ -7,6 +7,7 @@ import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
 import { useLiveChapter } from "@/components/studio/use-live-chapter";
 import { useBookComments } from "./comments-panel";
 import { ChapterSidebar, type ChapterMenuOps } from "./chapter-sidebar";
+import { EditStyles } from "./edit-styles";
 import { runAi } from "@/components/studio/ai-review";
 import { PromptDialog } from "@/components/studio/prompt-dialog";
 import { chapterStats, docToMarkdown, splitDoc } from "@/lib/doc/markdown";
@@ -245,6 +246,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
 
   const [naming, setNaming] = useState<null | { c: Chapter; field: "title" | "subtitle" }>(null);
   const [statsFor, setStatsFor] = useState<Chapter | null>(null);
+  const [stylesOpen, setStylesOpen] = useState(false);
   // an AI review asked for on another chapter runs once that chapter is open
   const pendingAi = useRef<{ id: string; action: string } | null>(null);
   useEffect(() => {
@@ -516,6 +518,12 @@ export function WriteTab({ ws }: { ws: Workspace }) {
               </select>
               <span className="tabular hidden text-sm text-soft sm:inline">{fmt(active.word_count || 0)} words</span>
               {role === "owner" && <SprintTimer bookId={book.id} />}
+              {structural && (
+                <button type="button" onClick={() => setStylesOpen(true)} className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-sm text-ink-2 hover:bg-muted" title="Edit styles">
+                  <Settings2 className="size-4" />
+                  <span className="hidden xl:inline">Styles</span>
+                </button>
+              )}
               <Button variant="ghost" size="icon-sm" aria-label={showPreview ? "Hide preview" : "Show preview"} onClick={() => setShowPreview((v) => !v)} className="max-lg:hidden">
                 {showPreview ? <EyeOff /> : <Eye />}
               </Button>
@@ -865,6 +873,13 @@ export function WriteTab({ ws }: { ws: Workspace }) {
               ))}
             </ol>
           )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={stylesOpen} onOpenChange={setStylesOpen}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
+          <DialogTitle>Edit styles</DialogTitle>
+          <DialogDescription>How the text sits on the page, the same in print, the ebook and on your website. The preview updates as you go.</DialogDescription>
+          <EditStyles ws={ws} />
         </DialogContent>
       </Dialog>
       <ChapterStatsDialog

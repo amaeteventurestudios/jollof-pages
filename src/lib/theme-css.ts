@@ -1,4 +1,4 @@
-import type { InteriorTheme } from "./themes";
+import { textStyle, type InteriorTheme } from "./themes";
 import { BOXES, boxFill, boxLabelColor, boxStyle, cleanPresets, isDark, paleTint, type BookBoxStyles, type BoxFont, type BoxStyle } from "./blocks";
 import { fontCss, HAND_FONT, TYPEWRITER_FONT } from "./fonts";
 
@@ -25,10 +25,18 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
 
   if (o.scope) rules.push(`${o.scope} { font-family: ${theme.bodyCss}; line-height: ${lh}; }`);
   else rules.push(`body { font-family: ${theme.bodyCss}; line-height: ${lh}; margin: 0 5%; }`);
-  add("p", theme.indent ? "margin: 0; text-indent: 1.5em; text-align: justify; hyphens: auto;" : "margin: 0 0 0.8em; text-indent: 0; text-align: left;");
+  const ts = textStyle(theme);
+  const justify = ts.justify ?? theme.indent;
+  const hy = ts.hyphenate ? "auto" : "manual";
+  add(
+    "p",
+    theme.indent
+      ? `margin: 0 0 ${ts.paraSpacing ?? 0}em; text-indent: ${ts.indentSize ?? 1.5}em; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`
+      : `margin: 0 0 ${ts.paraSpacing ?? 0.8}em; text-indent: 0; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`,
+  );
   add("p.first, h2 + p, h3 + p, h4 + p, .scene-break + p, hr + p, blockquote + p, .callout + p, figure + p, ul + p, ol + p", "text-indent: 0;");
   add("p.blank", "text-indent: 0;");
-  add(".chapter-head", `text-align: ${theme.headingAlign}; margin: 3em 0 2.5em; font-family: ${theme.headingCss};`);
+  add(".chapter-head", `text-align: ${theme.headingAlign}; margin: ${3 * ts.headingSpace}em 0 ${2.5 * ts.headingSpace}em; font-family: ${theme.headingCss};`);
   add(
     ".chapter-label",
     theme.labelStyle === "large"
@@ -51,11 +59,17 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".chapter-head.inverted img", "width: 100%; height: 16em; object-fit: cover; display: block;");
   add(".chapter-head-text", "position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 1em 1.4em; background: rgba(0,0,0,0.38);");
   add(".chapter-head.inverted h1, .chapter-head.inverted .chapter-label", "color: #fff;");
-  add(".chapter-subtitle", "display: block; font-style: italic; font-size: 1.1em; margin-top: 0.6em; font-weight: 400;");
+  add(
+    ".chapter-subtitle",
+    `display: block; font-size: 1.1em; margin-top: 0.6em; font-weight: 400; ${ts.subtitleStyle === "italic" ? "font-style: italic;" : ts.subtitleStyle === "smallcaps" ? "font-style: normal; font-variant: small-caps; letter-spacing: 0.06em;" : "font-style: normal;"}`,
+  );
   add("h2", `font-family: ${theme.headingCss}; font-size: 1.3em; line-height: 1.25; margin: 1.8em 0 0.6em; font-weight: 700; hyphens: none;`);
   add("h3", `font-family: ${theme.headingCss}; font-size: 1.12em; line-height: 1.3; margin: 1.5em 0 0.5em; font-weight: 700;`);
   add("h4", `font-family: ${theme.headingCss}; font-size: 1em; margin: 1.3em 0 0.4em; font-weight: 700; font-style: italic;`);
   add("blockquote", "margin: 1.2em 2em; font-style: italic;");
+  add(".book-index ul.index", "list-style: none; padding: 0; margin: 0 0 1em; columns: 2; column-gap: 1.5em;");
+  add(".book-index ul.index li", "margin: 0 0 0.2em; padding-left: 1em; text-indent: -1em; break-inside: avoid;");
+  add(".book-index .index-letter", "font-size: 1.05em; margin: 1.2em 0 0.4em;");
   add("blockquote p", "text-indent: 0;");
   add(".callout", `margin: 1.4em 0; padding: 0.9em 1.1em; background: #f2efe8; border-left: 4px solid ${theme.accent};`);
   add(".callout p", "text-indent: 0; margin: 0 0 0.5em;");
