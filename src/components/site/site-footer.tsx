@@ -9,6 +9,7 @@ const COLUMNS = [
       { href: "/#how", label: "Formatting" },
       { href: "/#covers", label: "Covers" },
       { href: "/#export", label: "Export" },
+      { href: "https://studio.jollofpages.com", label: "Jollof Studio, free" },
     ],
   },
   {

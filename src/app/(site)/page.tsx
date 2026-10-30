@@ -460,6 +460,42 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* ---------- Jollof Studio: the sister design studio, for launch posts and more covers ---------- */}
+        <section id="studio" aria-labelledby="studio-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-studio" kind="adire" color="var(--char)" opacity={0.14} drift={false} />
+          <div className="relative px-4 sm:px-8">
+            <SectionHead id="studio-title" title="Then launch it with Jollof Studio" sub="Our free design studio, for launch posts, ads, covers and slides." />
+          </div>
+          <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1400px] gap-4 px-4 sm:px-8 lg:grid-cols-[1.45fr_1fr]">
+            <div className="tilt-in self-start bg-white" data-p="enter">
+              <Shot src="studio-cover" w={2000} h={1250} alt="Jollof Studio with a KDP book cover open and the templates panel beside it" />
+            </div>
+            <div className="grid content-start gap-4">
+              <div className="bg-white" data-reveal>
+                <Shot src="studio-options" w={1136} h={900} alt="Studio AI offering six poster designs from one sentence" />
+              </div>
+              <ul className="grid gap-4 bg-char p-6 sm:p-8">
+                {[
+                  ["Every social size", "Launch posts, stories, ads and banners for Instagram, TikTok, Facebook, X and more."],
+                  ["Studio AI", "Describe it once and get six designs, or ask for changes and keep or undo each one."],
+                  ["Free, no subscription", "No watermark. Download PDF, PNG, video, PowerPoint and more."],
+                ].map(([k, v], i) => (
+                  <li key={k} className="flex gap-4" data-reveal style={{ ["--i" as string]: i }}>
+                    <Star className="mt-1.5 text-bonnet" />
+                    <span>
+                      <span className="block text-[1.25rem] font-bold">{k}</span>
+                      <span className="text-cream/90">{v}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <a href="https://studio.jollofpages.com" className="btn justify-self-start" data-reveal>
+                Open Jollof Studio <Arrow />
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* ---------- export: the files, then the shops they go to ---------- */}
         <section id="export" aria-labelledby="export-title" className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,11vw,9rem)]">
           <Pattern id="p-rice" kind="rice" color="var(--ground-2)" />
