@@ -211,7 +211,7 @@ const FAQ = [
   },
   {
     q: "What is the free author website?",
-    a: "Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. Your own domain, like yourname.com, plus newsletters, direct ebook sales and analytics, will be part of Author Site Pro, coming soon at $10 a month or $96 a year with a free .com for the first year.",
+    a: "Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. To use your own domain, like yourname.com, upgrade to Author Site Pro from the studio for $10 a month, or $96 a year with a free .com for the first year. Pro also adds analytics, with newsletters and direct ebook sales coming soon.",
   },
   {
     q: "Is there a limit on books or pen names?",
@@ -672,9 +672,9 @@ export default async function Home() {
             </div>
             <div className="flex flex-col items-start justify-between gap-4 border-2 border-char/15 bg-cream p-6 text-char sm:flex-row sm:items-center sm:p-8" data-reveal>
               <div>
-                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Upgrade, coming soon</p>
+                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Optional upgrade</p>
                 <p className="wide mt-1 text-[1.5rem] font-bold">Author Site Pro</p>
-                <p className="mt-1 max-w-[52ch]">Your author website on your own domain, like yourname.com, plus newsletters, direct ebook sales and analytics. $10 a month, or $96 a year with a free .com for the first year.</p>
+                <p className="mt-1 max-w-[52ch]">Your author website on your own domain, like yourname.com, with analytics. Newsletters and direct ebook sales are coming soon. $10 a month, or $96 a year with a free .com for the first year.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
