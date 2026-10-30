@@ -20,6 +20,9 @@ export async function POST(req: Request) {
     const { url } = await accountLink(billing.payout_account, `${back}?payouts=retry`, `${back}?payouts=done`);
     return NextResponse.json({ url });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 502 });
+    const msg = e instanceof Error ? e.message : String(e);
+    // until the publisher switches on Stripe Connect, Stripe refuses to create payout accounts
+    if (/connect/i.test(msg)) return NextResponse.json({ error: "Ebook payouts open soon. Your plan and site are not affected." }, { status: 503 });
+    return NextResponse.json({ error: msg }, { status: 502 });
   }
 }
