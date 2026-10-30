@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useProStatus } from "@/components/studio/pro-panel";
 import { errorMessage, pb } from "@/lib/pb";
 import { userId } from "@/lib/studio";
+import { EMAIL_PACKS, allowanceLeft, type EmailQuota } from "@/lib/email-quota";
 
 interface Reader {
   id: string;
@@ -37,6 +38,7 @@ export default function ReadersPage() {
   const [letters, setLetters] = useState<Letter[]>([]);
   const [open, setOpen] = useState<Letter | null>(null);
   const { status } = useProStatus();
+  const [quota, setQuota] = useState<EmailQuota | null>(null);
 
   const load = useCallback(() => {
     pb()
@@ -48,6 +50,10 @@ export default function ReadersPage() {
       .collection("newsletters")
       .getFullList<Letter>({ sort: "-updated" })
       .then(setLetters)
+      .catch(() => undefined);
+    fetch("/api/newsletters/quota", { headers: { Authorization: pb().authStore.token } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((q: EmailQuota | null) => q && setQuota(q))
       .catch(() => undefined);
   }, []);
   useEffect(load, [load]);
@@ -67,6 +73,7 @@ export default function ReadersPage() {
           ) : !status.mail ? (
             <p className="rounded-md bg-muted p-3 text-sm">Sending is being set up on the server. You can write drafts now.</p>
           ) : null}
+          {status?.pro && quota && <EmailAllowance quota={quota} onChange={setQuota} />}
           {open ? (
             <Composer letter={open} readers={active.length} canSend={canSend} onClose={() => (setOpen(null), load())} />
           ) : (
@@ -132,6 +139,73 @@ export default function ReadersPage() {
         </Panel>
       </main>
     </>
+  );
+}
+
+const n = (x: number) => x.toLocaleString("en-US");
+
+/** This month's newsletter emails, bought emails left, and buying more. */
+function EmailAllowance({ quota, onChange }: { quota: EmailQuota; onChange: (q: EmailQuota) => void }) {
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState("");
+
+  // back from Stripe: credit the payment now rather than waiting for the webhook
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const session = q.get("session_id");
+    if (!q.get("emails")) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    if (q.get("emails") !== "paid" || !session) {
+      queueMicrotask(() => setMsg("Payment cancelled. Nothing was charged."));
+      return;
+    }
+    fetch("/api/newsletters/quota", { method: "POST", headers: { Authorization: pb().authStore.token, "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: session }) })
+      .then((r) => r.json())
+      .then((out: { paid?: boolean; quota?: EmailQuota; error?: string }) => {
+        if (out.quota) onChange(out.quota);
+        setMsg(out.error ?? (out.paid ? "Thanks! Your extra emails are ready." : "Your payment is still going through. The emails appear once it clears."));
+      })
+      .catch(() => undefined);
+  }, [onChange]);
+
+  async function buy(pack: string) {
+    setBusy(pack);
+    setMsg("");
+    try {
+      const res = await fetch("/api/newsletters/topup", { method: "POST", headers: { Authorization: pb().authStore.token, "Content-Type": "application/json" }, body: JSON.stringify({ pack }) });
+      const out = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !out.url) throw new Error(out.error);
+      window.location.assign(out.url);
+    } catch (e) {
+      setMsg(errorMessage(e));
+      setBusy("");
+    }
+  }
+
+  if (quota.unlimited) return <p className="text-sm text-soft">Your account sends newsletters without a monthly limit.</p>;
+  const pct = quota.allowance ? Math.min(100, Math.round((quota.used / quota.allowance) * 100)) : 100;
+  return (
+    <div className="grid gap-3 rounded-md bg-card p-4" aria-label="Newsletter emails">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+        <span>
+          <strong>{n(allowanceLeft(quota))}</strong> of {n(quota.allowance)} emails left this month
+          {quota.extra > 0 && <>, plus {n(quota.extra)} extra</>}
+        </span>
+        <span className="text-soft">Refills on {quota.resets}</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Allowance used">
+        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-[13px] text-soft">Each reader counts as one email per newsletter. Extra emails are used after your monthly allowance, and they never expire.</p>
+      <div className="flex flex-wrap gap-2">
+        {EMAIL_PACKS.map((p) => (
+          <Button key={p.id} variant="outline" size="sm" disabled={!!busy} onClick={() => buy(p.id)}>
+            {busy === p.id ? "Opening checkout…" : `Buy ${n(p.emails)} emails, ${p.label}`}
+          </Button>
+        ))}
+      </div>
+      {msg && <p className="text-sm" role="status">{msg}</p>}
+    </div>
   );
 }
 

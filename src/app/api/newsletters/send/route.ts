@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { bearer } from "@/lib/server/load-book";
-import { adminPb, caller } from "@/lib/server/credits";
+import { adminPb, caller, withUserLock } from "@/lib/server/credits";
+import { emailQuota, spendExtraEmails } from "@/lib/server/email-quota";
+import { planSend } from "@/lib/email-quota";
 import { letterHtml, letterText, mailConfigured, sendBatch, sendMail, type Mail } from "@/lib/server/mail";
 import { hasPro, rootDomain, siteLabel } from "@/lib/sites";
 import type { SiteSettings } from "@/lib/types";
@@ -59,19 +61,40 @@ export async function POST(req: Request) {
       .collection("subscribers")
       .getFullList<{ email: string; token: string }>({ filter: pb.filter("owner = {:o} && unsubscribed != true", { o: me.id }), fields: "email,token" });
     if (!readers.length) return NextResponse.json({ error: "Your reader list is empty so far." }, { status: 400 });
-    await pb.collection("newsletters").update(letter.id, { status: "sending", recipients: readers.length });
-    let sent = 0;
-    try {
-      for (let i = 0; i < readers.length; i += 100) {
-        await sendBatch(readers.slice(i, i + 100).map((r) => make(r.email, r.token)));
-        sent += Math.min(100, readers.length - i);
+    // one send at a time per author, so two quick clicks cannot both fit in the same allowance
+    return await withUserLock(`mail:${me.id}`, async () => {
+      const quota = await emailQuota(me);
+      const plan = planSend(quota, readers.length);
+      if (!plan.ok)
+        return NextResponse.json(
+          {
+            error: `This send needs ${readers.length.toLocaleString("en-US")} emails and you have ${(readers.length - plan.short).toLocaleString("en-US")} left. Buy more emails on the Readers page, or wait until your allowance refills on ${quota.resets}.`,
+            quota,
+          },
+          { status: 402 },
+        );
+      await pb.collection("newsletters").update(letter.id, { status: "sending", recipients: readers.length });
+      let sent = 0;
+      // what the sent emails cost beyond the allowance, settled however the send ends
+      const settle = async () => {
+        const fromExtra = Math.max(0, sent - plan.fromAllowance);
+        await spendExtraEmails(me.id, fromExtra, letter.id);
+        return fromExtra;
+      };
+      try {
+        for (let i = 0; i < readers.length; i += 100) {
+          await sendBatch(readers.slice(i, i + 100).map((r) => make(r.email, r.token)));
+          sent += Math.min(100, readers.length - i);
+        }
+        const fromExtra = await settle();
+        await pb.collection("newsletters").update(letter.id, { status: "sent", sent_count: sent, from_extra: fromExtra, sent_at: new Date().toISOString().replace("T", " ") });
+        return NextResponse.json({ sent });
+      } catch (e) {
+        const fromExtra = await settle().catch(() => 0);
+        await pb.collection("newsletters").update(letter.id, { status: "failed", sent_count: sent, from_extra: fromExtra, sent_at: new Date().toISOString().replace("T", " "), error: e instanceof Error ? e.message : String(e) });
+        throw e;
       }
-      await pb.collection("newsletters").update(letter.id, { status: "sent", sent_count: sent, sent_at: new Date().toISOString().replace("T", " ") });
-      return NextResponse.json({ sent });
-    } catch (e) {
-      await pb.collection("newsletters").update(letter.id, { status: "failed", sent_count: sent, error: e instanceof Error ? e.message : String(e) });
-      throw e;
-    }
+    });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 502 });
   }

@@ -121,6 +121,14 @@ Sent from `<subdomain>@MAIL_FROM_DOMAIN` with replies going to the author's own 
 unsubscribe link and header. In Resend, add `MAIL_FROM_DOMAIN` (Domains → Add) and put the DNS records
 it shows into Cloudflare (DNS only).
 
+All authors send through the one Resend account, so each Pro author has a monthly allowance
+(`NEWSLETTER_MONTHLY_EMAILS`, default 5,000; one email per reader per send) that refills on the 1st
+(UTC). Use is summed from that month's sent newsletters. On top of it authors can buy packs of extra
+emails (`EMAIL_PACKS` in `src/lib/email-quota.ts`: 10,000 for $6, 100,000 for $54) through Stripe
+Checkout (`kind=email-credits`); bought emails live in `email_ledger`, never expire and are used
+after the allowance. A send that does not fit is refused before anything goes out. Accounts in
+`COVER_AI_FREE_EMAILS` send without a limit. `RESEND_API_URL` points at a test double locally.
+
 ### Analytics
 
 No cookies. Every page of a public site sends one beacon to `/api/a`; the server counts views per
