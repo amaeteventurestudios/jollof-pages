@@ -173,6 +173,10 @@
   outline: none;
   min-height: 60vh;
 }
+/* a word marked for the index */
+.manuscript .ProseMirror .ix-term {
+  border-bottom: 1.5px dotted var(--color-primary);
+}
 .manuscript .ProseMirror > * + * {
   margin-top: 0.9em;
 }
@@ -434,4 +438,17 @@
   to {
     transform: translateY(0);
   }
+}
+
+/* the six-dot handle beside the block under the pointer (block-handle.tsx) */
+.jp-drag-handle {
+  z-index: 20;
+  transition: top 80ms ease-out;
+}
+.jp-drag-handle[data-dragging="true"] {
+  opacity: 0.4;
+}
+.manuscript .ProseMirror .ProseMirror-selectednode {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
 }

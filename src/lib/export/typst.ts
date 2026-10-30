@@ -1,9 +1,10 @@
 import { authorName, elementBackground, forEdition, orderedElements, tocText, type BookElement, type ExportInput, type ResolvedBackground } from "../book-model";
 import { pageGeometry, type Binding } from "../kdp";
 import { isSubhead, type DocMark, type DocNode } from "../doc/types";
-import { themeFor, type InteriorTheme } from "../themes";
-import { boxDef, paleTint, type BoxFont, type BoxStyle } from "../blocks";
+import { textStyle, themeFor, type InteriorTheme } from "../themes";
+import { boxDef, boxStyle, isDark, paleTint, type BookBoxStyles, type BoxFont, type BoxStyle } from "../blocks";
 import { HAND_FONT, TYPEWRITER_FONT } from "../fonts";
+import { openingParagraph, paraFormat } from "../paragraph";
 import { getOrnament, ornamentSvg } from "../ornaments";
 import { backgroundArt, textOverBackground } from "../backgrounds";
 import { isLibraryBackground, libraryId } from "../background-ref";
@@ -53,6 +54,11 @@ function marked(text: string, marks: DocMark[] | undefined): string {
         if (typeof href === "string" && /^(https?:|mailto:)/i.test(href)) out = `#link(${str(href)})[${out}]`;
         break;
       }
+      case "indexTerm": {
+        const term = String(m.attrs?.term ?? "").trim() || text.trim();
+        if (term) out = `#jp-ix(${str(term.slice(0, 120))})[${out}]`;
+        break;
+      }
     }
   }
   return out;
@@ -64,6 +70,10 @@ export interface DocTypstOptions {
   outlineSubheads?: boolean;
   /** Typst for a scene break, given the break's own ornament id (undefined: the theme's) */
   ornament?: (id: string | undefined) => string;
+  /** the author's block styles (the theme's `boxes` and `boxPresets`) */
+  book?: BookBoxStyles;
+  /** endnotes go to the book's Notes page instead of the chapter's end */
+  endnotesOut?: string[];
 }
 
 const BOX_FONTS: Record<BoxFont, string> = {
@@ -76,31 +86,40 @@ const BOX_FONTS: Record<BoxFont, string> = {
 
 /** Arguments for the preamble's jp-box function, from the block catalog. */
 function boxArgs(st: BoxStyle, label: string): string {
-  const c = st.accent ? "accent" : "rgb(207, 200, 187)";
-  const fill = st.fill ? (st.fill === "accent" ? "accent-tint" : `rgb(${str(st.fill)})`) : "none";
+  const colour = (v: string) => (v === "accent" ? "accent" : `rgb(${str(v)})`);
+  const c = st.line ? colour(st.line) : st.accent ? "accent" : "rgb(207, 200, 187)";
+  const fill = st.fill && st.fill !== "none" ? (st.fill === "accent" ? "accent-tint" : `rgb(${str(st.fill)})`) : "none";
+  const w = st.weight ?? 1;
+  const pt = (n: number) => `${+(n * w).toFixed(2)}pt`;
   const stroke =
     {
-      left: `(left: 3pt + ${c})`,
-      box: `0.6pt + ${c}`,
-      rules: `(top: 0.6pt + ${c}, bottom: 0.6pt + ${c})`,
-      dashed: `(paint: ${c}, thickness: 0.8pt, dash: "dashed")`,
-      double: `2pt + ${c}`,
-      top: `(top: 2.4pt + ${c})`,
+      left: `(left: ${pt(3)} + ${c})`,
+      box: `${pt(0.6)} + ${c}`,
+      rules: `(top: ${pt(0.6)} + ${c}, bottom: ${pt(0.6)} + ${c})`,
+      dashed: `(paint: ${c}, thickness: ${pt(0.8)}, dash: "dashed")`,
+      double: `${pt(2)} + ${c}`,
+      top: `(top: ${pt(2.4)} + ${c})`,
       none: "none",
     }[st.border ?? "none"] ?? "none";
-  const framed = (st.fill || (st.border && st.border !== "none")) && st.border !== "rules";
+  const framed = ((st.fill && st.fill !== "none") || (st.border && st.border !== "none")) && st.border !== "rules";
   const inset = framed ? "(x: 1em, y: 0.85em)" : st.border === "rules" ? "(x: 0em, y: 0.7em)" : "0pt";
   const args = [
     `fill: ${fill}`,
     `stroke: ${stroke}`,
     `inset: ${inset}`,
-    `font: ${BOX_FONTS[st.font ?? "body"]}`,
+    `font: ${st.fontFamily ? `(${str(st.fontFamily)}, "Libertinus Serif", "Noto Emoji")` : BOX_FONTS[st.font ?? "body"]}`,
     `italic: ${!!st.italic}`,
     `align-to: ${st.align ?? "left"}`,
     `size: ${st.size ?? 1}em`,
     `lines: ${st.lines ?? 0}`,
     `checklist: ${!!st.checklist}`,
   ];
+  if (st.leading) args.push(`leading: ${leading(st.leading)}`);
+  if (st.bold) args.push("bold: true");
+  if (st.corners !== undefined) args.push(`radius: ${["0pt", "2pt", "7pt"][st.corners] ?? "2pt"}`);
+  if (st.text) args.push(`ink: ${colour(st.text)}`);
+  else if (st.fill && st.fill.startsWith("#") && isDark(st.fill)) args.push(`ink: rgb("#f6f2ea")`);
+  if (st.labelColor) args.push(`label-fill: ${colour(st.labelColor)}`);
   if (label) args.push(`label: ${str(label)}`, `label-end: ${!!st.labelAtEnd}`);
   return args.join(", ");
 }
@@ -134,24 +153,33 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
     }
   }
 
+  // an author can move the chapter's opening (lead-in, no indent) to a later paragraph
+  const markedIdx = doc?.type === "doc" ? openingParagraph(doc.content) : -1;
+  const opener = markedIdx >= 0 ? doc!.content![markedIdx] : null;
+
   function paragraph(n: DocNode): string {
     const kids = n.content ?? [];
     if (!kids.length) return "#v(1em)";
+    const pf = paraFormat(n.attrs);
+    const opening = depth === 0 && (opener ? n === opener : firstPara);
     let body: string;
     const first = kids[0];
-    if (depth === 0 && leadInPending && first.type === "text" && !(first.marks ?? []).length) {
+    // print has no drop caps yet, so a forced drop cap opens with small capitals instead
+    const lead = (opening && leadInPending) || pf.leadIn || pf.dropCap;
+    if (lead && first.type === "text" && !(first.marks ?? []).length) {
       const words = (first.text ?? "").split(/(\s+)/);
       // first three words in small caps, the rest as usual
-      const lead = words.slice(0, 5).join("");
+      const head = words.slice(0, 5).join("");
       const rest = words.slice(5).join("");
-      body = `#sc[#${str(lead)}]` + (rest ? `#${str(rest)}` : "") + inline(kids.slice(1));
+      body = `#sc[#${str(head)}]` + (rest ? `#${str(rest)}` : "") + inline(kids.slice(1));
     } else body = inline(kids);
-    if (depth === 0) leadInPending = false;
+    if (opening) leadInPending = false;
+    if (pf.tracking) body = `#text(tracking: ${pf.tracking}em)[${body}]`;
     // the opener is set in its own paragraph, so the first text paragraph must not indent
-    if (firstPara && depth === 0) {
-      firstPara = false;
-      body = `#par(first-line-indent: 0em)[${body}]`;
-    }
+    if (opening) firstPara = false;
+    const indent = opening || pf.noIndent || pf.dropCap ? "0em" : pf.indent !== undefined ? `${pf.indent}em` : null;
+    if (indent) body = `#par(first-line-indent: ${indent})[${body}]`;
+    if (pf.left) body = `#pad(left: ${pf.left}em)[${body}]`;
     const a = n.attrs?.textAlign;
     if (a === "center" || a === "right") return `#align(${a})[${body}]`;
     return body;
@@ -180,7 +208,7 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
         return paragraph(n);
       case "heading": {
         const level = Math.min(Math.max(Number(n.attrs?.level ?? 2), 2), 4);
-        leadInPending = false;
+        if (!opener) leadInPending = false;
         // sub-chapters join the printed contents when the book asks for them
         return `#heading(level: ${level}, outlined: ${depth === 0 && !!opts.outlineSubheads && isSubhead(n)})[${inline(n.content)}]`;
       }
@@ -190,7 +218,7 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
         return `#callout[${nested(n.content)}]`;
       case "box": {
         const def = boxDef(String(n.attrs?.variant ?? ""));
-        const st = def.box ?? {};
+        const st = boxStyle(def.id, opts.book, n.attrs?.look, n.attrs?.preset);
         if (st.only === "ebook") return "";
         // print-only blocks are plain text in print; their dashed frame is an editor hint
         if (st.only) return nested(n.content);
@@ -251,6 +279,10 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
       }
       case "doc": {
         const out = blocks(n.content);
+        if (endnotes.length && opts.endnotesOut) {
+          opts.endnotesOut.push(...endnotes);
+          return out;
+        }
         return endnotes.length ? `${out}\n\n#jp-endnotes((${endnotes.map((t) => `[#${str(t)}]`).join(", ")},))` : out;
       }
       default:
@@ -323,7 +355,9 @@ function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, 
   const bodyFont = `(${str(theme.bodyFont)}, "Libertinus Serif", "Noto Emoji")`;
   const headFont = `(${str(theme.headingFont)}, ${str(theme.bodyFont)}, "Libertinus Serif", "Noto Emoji")`;
   const scale = g.trim.width >= 7 ? 1.15 : g.trim.width <= 5.25 ? 0.9 : 1;
-  const opener = `${(g.trim.height * 0.16).toFixed(2)}in`;
+  const ts = textStyle(theme);
+  const opener = `${(g.trim.height * 0.16 * ts.headingSpace).toFixed(2)}in`;
+  const subtitle = (v: string) => (ts.subtitleStyle === "smallcaps" ? `text(size: 1.1em, sc(${v}))` : `text(size: 1.1em${ts.subtitleStyle === "italic" ? ', style: "italic"' : ""}, ${v})`);
   const runningHead = format.runningHeads
     ? `
     if calc.even(p) { align(left, text(size: 0.78em, tracking: 0.06em, sc(book-title))) }
@@ -340,8 +374,8 @@ function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, 
 #let sc(body) = text(size: 0.82em, tracking: 0.06em, upper(body))
 
 #set document(title: book-title, author: book-author)
-#set text(font: ${bodyFont}, size: ${size}pt, lang: ${str((book.language || "en").slice(0, 2))}, hyphenate: true, number-type: "old-style")
-#set par(justify: true, leading: ${leading(lh)}, spacing: ${theme.indent ? leading(lh) : "0.9em"}, first-line-indent: ${theme.indent ? "1.4em" : "0em"})
+#set text(font: ${bodyFont}, size: ${size}pt, lang: ${str((book.language || "en").slice(0, 2))}, hyphenate: ${ts.hyphenate}, number-type: "old-style")
+#set par(justify: ${ts.justify ?? true}, leading: ${leading(lh)}, spacing: ${theme.indent ? (ts.paraSpacing ? `${leading(lh)} + ${ts.paraSpacing}em` : leading(lh)) : `${ts.paraSpacing ?? 0.9}em`}, first-line-indent: ${theme.indent ? `${ts.indentSize ?? 1.4}em` : "0em"})
 #show heading: set text(font: head-font, hyphenate: false)
 #show heading.where(level: 1): none
 #show heading.where(level: 2): it => block(above: 1.7em, below: 0.75em, sticky: true, text(size: 1.22em, weight: 700, it.body))
@@ -363,13 +397,16 @@ function preamble(input: ExportInput, format: BookFormat, theme: InteriorTheme, 
 ${sceneBreak(theme)}
 
 // special blocks (src/lib/blocks.ts)
-#let jp-box(fill: none, stroke: none, inset: 0pt, font: auto, italic: false, align-to: left, size: 1em, lines: 0, checklist: false, label: none, label-end: false, body) = block(above: 1.3em, below: 1.3em, width: 100%, inset: inset, fill: fill, stroke: stroke, radius: 2pt, breakable: true, {
+#let jp-box(fill: none, stroke: none, inset: 0pt, font: auto, italic: false, align-to: left, size: 1em, lines: 0, checklist: false, radius: 2pt, ink: auto, label-fill: accent, leading: auto, bold: false, label: none, label-end: false, body) = block(above: 1.3em, below: 1.3em, width: 100%, inset: inset, fill: fill, stroke: stroke, radius: radius, breakable: true, {
   set par(first-line-indent: 0em, justify: false)
   set text(size: size, style: if italic { "italic" } else { "normal" })
+  set text(fill: ink) if ink != auto
+  set text(weight: 700) if bold
+  set par(leading: leading) if leading != auto
   set text(font: font) if font != auto
   set align(align-to)
   set list(marker: box(width: 0.65em, height: 0.65em, stroke: 0.6pt + accent, radius: 1pt)) if checklist
-  if label != none and not label-end { block(below: 0.55em, text(font: head-font, size: 0.72em, tracking: 0.12em, style: "normal", fill: accent, upper(label))) }
+  if label != none and not label-end { block(below: 0.55em, text(font: head-font, size: 0.72em, tracking: 0.12em, style: "normal", fill: label-fill, upper(label))) }
   body
   if lines > 0 { for i in range(lines) { v(1.35em); line(length: 100%, stroke: 0.4pt + luma(165)) } }
   if label != none and label-end { v(0.6em); text(style: "italic", label) }
@@ -391,6 +428,44 @@ ${sceneBreak(theme)}
   set text(size: 0.9em)
   table(columns: (1fr,) * n, inset: 0.45em, stroke: 0.5pt + luma(185), fill: (x, y) => if y == 0 { accent-tint }, ..cells)
 })
+// index entries: the words, plus a marker the Index page finds with its page number
+#let jp-ix(term, body) = [#body#metadata((ix: term))<jp-ix>]
+#let jp-index() = context {
+  let pages = (:)
+  for m in query(<jp-ix>) {
+    let loc = m.location()
+    let fmt = if loc.page-numbering() == none { "1" } else { loc.page-numbering() }
+    let n = numbering(fmt, ..counter(page).at(loc))
+    let have = pages.at(m.value.ix, default: ())
+    if n not in have { have.push(n) }
+    pages.insert(m.value.ix, have)
+  }
+  set par(first-line-indent: 0em, justify: false, hanging-indent: 1em, spacing: 0.35em)
+  set text(size: 0.9em)
+  let letter = ""
+  columns(2, gutter: 1.6em, {
+    for k in pages.keys().sorted(key: k => lower(k)) {
+      let l = upper(k.clusters().first())
+      if l != letter {
+        letter = l
+        v(0.7em)
+        text(font: head-font, weight: 700, l)
+        parbreak()
+      }
+      [#k, #pages.at(k).join(", ")]
+      parbreak()
+    }
+  })
+}
+// the book's Notes page: each chapter's endnotes under its title
+#let jp-note-group(title, notes) = {
+  v(1.2em)
+  text(font: head-font, weight: 700, title)
+  v(0.3em)
+  set text(size: 0.9em)
+  set par(first-line-indent: 0em)
+  enum(..notes)
+}
 #let jp-endnotes(notes) = {
   v(2em)
   text(font: head-font, weight: 700)[Notes]
@@ -473,7 +548,7 @@ ${sceneBreak(theme)}
           ? `v(0.55em * s); line(length: 3em, stroke: 0.6pt + accent)`
           : ""
     }
-    if subtitle != "" { v(0.5em * s); text(size: 1.1em, style: "italic", subtitle) }
+    if subtitle != "" { v(0.5em * s); ${subtitle("subtitle")} }
   })
   if inverted {
     block(width: 100%, height: ${(g.trim.height * 0.32).toFixed(2)}in, clip: true, {
@@ -488,14 +563,29 @@ ${sceneBreak(theme)}
     } else { v(${opener} * s) }
     head
   }
-  v(${(g.trim.height * 0.07).toFixed(2)}in * s)
+  v(${(g.trim.height * 0.07 * ts.headingSpace).toFixed(2)}in * s)
 }
 `;
 }
 
 const LEAD_IN_KINDS = new Set(["chapter", "introduction", "foreword", "preface", "conclusion", "afterword"]);
 
-function elementTypst(input: ExportInput, e: BookElement, format: BookFormat, theme: InteriorTheme, imagePath: TypstOptions["imagePath"], bgKey: string | null, bgOpener: boolean): string {
+/** endnotes gathered for the book's Notes page: `out` collects a chapter's, `collected` is the Notes page's list */
+interface BookNotes {
+  out?: string[];
+  collected?: string;
+}
+
+function elementTypst(
+  input: ExportInput,
+  e: BookElement,
+  format: BookFormat,
+  theme: InteriorTheme,
+  imagePath: TypstOptions["imagePath"],
+  bgKey: string | null,
+  bgOpener: boolean,
+  notes: BookNotes = {},
+): string {
   const { book } = input;
   const o = e.options;
   const fullImage = e.kind.layout === "full_image";
@@ -509,6 +599,8 @@ function elementTypst(input: ExportInput, e: BookElement, format: BookFormat, th
       imagePath,
       outlineSubheads: format.tocSubheads && e.inToc && e.kind.id !== "part",
       ornament: (own) => (own ? `#${ornamentTypst(own, theme)}` : "#scene-break()"),
+      book: theme,
+      endnotesOut: notes.out,
     });
   if (fullImage)
     // the picture is the page's background (see buildTypst); the box keeps the page from collapsing
@@ -575,7 +667,7 @@ ${input.alsoBy.length ? input.alsoBy.map((b) => `#${str(b.title)}${b.subtitle ? 
       return `${meta}
 ${heading}
 ${opening}
-${e.kind.layout === "centered" ? `#[\n#set par(first-line-indent: 0em, justify: false)\n#set align(center)\n${body}\n]` : body}${e.kind.layout === "lined" ? "\n\n#jp-lines(16)" : ""}`;
+${e.kind.layout === "centered" ? `#[\n#set par(first-line-indent: 0em, justify: false)\n#set align(center)\n${body}\n]` : body}${e.kind.layout === "lined" ? "\n\n#jp-lines(16)" : ""}${notes.collected ? `\n\n${notes.collected}` : ""}`;
     }
   }
 }
@@ -608,7 +700,21 @@ export function buildTypst(input: ExportInput, opts: TypstOptions): string {
     return { key, opener: bg.openerOnly, ink: bg.openerOnly ? null : textOverBackground(bg.src) };
   });
   const parts: string[] = [preamble(input, format, theme, opts.pageCount, binding, backgrounds)];
+  // with endnotes for the whole book, the chapters before the Notes page send theirs there
+  const notesAt = textStyle(theme).endnotes === "book" ? elements.findIndex((e) => e.kind.id === "notes") : -1;
+  const groups: { title: string; items: string[] }[] = [];
   let bodyStarted = false;
+  const notesFor = (i: number): BookNotes => {
+    if (i < notesAt) {
+      const g = { title: tocText(elements[i]), items: [] as string[] };
+      groups.push(g);
+      return { out: g.items };
+    }
+    if (i !== notesAt) return {};
+    const list = groups.filter((g) => g.items.length).map((g) => `#jp-note-group(${str(g.title)}, (${g.items.map((t) => `[#${str(t)}]`).join(", ")},))`);
+    return list.length ? { collected: list.join("\n") } : {};
+  };
+  const indexed = elements.some((e) => hasMark(e.chapter.content, "indexTerm"));
   elements.forEach((e, i) => {
     const out: string[] = [];
     if (i > 0) {
@@ -622,8 +728,14 @@ export function buildTypst(input: ExportInput, opts: TypstOptions): string {
     }
     // each element sets its own paragraph rules inside a scope
     const ink = bgFor[i]?.ink;
-    out.push(`#[\n${ink ? `#set text(fill: rgb(${str(ink)}))\n` : ""}${elementTypst(input, e, format, theme, opts.imagePath, bgFor[i]?.key ?? null, bgFor[i]?.opener ?? false)}\n#metadata((end: true)) <jp-end>\n]`);
+    out.push(`#[\n${ink ? `#set text(fill: rgb(${str(ink)}))\n` : ""}${elementTypst(input, e, format, theme, opts.imagePath, bgFor[i]?.key ?? null, bgFor[i]?.opener ?? false, e.kind.id === "index" && indexed ? { collected: "#jp-index()" } : notesFor(i))}\n#metadata((end: true)) <jp-end>\n]`);
     parts.push(out.join("\n"));
   });
   return parts.join("\n\n") + "\n";
+}
+
+function hasMark(n: DocNode | null | undefined, type: string): boolean {
+  if (!n) return false;
+  if (n.marks?.some((m) => m.type === type)) return true;
+  return (n.content ?? []).some((c) => hasMark(c, type));
 }

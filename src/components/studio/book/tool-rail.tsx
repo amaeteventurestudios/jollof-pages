@@ -18,6 +18,7 @@ import { ChangesPanel } from "./changes-panel";
 import { CommentsPanel, type Comment } from "./comments-panel";
 import { AssistantPanel } from "./assistant-panel";
 import { cn } from "@/lib/utils";
+import { RailHelp } from "./rail-help";
 
 export type RailPanel = "assistant" | "settings" | "find" | "quotes" | "changes" | "comments" | "preview";
 
@@ -120,6 +121,7 @@ export function ToolRail(props: RailProps) {
         </aside>
       )}
       <nav
+        data-tour="rail"
         aria-label="Writing tools"
         className="flex w-14 shrink-0 flex-col items-center gap-1 border-l border-border bg-card py-2 app:fixed app:inset-x-0 app:bottom-0 app:z-30 app:w-auto app:flex-row app:gap-0 app:overflow-x-auto app:border-t app:border-l-0 app:py-0 app:pb-[env(safe-area-inset-bottom)]"
       >
@@ -147,6 +149,7 @@ export function ToolRail(props: RailProps) {
             )}
           </button>
         ))}
+        <RailHelp />
       </nav>
     </>
   );

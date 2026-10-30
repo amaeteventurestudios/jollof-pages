@@ -37,6 +37,12 @@ Fredoka|wght@400;700|Fredoka
 Great Vibes|wght@400|GreatVibes
 Caveat|wght@400;700|Caveat
 Kalam|wght@400;700|Kalam
+Reenie Beanie|wght@400|ReenieBeanie
+Indie Flower|wght@400|IndieFlower
+Patrick Hand|wght@400|PatrickHand
+Shadows Into Light|wght@400|ShadowsIntoLight
+Gloria Hallelujah|wght@400|GloriaHallelujah
+Dancing Script|wght@400;700|DancingScript
 Special Elite|wght@400|SpecialElite
 Courier Prime|ital,wght@0,400;0,700;1,400|CourierPrime
 Noto Emoji|wght@400|NotoEmoji

@@ -1,5 +1,5 @@
-import type { InteriorTheme } from "./themes";
-import { BOXES, boxFill, paleTint, type BoxFont } from "./blocks";
+import { textStyle, type InteriorTheme } from "./themes";
+import { BOXES, boxFill, boxLabelColor, boxStyle, cleanPresets, isDark, paleTint, type BookBoxStyles, type BoxFont, type BoxStyle } from "./blocks";
 import { fontCss, HAND_FONT, TYPEWRITER_FONT } from "./fonts";
 
 export interface ThemeCssOptions {
@@ -25,10 +25,18 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
 
   if (o.scope) rules.push(`${o.scope} { font-family: ${theme.bodyCss}; line-height: ${lh}; }`);
   else rules.push(`body { font-family: ${theme.bodyCss}; line-height: ${lh}; margin: 0 5%; }`);
-  add("p", theme.indent ? "margin: 0; text-indent: 1.5em; text-align: justify; hyphens: auto;" : "margin: 0 0 0.8em; text-indent: 0; text-align: left;");
+  const ts = textStyle(theme);
+  const justify = ts.justify ?? theme.indent;
+  const hy = ts.hyphenate ? "auto" : "manual";
+  add(
+    "p",
+    theme.indent
+      ? `margin: 0 0 ${ts.paraSpacing ?? 0}em; text-indent: ${ts.indentSize ?? 1.5}em; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`
+      : `margin: 0 0 ${ts.paraSpacing ?? 0.8}em; text-indent: 0; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`,
+  );
   add("p.first, h2 + p, h3 + p, h4 + p, .scene-break + p, hr + p, blockquote + p, .callout + p, figure + p, ul + p, ol + p", "text-indent: 0;");
   add("p.blank", "text-indent: 0;");
-  add(".chapter-head", `text-align: ${theme.headingAlign}; margin: 3em 0 2.5em; font-family: ${theme.headingCss};`);
+  add(".chapter-head", `text-align: ${theme.headingAlign}; margin: ${3 * ts.headingSpace}em 0 ${2.5 * ts.headingSpace}em; font-family: ${theme.headingCss};`);
   add(
     ".chapter-label",
     theme.labelStyle === "large"
@@ -51,11 +59,17 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".chapter-head.inverted img", "width: 100%; height: 16em; object-fit: cover; display: block;");
   add(".chapter-head-text", "position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 1em 1.4em; background: rgba(0,0,0,0.38);");
   add(".chapter-head.inverted h1, .chapter-head.inverted .chapter-label", "color: #fff;");
-  add(".chapter-subtitle", "display: block; font-style: italic; font-size: 1.1em; margin-top: 0.6em; font-weight: 400;");
+  add(
+    ".chapter-subtitle",
+    `display: block; font-size: 1.1em; margin-top: 0.6em; font-weight: 400; ${ts.subtitleStyle === "italic" ? "font-style: italic;" : ts.subtitleStyle === "smallcaps" ? "font-style: normal; font-variant: small-caps; letter-spacing: 0.06em;" : "font-style: normal;"}`,
+  );
   add("h2", `font-family: ${theme.headingCss}; font-size: 1.3em; line-height: 1.25; margin: 1.8em 0 0.6em; font-weight: 700; hyphens: none;`);
   add("h3", `font-family: ${theme.headingCss}; font-size: 1.12em; line-height: 1.3; margin: 1.5em 0 0.5em; font-weight: 700;`);
   add("h4", `font-family: ${theme.headingCss}; font-size: 1em; margin: 1.3em 0 0.4em; font-weight: 700; font-style: italic;`);
   add("blockquote", "margin: 1.2em 2em; font-style: italic;");
+  add(".book-index ul.index", "list-style: none; padding: 0; margin: 0 0 1em; columns: 2; column-gap: 1.5em;");
+  add(".book-index ul.index li", "margin: 0 0 0.2em; padding-left: 1em; text-indent: -1em; break-inside: avoid;");
+  add(".book-index .index-letter", "font-size: 1.05em; margin: 1.2em 0 0.4em;");
   add("blockquote p", "text-indent: 0;");
   add(".callout", `margin: 1.4em 0; padding: 0.9em 1.1em; background: #f2efe8; border-left: 4px solid ${theme.accent};`);
   add(".callout p", "text-indent: 0; margin: 0 0 0.5em;");
@@ -85,6 +99,7 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".toc ol ol li", "margin: 0 0 0.3em;");
   add(".part-page", "text-align: center; margin-top: 30%;");
   if (o.dropCaps && theme.dropCap !== "none") add("p.first::first-letter", dropCapCss(theme));
+  add("p.lead-in::first-line", "font-variant: small-caps; letter-spacing: 0.04em;");
   if (theme.headingCase === "upper") add("h1", "text-transform: uppercase; letter-spacing: 0.06em;");
   if (theme.headingRule === "above" || theme.headingRule === "both") add(".chapter-head", `border-top: 1px solid ${theme.accent}; padding-top: 1.2em;`);
   if (theme.headingRule === "below" || theme.headingRule === "both") add(".chapter-head h1", `border-bottom: 1px solid ${theme.accent}; padding-bottom: 0.4em;`);
@@ -121,10 +136,21 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".endnotes h2", "font-size: 1.1em;");
   add(".endnotes p", "text-indent: 0;");
   for (const b of BOXES) {
-    add(`.blk-${b.id}`, boxCss(b.box ?? {}, theme));
-    if (b.box?.align) add(`.blk-${b.id} p`, `text-align: ${b.box.align};`);
+    const st = boxStyle(b.id, theme);
+    add(`.blk-${b.id}`, boxCss(st, paletteOf(theme)));
+    if (st.align) add(`.blk-${b.id} p`, `text-align: ${st.align};`);
+    if (st.labelColor) add(`.blk-${b.id} .blk-label`, `color: ${boxLabelColor(st, theme.accent)};`);
+  }
+  // named presets: a class per preset, so changing one restyles every block that uses it
+  for (const p of cleanPresets(theme.boxPresets)) {
+    const st = boxStyle(p.variant, theme, null, p.id);
+    add(`.blk.blk-p-${p.id}`, boxCss(st, paletteOf(theme), true));
+    add(`.blk.blk-p-${p.id} p`, "text-align: inherit;");
+    add(`.blk.blk-p-${p.id} .blk-label`, `color: ${boxLabelColor(st, theme.accent)};`);
   }
   add(".blk", "margin: 1.4em 0; text-indent: 0;");
+  // a restyled block sets its alignment on itself; its paragraphs follow it
+  add(".blk.blk-own p", "text-align: inherit;");
   add(".blk p", "text-indent: 0;");
   add(".blk > p + p", "margin-top: 0.45em;");
   add(".blk-label", `font-family: ${theme.headingCss}; font-size: 0.72em; letter-spacing: 0.12em; text-transform: uppercase; font-style: normal; color: ${theme.accent}; margin: 0 0 0.5em;`);
@@ -175,7 +201,24 @@ function dropCapCss(t: InteriorTheme): string {
   }
 }
 
-const BOX_FONT: Record<BoxFont, (t: InteriorTheme) => string> = {
+/** The theme values a box needs; the editor passes CSS variables so one node style fits every theme. */
+export interface BoxPalette {
+  accent: string;
+  tint: string;
+  headingCss: string;
+  bodyCss: string;
+  /** the book's styles for each kind of block and its named presets */
+  book?: BookBoxStyles;
+}
+
+export function paletteOf(t: InteriorTheme): BoxPalette {
+  return { accent: t.accent, tint: paleTint(t.accent), headingCss: t.headingCss, bodyCss: t.bodyCss, book: { boxes: t.boxes, boxPresets: t.boxPresets } };
+}
+
+/** For styles written into the editor's HTML: editorBlockCss sets these variables from the theme. */
+export const EDITOR_PALETTE: BoxPalette = { accent: "var(--jp-accent)", tint: "var(--jp-tint)", headingCss: "var(--jp-head)", bodyCss: "var(--jp-body)" };
+
+const BOX_FONT: Record<BoxFont, (t: BoxPalette) => string> = {
   body: (t) => t.bodyCss,
   heading: (t) => t.headingCss,
   hand: () => fontCss(HAND_FONT),
@@ -183,37 +226,60 @@ const BOX_FONT: Record<BoxFont, (t: InteriorTheme) => string> = {
   sans: () => "Inter, 'Helvetica Neue', Arial, sans-serif",
 };
 
-function boxCss(st: import("./blocks").BoxStyle, t: InteriorTheme): string {
+/**
+ * CSS for a box. With `full`, every property is set (padding, border, font, colour…), so the
+ * result can sit in a block's own style attribute and override its kind's rules completely.
+ */
+export function boxCss(st: BoxStyle, t: BoxPalette, full = false): string {
   const out: string[] = [];
-  const fill = boxFill(st, t.accent);
-  const line = st.accent ? t.accent : "#cfc8bb";
-  if (fill) out.push(`background: ${fill};`);
-  if (fill || (st.border && st.border !== "none" && st.border !== "rules")) out.push("padding: 0.9em 1.1em;");
+  const fill = !st.fill || st.fill === "none" ? null : st.fill === "accent" ? t.tint : st.fill;
+  const line = st.line ? (st.line === "accent" ? t.accent : st.line) : st.accent ? t.accent : "#cfc8bb";
+  const w = st.weight ?? 1;
+  const radius = st.corners === 2 ? "0.9em" : st.corners === 0 ? "0" : "0.3em";
+  if (fill) out.push(`background-color: ${fill};`);
+  else if (full) out.push("background-color: transparent;");
+  const framed = fill || (st.border && st.border !== "none" && st.border !== "rules");
+  if (framed) out.push("padding: 0.9em 1.1em;");
+  else if (full) out.push("padding: 0;");
+  if (full) out.push("border: 0;");
   switch (st.border) {
     case "left":
-      out.push(`border-left: 4px solid ${line};`);
+      out.push(`border-left: ${4 * w}px solid ${line};`);
       break;
     case "box":
-      out.push(`border: 1px solid ${line}; border-radius: 0.3em;`);
+      out.push(`border: ${w}px solid ${line};`);
       break;
     case "rules":
-      out.push(`border-top: 1px solid ${line}; border-bottom: 1px solid ${line}; padding: 0.8em ${fill ? "1.1em" : "0"};`);
+      out.push(`border-top: ${w}px solid ${line}; border-bottom: ${w}px solid ${line}; padding: 0.8em ${fill ? "1.1em" : "0"};`);
       break;
     case "dashed":
-      out.push(`border: 1.5px dashed ${line}; border-radius: 0.3em;`);
+      out.push(`border: ${1.5 * w}px dashed ${line};`);
       break;
     case "double":
-      out.push(`border: 3px double ${line};`);
+      out.push(`border: ${3 * w}px double ${line};`);
       break;
     case "top":
-      out.push(`border-top: 3px solid ${line};`);
+      out.push(`border-top: ${3 * w}px solid ${line};`);
       break;
   }
-  if (st.font && st.font !== "body") out.push(`font-family: ${BOX_FONT[st.font](t)};`);
+  // the catalog rounds framed boxes slightly; an author's choice of corners applies to any box
+  if (st.corners !== undefined) out.push(`border-radius: ${radius};`);
+  else if (st.border === "box" || st.border === "dashed") out.push("border-radius: 0.3em;");
+  else if (full) out.push("border-radius: 0;");
+  if (st.fontFamily) out.push(`font-family: ${fontCss(st.fontFamily)};`);
+  else if (st.font && st.font !== "body") out.push(`font-family: ${BOX_FONT[st.font](t)};`);
+  else if (full) out.push(`font-family: ${t.bodyCss};`);
+  if (st.bold) out.push("font-weight: 700;");
+  if (st.leading) out.push(`line-height: ${st.leading};`);
   if (st.italic) out.push("font-style: italic;");
-  if (st.align) out.push(`text-align: ${st.align};`);
+  else if (full) out.push("font-style: normal;");
+  if (st.align) out.push(`text-align: ${st.align}; hyphens: none;`);
+  else if (full) out.push("text-align: left;");
   if (st.size && st.size !== 1) out.push(`font-size: ${st.size}em;`);
-  if (st.align) out.push("hyphens: none;");
+  else if (full) out.push("font-size: 1em;");
+  if (st.text) out.push(`color: ${st.text};`);
+  else if (fill && !fill.startsWith("var(") && isDark(fill)) out.push("color: #f6f2ea;");
+  if (full) out.push(`--blk-label: ${st.labelColor ? (st.labelColor === "accent" ? t.accent : st.labelColor) : t.accent};`);
   return out.join(" ");
 }
 
@@ -224,16 +290,29 @@ function boxCss(st: import("./blocks").BoxStyle, t: InteriorTheme): string {
 export function editorBlockCss(theme: InteriorTheme, scope = ".manuscript .ProseMirror"): string {
   const r: string[] = [];
   const add = (sel: string, body: string) => r.push(`${sel.split(",").map((p) => `${scope} ${p.trim()}`).join(", ")} { ${body} }`);
+  r.push(`${scope} { --jp-accent: ${theme.accent}; --jp-tint: ${paleTint(theme.accent)}; --jp-head: ${theme.headingCss}; --jp-body: ${theme.bodyCss}; }`);
   for (const b of BOXES) {
-    const st = b.box ?? {};
-    let css = boxCss(st, theme);
+    const st = boxStyle(b.id, theme);
+    let css = boxCss(st, paletteOf(theme));
     if (st.only) css = "border: 1.5px dashed var(--paper-3); border-radius: 6px; padding: 0.9em 1.1em;";
-    if (boxFill(st, theme.accent)) css += " color: #1c1a17;";
+    const fill = boxFill(st, theme.accent);
+    if (fill && !st.text && !isDark(fill)) css += " color: #1c1a17;";
+    css += ` --blk-label: ${boxLabelColor(st, theme.accent)};`;
     add(`.blk-${b.id}`, css);
   }
+  for (const p of cleanPresets(theme.boxPresets)) {
+    const st = boxStyle(p.variant, theme, null, p.id);
+    const fill = boxFill(st, theme.accent);
+    add(`.blk.blk-p-${p.id}`, boxCss(st, paletteOf(theme), true) + (fill && !st.text && !isDark(fill) ? " color: #1c1a17;" : ""));
+    add(`.blk.blk-p-${p.id} p`, "text-align: inherit;");
+  }
   add(".blk", "position: relative; margin: 1.4em 0;");
+  add(".blk.blk-own p", "text-align: inherit;");
+  add("p[data-lead-in]::first-line", "font-variant: small-caps; letter-spacing: 0.04em;");
+  add("p[data-first]::first-letter, p[data-drop-cap]::first-letter", `float: left; font-family: ${theme.headingCss}; font-size: 3.1em; line-height: 0.85; padding: 0.06em 0.08em 0 0; color: ${theme.accent};`);
+  add("p[data-first], p[data-drop-cap]", "text-indent: 0;");
   add(".blk > * + *", "margin-top: 0.5em;");
-  add(".blk::before", `content: attr(data-shown-label); display: block; font-family: ${theme.headingCss}; font-size: 0.7em; letter-spacing: 0.12em; text-transform: uppercase; font-style: normal; color: ${theme.accent}; margin-bottom: 0.4em;`);
+  add(".blk::before", `content: attr(data-shown-label); display: block; font-family: ${theme.headingCss}; font-size: 0.7em; letter-spacing: 0.12em; text-transform: uppercase; font-style: normal; color: var(--blk-label, ${theme.accent}); margin-bottom: 0.4em;`);
   add(".blk[data-shown-label='']::before", "display: none;");
   add(".blk-label-end::before", "display: none;");
   add(".blk-label-end::after", "content: attr(data-shown-label); display: block; font-style: italic; margin-top: 0.6em; font-size: 0.95em;");

@@ -3,8 +3,8 @@ import { backgroundStyle, chapterHeadHtml, ornamentHtml } from "../render-elemen
 import { authorName, bookImages, elementBackground, forEdition, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { docToHtml, escapeHtml } from "../doc/html";
 import { collectOrnaments, subheads } from "../doc/types";
-import { themeCss } from "../theme-css";
-import { sceneBreakGlyph, themeFor } from "../themes";
+import { paletteOf, themeCss } from "../theme-css";
+import { sceneBreakGlyph, textStyle, themeFor } from "../themes";
 import { bookFormat } from "../types";
 import { ornamentSvg } from "../ornaments";
 import { backgroundArt, textOverBackground } from "../backgrounds";
@@ -153,6 +153,13 @@ export async function buildEpub(input: ExportInput, assets: EpubAssets = {}): Pr
   const subList = (file: string, subs: string[], prefix = "") =>
     subs.length ? `<ol>${subs.map((t, j) => `<li><a href="${prefix}${file}#sub-${j + 1}">${escapeHtml(t)}</a></li>`).join("")}</ol>` : "";
 
+  // with endnotes for the whole book, the chapters before the Notes page send theirs there
+  const notesAt = textStyle(theme).endnotes === "book" ? elements.findIndex((e) => e.kind.id === "notes") : -1;
+  const noteGroups: { title: string; items: string[] }[] = [];
+  // index entries from every chapter before the Index page
+  const indexAt = elements.findIndex((e) => e.kind.id === "index");
+  const indexOut: { term: string; href: string }[] = [];
+
   elements.forEach((e, i) => {
     const c = e.chapter;
     let body: string;
@@ -178,11 +185,16 @@ ${book.imprint ? `<p class="tp-imprint">${escapeHtml(book.imprint)}</p>` : ""}
 ${input.alsoBy.length ? input.alsoBy.map((b) => `<p class="first">${escapeHtml(b.title)}${b.subtitle ? `: <em>${escapeHtml(b.subtitle)}</em>` : ""}</p>`).join("\n") : "<p>More books coming soon.</p>"}</section>`;
         break;
       default: {
+        const group = i < notesAt ? { title: tocText(e), items: [] as string[] } : null;
+        if (group) noteGroups.push(group);
         const { html, notes } = docToHtml(c.content, {
           mode: "epub",
           imageHref: (src) => imageHref.get(src) ?? src,
           sceneBreak: sceneBreakGlyph(theme),
+          palette: paletteOf(theme),
           notePrefix: `n${i + 1}`,
+          ...(group ? { bookNotes: { file: files[notesAt], back: files[i], out: group.items } } : {}),
+          ...(i < indexAt ? { index: { file: files[i], out: indexOut } } : {}),
           ornament: (own) => ornamentHtml(theme, own, true, (id) => ornamentHref.get(id) ?? null),
           target: "ebook",
         });
@@ -193,8 +205,17 @@ ${input.alsoBy.length ? input.alsoBy.map((b) => `<p class="first">${escapeHtml(b
           body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>${html}</section>`;
         else {
           const cls = e.kind.layout === "centered" ? ' class="centered-verse"' : "";
+          const collected =
+            i === indexAt && indexOut.length
+              ? indexHtml(indexOut)
+              : i === notesAt
+              ? noteGroups
+                  .filter((g) => g.items.length)
+                  .map((g) => `<section class="endnotes" epub:type="endnotes"><h2>${escapeHtml(g.title)}</h2><ol>${g.items.join("")}</ol></section>`)
+                  .join("\n")
+              : "";
           body = `<section${cls}>${chapterHeadHtml(e, e.image ? (imageHref.get(e.image) ?? null) : null)}
-${html}${e.kind.layout === "lined" ? '<div class="blk-lines" style="height:24em"></div>' : ""}${notes}</section>`;
+${html}${e.kind.layout === "lined" ? '<div class="blk-lines" style="height:24em"></div>' : ""}${notes}${collected}</section>`;
         }
       }
     }
@@ -313,4 +334,27 @@ function ncxPoints(entries: { e: BookElement; file: string; subs: string[] }[]):
       return `<navPoint id="np${id}" playOrder="${id}"><navLabel><text>${escapeHtml(tocText(e))}</text></navLabel><content src="text/${file}"/>${kids}</navPoint>`;
     })
     .join("\n");
+}
+
+/** The Index page: terms A to Z, each with numbered links to where it is used (an ebook has no page numbers). */
+function indexHtml(entries: { term: string; href: string }[]): string {
+  const byTerm = new Map<string, string[]>();
+  for (const e of entries) byTerm.set(e.term, [...(byTerm.get(e.term) ?? []), e.href]);
+  const terms = [...byTerm.keys()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  let letter = "";
+  const out: string[] = [];
+  for (const t of terms) {
+    const l = t.charAt(0).toUpperCase();
+    if (l !== letter) {
+      if (letter) out.push("</ul>");
+      letter = l;
+      out.push(`<h2 class="index-letter">${escapeHtml(l)}</h2><ul class="index">`);
+    }
+    out.push(`<li>${escapeHtml(t)}, ${byTerm
+      .get(t)!
+      .map((h, i) => `<a href="${escapeHtml(h)}">${i + 1}</a>`)
+      .join(", ")}</li>`);
+  }
+  if (letter) out.push("</ul>");
+  return `<section class="book-index" epub:type="index">${out.join("")}</section>`;
 }

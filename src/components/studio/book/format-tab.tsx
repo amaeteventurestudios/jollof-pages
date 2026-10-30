@@ -12,6 +12,7 @@ import { bookFormat, printEdition, type BookFormat } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/progress";
 import type { Workspace } from "./workspace";
+import { EditStyles } from "./edit-styles";
 
 export function usePageCount(ws: Workspace, binding: Binding = "paperback"): { pages: number; estimated: boolean } {
   const f = bookFormat(ws.book);
@@ -72,7 +73,7 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           <h2 className="text-lg font-medium">Interior theme</h2>
           <p className="mt-1 text-sm text-soft">93 themes. One theme styles the print PDF, the ebook and the preview. Pick one, then make it yours below.</p>
           <div className="mt-4">
-            <ThemeGallery value={f.theme} onChange={(id) => set({ theme: id, custom: {} })} />
+            <ThemeGallery value={f.theme} onChange={(id) => set({ theme: id, custom: { ...(f.custom?.boxes ? { boxes: f.custom.boxes } : {}), ...(f.custom?.boxPresets ? { boxPresets: f.custom.boxPresets } : {}) } })} />
           </div>
         </section>
 
@@ -171,6 +172,14 @@ export function FormatTab({ ws }: { ws: Workspace }) {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section id="edit-styles" className="rounded-xl bg-card p-5">
+          <h2 className="text-lg font-medium">Edit styles</h2>
+          <p className="mt-1 text-sm text-soft">How the text sits on the page, the same in print, the ebook and on your website. Also in the editor: Styles, above the page.</p>
+          <div className="mt-4">
+            <EditStyles ws={ws} />
           </div>
         </section>
 

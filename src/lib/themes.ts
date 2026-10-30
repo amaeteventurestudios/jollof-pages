@@ -8,6 +8,7 @@
 import { fontCss, FONT_HREFS } from "./fonts";
 import { getOrnament } from "./ornaments";
 import type { BookFormat } from "./types";
+import type { BoxLook, BoxPreset } from "./blocks";
 
 export type ChapterLabel = "word" | "number" | "none";
 export type DropCapStyle = "classic" | "accent" | "tall" | "boxed" | "outline" | "circle" | "script" | "none";
@@ -79,6 +80,50 @@ export interface InteriorTheme {
   accent: string;
   /** a library background (src/lib/backgrounds.ts) behind chapter openings, if the theme has one */
   openerBackground?: string;
+  /** the author's style for every block of a kind, by block id (src/lib/blocks.ts) */
+  boxes?: Record<string, BoxLook>;
+  /** the author's named block styles */
+  boxPresets?: BoxPreset[];
+  /* Edit styles: missing means the theme's own setting */
+  /** justified text (both edges straight) */
+  justify?: boolean;
+  /** break long words at line ends */
+  hyphenate?: boolean;
+  /** extra space between paragraphs, in em */
+  paraSpacing?: number;
+  /** first-line indent, in em */
+  indentSize?: number;
+  /** how much space a chapter opening takes: 0.6 tight to 1.6 airy */
+  headingSpace?: number;
+  /** how a chapter subtitle is set */
+  subtitleStyle?: "italic" | "smallcaps" | "plain";
+  /** endnotes at the end of each chapter, or together on the book's Notes page */
+  endnotes?: "chapter" | "book";
+}
+
+export interface TextStyle {
+  justify: boolean | null;
+  hyphenate: boolean;
+  paraSpacing: number | null;
+  indentSize: number | null;
+  headingSpace: number;
+  subtitleStyle: "italic" | "smallcaps" | "plain";
+  endnotes: "chapter" | "book";
+}
+
+const clampNum = (v: unknown, min: number, max: number): number | null => (typeof v === "number" && Number.isFinite(v) ? Math.round(Math.min(max, Math.max(min, v)) * 100) / 100 : null);
+
+/** The Edit styles settings, checked, with null where the theme's own default applies. Every format reads them here. */
+export function textStyle(t: InteriorTheme): TextStyle {
+  return {
+    justify: typeof t.justify === "boolean" ? t.justify : null,
+    hyphenate: t.hyphenate !== false,
+    paraSpacing: clampNum(t.paraSpacing, 0, 2),
+    indentSize: clampNum(t.indentSize, 0, 4),
+    headingSpace: clampNum(t.headingSpace, 0.5, 2) ?? 1,
+    subtitleStyle: t.subtitleStyle === "smallcaps" || t.subtitleStyle === "plain" ? t.subtitleStyle : "italic",
+    endnotes: t.endnotes === "book" ? "book" : "chapter",
+  };
 }
 
 type Look = Pick<InteriorTheme, "chapterLabel" | "labelStyle" | "headingAlign" | "headingItalic" | "headingWeight" | "headingSize" | "headingCase" | "headingRule" | "indent" | "leadIn">;
@@ -291,6 +336,15 @@ export type ThemeCustom = Partial<
     | "ornament"
     | "dropCap"
     | "accent"
+    | "boxes"
+    | "boxPresets"
+    | "justify"
+    | "hyphenate"
+    | "paraSpacing"
+    | "indentSize"
+    | "headingSpace"
+    | "subtitleStyle"
+    | "endnotes"
   >
 >;
 

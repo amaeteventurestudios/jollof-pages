@@ -1,6 +1,7 @@
 import type { BookElement, ExportInput, ResolvedBackground } from "./book-model";
 import { authorName, elementBackground, tocText } from "./book-model";
 import { docToHtml, escapeHtml } from "./doc/html";
+import { paletteOf } from "./theme-css";
 import { sceneBreakGlyph, type InteriorTheme } from "./themes";
 import { subheads } from "./doc/types";
 import { bookFormat } from "./types";
@@ -101,6 +102,7 @@ export function elementHtml(e: BookElement, input: Pick<ExportInput, "book" | "a
   const { html, notes } = docToHtml(e.chapter.content, {
     mode: "web",
     sceneBreak: sceneBreakGlyph(theme),
+    palette: paletteOf(theme),
     notePrefix: `n-${e.chapter.id}`,
     ornament: (own) => ornamentHtml(theme, own, false),
   });
