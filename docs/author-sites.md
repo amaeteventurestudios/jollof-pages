@@ -14,7 +14,7 @@ Every studio buyer gets a private studio and a public website, filled in from th
 | Accounts, paid/comp access, per-author rules | `pocketbase/pb_migrations/1761480000_author_accounts.js` |
 | Host → site routing (`ada.jollofpages.com/books/x` → `/sites/ada/books/x`) | `src/proxy.ts`, `src/lib/sites.ts` |
 | Author home page | `src/app/(site)/sites/[site]/page.tsx` (book pages reuse `/books/[slug]`) |
-| Sign-up and the $119 payment | `/signup`, `src/app/api/accounts/*`, `src/lib/server/accounts.ts` |
+| Sign-up and the $129 payment | `/signup`, `src/app/api/accounts/*`, `src/lib/server/accounts.ts` |
 | Address, own domain, Caddy's certificate check | `src/app/api/sites/*` |
 | Reader lists, one per author | `src/app/api/subscribe/route.ts` |
 | Add a published book by ISBN (Open Library) | `src/app/api/books/isbn/route.ts`, `src/components/studio/isbn-dialog.tsx` |
@@ -27,7 +27,7 @@ site land on that author's list, which only that author can read.
 | Name | Value | What it does |
 | --- | --- | --- |
 | `STUDIO_SIGNUP` | `paid`, `free` or `closed` | `paid`: sign up, then pay through Stripe. `free`: no payment (beta). `closed`: no sign-up. Unset = `paid` when `STRIPE_SECRET_KEY` is set, else `closed`. |
-| `STUDIO_PRICE_CENTS` | `11900` | The one-time price. |
+| `STUDIO_PRICE_CENTS` | `12900` | The one-time price. |
 | `ROOT_DOMAIN` | `jollofpages.com` | Optional; defaults to the host of `SITE_URL`. |
 | `PB_SUPERUSER_EMAIL`, `PB_SUPERUSER_PASSWORD` | as for AI covers | Needed: sign-up creates accounts as a superuser. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | as for AI covers | The same webhook (`/api/credits/webhook`) also opens paid studios. |

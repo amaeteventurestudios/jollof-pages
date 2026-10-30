@@ -162,7 +162,7 @@ export const FAQ: FaqGroup[] = [
       },
       {
         q: "Is there a subscription?",
-        a: "No. The studio is one payment of $119 with every future update included. AI cover credits are optional and pay as you go. Author Site Pro is the only monthly plan, and you only need it for your own domain and the Pro website features.",
+        a: "No. The studio is one payment of $129 with every future update included. AI cover credits are optional and pay as you go. Author Site Pro is the only monthly plan, and you only need it for your own domain and the Pro website features.",
       },
       {
         q: "Can I install the studio like an app?",

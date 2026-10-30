@@ -76,9 +76,9 @@ export function verifyWebhook(payload: string, header: string | null, secret: st
   });
 }
 
-/** The studio itself: one payment, a lifetime account. STUDIO_PRICE_CENTS defaults to $119. */
+/** The studio itself: one payment, a lifetime account. STUDIO_PRICE_CENTS defaults to $129. */
 export function studioPriceCents(): number {
-  return Number(process.env.STUDIO_PRICE_CENTS) || 11900;
+  return Number(process.env.STUDIO_PRICE_CENTS) || 12900;
 }
 
 export function createStudioCheckout(p: { userId: string; email: string; successUrl: string; cancelUrl: string }) {

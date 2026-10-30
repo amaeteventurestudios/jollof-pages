@@ -17,7 +17,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: { absolute: "Jollof Pages: write, format and publish your book. An Atticus alternative" },
   description:
-    "Write your manuscript, format a KDP-ready paperback, hardcover and ebook, design the cover, and publish to your own author website. AI writing help, live co-writing and track changes. $119 once, no subscription.",
+    "Write your manuscript, format a KDP-ready paperback, hardcover and ebook, design the cover, and publish to your own author website. AI writing help, live co-writing and track changes. $129 once, no subscription.",
   alternates: { canonical: "/" },
 };
 
@@ -141,7 +141,7 @@ const COMPARE: { row: string; us: string | boolean; them: string | boolean | nul
   { row: "Newsletters, direct ebook sales and analytics", us: "With Author Site Pro", them: null },
   { row: "Video guides", us: "One for every feature", them: "Tutorials" },
   { row: "Free design studio for social posts and ads", us: "Jollof Studio", them: null },
-  { row: "Price, one time", us: "$119", them: "$147" },
+  { row: "Price, one time", us: "$129", them: "$147" },
 ];
 
 const PLATFORMS = [
@@ -207,7 +207,7 @@ const FAQ = [
   },
   {
     q: "Is it a subscription?",
-    a: "No. Jollof Pages is one payment of $119, with every future update included. AI cover credits are optional and pay as you go: $10 buys 100 credits, enough for about 25 print-ready covers, and credits never expire.",
+    a: "No. Jollof Pages is one payment of $129, with every future update included. AI cover credits are optional and pay as you go: $10 buys 100 credits, enough for about 25 print-ready covers, and credits never expire.",
   },
   {
     q: "What is the free author website?",
@@ -239,7 +239,7 @@ const STRUCTURED = [
     operatingSystem: "Windows, macOS, Linux, ChromeOS, iPadOS, Android (installs from the browser)",
     description: "Write, format and publish print books and ebooks ready for Amazon KDP, with a cover designer and a free author website.",
     image: "https://jollofpages.com/og/jollof-pages.jpg",
-    offers: { "@type": "Offer", price: "119", priceCurrency: "USD", description: "One payment, every future update included. No subscription." },
+    offers: { "@type": "Offer", price: "129", priceCurrency: "USD", description: "One payment, every future update included. No subscription." },
     publisher: { "@type": "Organization", name: "Amaete Venture Studios", email: "support@jollofpages.com" },
   },
   {
@@ -280,7 +280,7 @@ export default async function Home() {
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3" data-rise style={{ ["--i" as string]: 2 }}>
               <a href="/signup" className="btn">
-                Buy for $119
+                Buy for $129
                 <Arrow />
               </a>
               <a href="#write" className="btn btn-ghost">
@@ -644,7 +644,7 @@ export default async function Home() {
                 <Pattern id="p-plan" kind="adire" color="var(--char)" opacity={0.18} drift={false} />
                 <div className="relative">
                   <p className="text-[1.25rem] font-semibold">Jollof Pages Studio</p>
-                  <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">$119</p>
+                  <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">$129</p>
                   <p className="mt-4 text-[1.125rem] font-semibold">One-time payment. No monthly fees.</p>
                   <p className="mt-3 max-w-[34ch] text-cream/95">Buy it once and write as many books as you like, with every update we ship included.</p>
                   <a href="/signup" className="btn mt-8">
@@ -736,7 +736,7 @@ export default async function Home() {
             <div className="mx-auto mt-8 max-w-[560px]" data-reveal style={{ ["--i" as string]: 2 }}>
               <div className="flex justify-center">
                 <a href="/signup" className="btn">
-                  Buy Jollof Pages for $119
+                  Buy Jollof Pages for $129
                   <Arrow />
                 </a>
               </div>

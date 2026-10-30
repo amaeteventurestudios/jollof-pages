@@ -10,7 +10,7 @@ const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: 
 
 const TITLE = "Jollof Pages: write, format and publish your book";
 const DESCRIPTION =
-  "The book studio for authors. Write your manuscript, format a KDP-ready paperback, hardcover and ebook, design the cover, and publish to your own author website. An Atticus and Vellum alternative for $119 once, no subscription.";
+  "The book studio for authors. Write your manuscript, format a KDP-ready paperback, hardcover and ebook, design the cover, and publish to your own author website. An Atticus and Vellum alternative for $129 once, no subscription.";
 const OG_IMAGE = { url: "/og/jollof-pages.jpg", width: 1200, height: 630, alt: "Jollof Pages: Write. Format. Publish. Your book, from first draft to finished page." };
 
 export const metadata: Metadata = {

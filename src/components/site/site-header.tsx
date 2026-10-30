@@ -25,7 +25,7 @@ const AUTHOR_LINKS = [
  */
 export function SiteHeader({ name, overHero = false, author = false }: { name: string; overHero?: boolean; author?: boolean }) {
   const LINKS = author ? AUTHOR_LINKS : STUDIO_LINKS;
-  const cta = author ? { href: "/#join", label: "Join the reader list" } : { href: "/signup", label: "Buy for $119" };
+  const cta = author ? { href: "/#join", label: "Join the reader list" } : { href: "/signup", label: "Buy for $129" };
   const [solid, setSolid] = useState(!overHero);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);

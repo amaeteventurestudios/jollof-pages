@@ -8,7 +8,7 @@ export async function GET() {
   const o = `https://${rootDomain()}`;
   const body = `# Jollof Pages
 
-> Jollof Pages is a book writing, formatting and publishing studio for authors. Write a manuscript, format a paperback, hardcover and ebook that pass Amazon KDP's checks, design the cover, and publish the book on your own author website. It runs in the browser and installs like an app on Windows, Mac, Linux, Chromebook, iPad and Android. It costs $119 once, with every future update included and no subscription. People use it as an alternative to Atticus and Vellum. Made by Amaete Venture Studios.
+> Jollof Pages is a book writing, formatting and publishing studio for authors. Write a manuscript, format a paperback, hardcover and ebook that pass Amazon KDP's checks, design the cover, and publish the book on your own author website. It runs in the browser and installs like an app on Windows, Mac, Linux, Chromebook, iPad and Android. It costs $129 once, with every future update included and no subscription. People use it as an alternative to Atticus and Vellum. Made by Amaete Venture Studios.
 
 ## Write
 - Chapter-based editor with parts, sub-chapters, front matter and back matter, reordered by dragging
