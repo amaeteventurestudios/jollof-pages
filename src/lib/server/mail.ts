@@ -36,7 +36,7 @@ function payload(m: Mail) {
 }
 
 async function post(path: string, body: unknown): Promise<void> {
-  const res = await fetch(`https://api.resend.com/${path}`, {
+  const res = await fetch(`${process.env.RESEND_API_URL || "https://api.resend.com"}/${path}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
