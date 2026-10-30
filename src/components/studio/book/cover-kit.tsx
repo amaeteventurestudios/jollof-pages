@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, Check, Copy, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BLEED, type CoverGeometry } from "@/lib/kdp";
+import type { CoverGeometry } from "@/lib/kdp";
 import { DPI, artPrompts, artSpec, type Check as PreflightCheck } from "@/lib/cover-kit";
 import { cn } from "@/lib/utils";
 
@@ -11,11 +11,14 @@ const RED = "#ff2d55";
 const BLUE = "#008bd8";
 
 /**
- * A layout guide at print size for an image tool or an editor such as Canva: bleed, trim, safe
- * area, spine and barcode, labelled with their measurements. "front" is the front panel alone.
+ * A layout guide at print size for an image tool or an editor such as Canva: bleed (or a
+ * hardcover's wrap), trim, safe area, spine and barcode, labelled with their measurements. "front"
+ * is the front panel alone.
  */
 function drawTemplate(g: CoverGeometry, part: "wrap" | "front"): HTMLCanvasElement {
   const spec = artSpec(g);
+  const E = g.edge;
+  const hard = g.binding === "hardcover";
   const wIn = part === "wrap" ? g.width : spec.front.width;
   const hIn = g.height;
   const ox = part === "wrap" ? 0 : -g.frontX; // shift so the front panel starts at the spine fold
@@ -40,7 +43,7 @@ function drawTemplate(g: CoverGeometry, part: "wrap" | "front"): HTMLCanvasEleme
     x.font = font(0.16, 500);
     x.fillText(sub, X(from + width / 2), P(hIn / 2) + P(0.25));
   };
-  const panelSub = `${spec.front.px.width} x ${spec.front.px.height} px with bleed`;
+  const panelSub = `${spec.front.px.width} x ${spec.front.px.height} px with ${hard ? "wrap" : "bleed"}`;
   if (part === "wrap") panel(0, g.spineX, "#f2efe9", "BACK", panelSub);
   panel(g.frontX, g.width - g.frontX, "#eef3f7", "FRONT", panelSub);
   if (part === "wrap") {
@@ -52,20 +55,20 @@ function drawTemplate(g: CoverGeometry, part: "wrap" | "front"): HTMLCanvasEleme
     x.fillStyle = "#1c1a17";
     x.textAlign = "center";
     x.font = font(Math.min(0.16, g.spine * 0.45), 700);
-    x.fillText(`SPINE ${g.spine.toFixed(3)} in${g.spineTextAllowed ? "" : " (no text under 79 pages)"}`, 0, P(Math.min(0.06, g.spine * 0.15)));
+    x.fillText(`SPINE ${g.spine.toFixed(3)} in${hard ? " with boards" : ""}${g.spineTextAllowed ? "" : " (no text under 79 pages)"}`, 0, P(Math.min(0.06, g.spine * 0.15)));
     x.restore();
   }
-  // bleed band, cut off when trimmed
+  // bleed band, cut off when trimmed; on a hardcover, the wrap that folds inside the boards
   x.fillStyle = "rgba(255,45,85,0.18)";
-  x.fillRect(0, 0, c.width, P(BLEED));
-  x.fillRect(0, c.height - P(BLEED), c.width, P(BLEED));
-  x.fillRect(c.width - P(BLEED), 0, P(BLEED), c.height);
-  if (part === "wrap") x.fillRect(0, 0, P(BLEED), c.height);
-  // trim and folds
+  x.fillRect(0, 0, c.width, P(E));
+  x.fillRect(0, c.height - P(E), c.width, P(E));
+  x.fillRect(c.width - P(E), 0, P(E), c.height);
+  if (part === "wrap") x.fillRect(0, 0, P(E), c.height);
+  // trim (board edge) and folds
   x.strokeStyle = RED;
   x.lineWidth = P(0.012);
   x.setLineDash([P(0.06), P(0.04)]);
-  x.strokeRect(part === "wrap" ? P(BLEED) : 0, P(BLEED), part === "wrap" ? c.width - 2 * P(BLEED) : c.width - P(BLEED), c.height - 2 * P(BLEED));
+  x.strokeRect(part === "wrap" ? P(E) : 0, P(E), part === "wrap" ? c.width - 2 * P(E) : c.width - P(E), c.height - 2 * P(E));
   x.setLineDash([]);
   if (part === "wrap")
     for (const at of [g.spineX, g.frontX]) {
@@ -78,9 +81,9 @@ function drawTemplate(g: CoverGeometry, part: "wrap" | "front"): HTMLCanvasEleme
   x.strokeStyle = BLUE;
   x.lineWidth = P(0.01);
   x.setLineDash([P(0.03), P(0.03)]);
-  const safe = (from: number) => x.strokeRect(X(from + g.safe), P(BLEED + g.safe), P(g.trim.width - 2 * g.safe), P(g.trim.height - 2 * g.safe));
-  safe(g.frontX);
-  if (part === "wrap") safe(BLEED);
+  const safe = (r: CoverGeometry["safeFront"]) => x.strokeRect(X(r.x), P(r.y), P(r.width), P(r.height));
+  safe(g.safeFront);
+  if (part === "wrap") safe(g.safeBack);
   x.setLineDash([]);
   if (part === "wrap") {
     x.fillStyle = "#ffffff";
@@ -96,9 +99,11 @@ function drawTemplate(g: CoverGeometry, part: "wrap" | "front"): HTMLCanvasEleme
   x.textAlign = "left";
   x.font = font(0.12, 600);
   x.fillStyle = RED;
-  x.fillText("Red band: bleed, cut off. Dashed red: trim and folds.", X(g.frontX + g.safe + 0.05), P(BLEED + g.safe + 0.25));
+  const lx = X(g.safeFront.x + 0.05);
+  x.fillText(hard ? `Red band: ${E.toFixed(3)} in wrap, folds inside the boards.` : "Red band: bleed, cut off. Dashed red: trim and folds.", lx, P(g.safeFront.y + 0.25));
+  if (hard) x.fillText("Dashed red: board edges and spine hinges.", lx, P(g.safeFront.y + 0.45));
   x.fillStyle = BLUE;
-  x.fillText("Dashed blue: keep words and faces inside.", X(g.frontX + g.safe + 0.05), P(BLEED + g.safe + 0.45));
+  x.fillText("Dashed blue: keep words and faces inside.", lx, P(g.safeFront.y + (hard ? 0.65 : 0.45)));
   return c;
 }
 
@@ -155,7 +160,7 @@ export function CoverKit({
   const rows: [string, string, string][] = [
     ["Front artwork", `${spec.front.px.width} x ${spec.front.px.height} px`, `${spec.front.width.toFixed(3)} x ${spec.front.height.toFixed(3)} in, ask for ${spec.front.ratio}`],
     ["Back artwork", `${spec.back.px.width} x ${spec.back.px.height} px`, `same size as the front`],
-    ["Spine", `${spec.spine.px} px wide`, `${g.spine.toFixed(4)} in, made by the studio`],
+    ["Spine", `${spec.spine.px} px wide`, `${g.spine.toFixed(4)} in${g.binding === "hardcover" ? " including the boards" : ""}, made by the studio`],
     ["Whole wrap", `${spec.wrap.px.width} x ${spec.wrap.px.height} px`, `${g.width.toFixed(3)} x ${g.height.toFixed(3)} in, if you design it in one piece`],
   ];
   return (
@@ -190,10 +195,10 @@ export function CoverKit({
         <div className="flex flex-wrap gap-2">
           <CopyButton text={prompts.front} label="Copy front prompt" />
           <CopyButton text={prompts.back} label="Copy back prompt" />
-          <Button type="button" size="sm" variant="outline" onClick={() => downloadCanvas(drawTemplate(g, "wrap"), `${slug}-kdp-wrap-template.png`)}>
+          <Button type="button" size="sm" variant="outline" onClick={() => downloadCanvas(drawTemplate(g, "wrap"), `${slug}-kdp-${g.binding === "hardcover" ? "hardcover-" : ""}wrap-template.png`)}>
             <Download /> Wrap template
           </Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => downloadCanvas(drawTemplate(g, "front"), `${slug}-kdp-front-template.png`)}>
+          <Button type="button" size="sm" variant="outline" onClick={() => downloadCanvas(drawTemplate(g, "front"), `${slug}-kdp-${g.binding === "hardcover" ? "hardcover-" : ""}front-template.png`)}>
             <Download /> Front template
           </Button>
         </div>

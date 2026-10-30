@@ -9,7 +9,7 @@ RUN npm ci
 FROM node:22-bookworm-slim AS tools
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates unzip xz-utils && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY scripts/setup-tools.sh scripts/setup-tools.sh
+COPY scripts/setup-tools.sh scripts/fonts.txt scripts/
 RUN bash scripts/setup-tools.sh && rm -rf pocketbase
 
 FROM node:22-bookworm-slim AS build
@@ -32,6 +32,8 @@ COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 COPY --from=tools /app/tools ./tools
 COPY --from=tools /app/fonts ./fonts
+# the writing assistant's memory (ASSISTANT_DIR) and its local embedding model (FastEmbed's local_cache)
+RUN mkdir -p /data/assistant /app/local_cache && chown -R node /data /app/local_cache
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

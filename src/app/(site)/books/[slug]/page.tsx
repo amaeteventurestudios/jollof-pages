@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { getBookBySlug, getSampleChapter, getSite } from "@/lib/pb-server";
+import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
+import { hasPro, rootDomain } from "@/lib/sites";
+import { BuyDirect } from "@/components/site/buy-direct";
+import { SiteDesignStyle } from "@/components/site/site-design-style";
 import { BookObject } from "@/components/site/book-object";
 import { Tilt } from "@/components/site/tilt";
 import { Pattern } from "@/components/site/patterns";
@@ -17,13 +20,23 @@ import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const book = await getBookBySlug((await params).slug);
+// also serves author sites: /sites/[site]/books/[slug] (ada.jollofpages.com/books/…) re-exports this page
+type Params = Promise<{ slug: string; site?: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug, site: sub } = await params;
+  const { book } = await getSiteBook(slug, sub);
   if (!book) return { title: "Book not found" };
   return {
     title: book.title,
     description: book.pitch || book.subtitle || book.description.slice(0, 160),
     openGraph: {
+      title: book.title,
+      description: book.pitch || book.subtitle,
+      images: book.cover ? [fileUrl(book, book.cover, "960x0")] : [],
+    },
+    twitter: {
+      card: book.cover ? "summary_large_image" : "summary",
       title: book.title,
       description: book.pitch || book.subtitle,
       images: book.cover ? [fileUrl(book, book.cover, "960x0")] : [],
@@ -36,9 +49,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
  * while the right column carries everything about it: what it is, where to buy it and at what price,
  * the author, praise, reviews and the printed details.
  */
-export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [site, book] = await Promise.all([getSite(), getBookBySlug(slug)]);
+export default async function BookPage({ params }: { params: Params }) {
+  const { slug, site: sub } = await params;
+  const { site, book } = await getSiteBook(slug, sub);
   if (!book) notFound();
   const sample = await getSampleChapter(book.id);
   const name = site?.publisher_name || "Jollof Pages";
@@ -49,9 +62,10 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const reviews = (book.reviews ?? []).filter((q) => q.quote);
   const author = book.expand?.author;
   const upcoming = isUpcoming(book);
+  const direct = book.sell_direct && book.ebook_file && (book.ebook_price_cents ?? 0) >= 100 && hasPro(site) ? `$${(book.ebook_price_cents! / 100).toFixed(2)}` : "";
   const dark = isDark(sb.accent);
   const details: [string, string][] = [
-    ["Format", `Paperback, ${sb.trimLabel}`],
+    ["Format", `${f.hardcover ? "Hardcover and paperback" : "Paperback"}, ${sb.trimLabel}`],
     ["Pages", book.page_count ? String(book.page_count) : ""],
     ["Paper", PAPER_LABELS[f.paper as PaperType] ?? ""],
     ["Spine", book.page_count ? `${spineOf(sb).toFixed(3)} in` : ""],
@@ -66,6 +80,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
         : "",
     ],
     ["Paperback ISBN", book.isbn_paperback],
+    ["Hardcover ISBN", book.isbn_hardcover ?? ""],
     ["Ebook ISBN", book.isbn_ebook],
     ["Series", book.series ? `${book.series}${book.series_number ? `, book ${book.series_number}` : ""}` : ""],
     ["Imprint", book.imprint],
@@ -98,7 +113,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <SiteHeader name={name} overHero />
+      {sub && <SiteDesignStyle design={site?.design} />}
+      <SiteHeader name={name} overHero author={!!sub} />
       <div className={cn("relative pt-[72px]", dark ? "text-cream" : "text-char")} style={{ background: sb.accent }}>
         <Pattern id="p-book" kind="adire" color={dark ? "#000" : "var(--char)"} opacity={dark ? 0.14 : 0.08} drift={false} />
         <div className="relative mx-auto grid max-w-[1700px] gap-x-16 px-4 sm:px-8 lg:grid-cols-[1fr_minmax(0,40rem)] 2xl:grid-cols-[1fr_minmax(0,46rem)]">
@@ -140,13 +156,15 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
               </div>
             )}
 
-            <Block title={links.length ? (upcoming ? "Preorder" : "Purchase") : upcoming ? "Coming soon" : "Purchase"} dark={dark}>
-              {links.length > 0 ? (
+            <Block title={links.length || direct ? (upcoming ? "Preorder" : "Purchase") : upcoming ? "Coming soon" : "Purchase"} dark={dark}>
+              {links.length > 0 || direct ? (
                 <ul className="grid gap-2 sm:grid-cols-2">
+                  {direct && <BuyDirect bookId={book.id} price={direct} dark={dark} />}
                   {links.map((l) => (
                     <li key={l.url}>
                       <a
                         href={l.url}
+                        data-track={l.label || "Amazon"}
                         target="_blank"
                         rel="noreferrer"
                         className={cn("buy-row flex h-16 items-center justify-between gap-4 border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}
@@ -222,13 +240,13 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 <h2 id="notify-title" className="wide text-[1.75rem] font-bold tracking-[-0.03em]">
                   {upcoming ? "Tell me when it is out" : "Hear about the next one"}
                 </h2>
-                <SubscribeForm source={`book:${book.slug}`} tone="dark" />
+                <SubscribeForm source={`book:${book.slug}`} site={sub} tone="dark" />
               </div>
             </section>
           </main>
         </div>
       </div>
-      <SiteFooter name={name} email={site?.email} />
+      <SiteFooter name={name} email={site?.email} {...(sub ? { blurb: site?.intro || undefined, studioUrl: `https://${rootDomain()}` } : {})} />
     </>
   );
 }

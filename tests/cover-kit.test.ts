@@ -31,3 +31,25 @@ describe("cover kit", () => {
     expect(artPrompts(artSpec(g), b, true).front).toContain('"Slow Money"');
   });
 });
+
+describe("hardcover cover kit", () => {
+  const h = coverGeometry("6x9", 200, "white", "hardcover");
+  const hb = { ...base, g: h };
+  it("sizes each panel with the board and the wrap that folds inside", () => {
+    const s = artSpec(h);
+    expect(s.front.width).toBeCloseTo(6 + 0.197 + 0.591, 3);
+    expect(s.front.height).toBeCloseTo(9 + 0.236 + 2 * 0.591, 3);
+    expect(s.wrap.px.width).toBe(Math.ceil(h.width * 300));
+  });
+  it("checks hardcover page limits", () => {
+    const thin = coverGeometry("6x9", 60, "white", "hardcover");
+    expect(preflight({ ...hb, g: thin }).find((c) => c.label === "Page count")?.state).toBe("fail");
+    expect(preflight(hb).find((c) => c.label === "Page count")?.state).toBe("ok");
+  });
+  it("keeps text off the wrap and away from the hinge", () => {
+    expect(preflight(hb).find((c) => c.label === "Safe area")?.state).toBe("ok");
+    // positions are fractions of the board: 0.03 is inside the hinge clearance, 0.02 from the top too close to the edge
+    expect(preflight({ ...hb, title: { x: 0.03, y: 0.15 } }).find((c) => c.label === "Safe area")?.state).toBe("fail");
+    expect(preflight({ ...hb, title: { x: 0.15, y: 0.02 } }).find((c) => c.label === "Safe area")?.state).toBe("fail");
+  });
+});

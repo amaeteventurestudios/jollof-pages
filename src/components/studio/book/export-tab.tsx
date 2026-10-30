@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Download, FileCode2, FileText, FileType2, Loader2, ShieldCheck, Archive } from "lucide-react";
+import { BookOpen, BookMarked, Download, FileCode2, FileText, FileType2, Loader2, ShieldCheck, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { download, exportInput, fetchCover, fetchImages } from "@/lib/studio";
 import { pb } from "@/lib/pb";
 import { slugify } from "@/lib/slug";
-import { coverGeometry, inches } from "@/lib/kdp";
-import { bookFormat } from "@/lib/types";
+import { coverGeometry, HARDCOVER, inches, type Binding } from "@/lib/kdp";
+import { bookFormat, printEdition } from "@/lib/types";
 import type { Workspace } from "./workspace";
 
 type Check = { ok: boolean; errors: number; warnings: number; messages: { severity: string; message: string; where: string }[] } | { error: string };
@@ -29,6 +29,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfBinding, setPdfBinding] = useState<Binding>("paperback");
   const [check, setCheck] = useState<Check | null>(null);
   const f = bookFormat(book);
   useEffect(() => () => void (pdfUrl && URL.revokeObjectURL(pdfUrl)), [pdfUrl]);
@@ -84,27 +85,39 @@ export function ExportTab({ ws }: { ws: Workspace }) {
       setMessage("Word file downloaded. Word will ask to update the contents field when you open it.");
     });
 
-  const pdf = (format: "pdf" | "typ") =>
-    guard(format, async () => {
+  const hc = printEdition(f, "hardcover");
+  const label = (trim: string) => `${trim.replace("x", '" x ')}"`;
+
+  const pdf = (format: "pdf" | "typ", binding: Binding = "paperback") =>
+    guard(binding === "hardcover" ? `hc-${format}` : format, async () => {
       const res = await fetch("/api/export/pdf", {
         method: "POST",
         headers: { Authorization: `Bearer ${pb().authStore.token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId: book.id, format }),
+        body: JSON.stringify({ bookId: book.id, format, binding }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(`${j.error ?? "The PDF could not be built."}${j.detail ? `\n${j.detail}` : ""}`);
       }
       const pages = Number(res.headers.get("X-Page-Count") || 0);
-      if (pages) ws.setBook((b) => (b ? { ...b, page_count: pages } : b));
+      if (pages) ws.setBook((b) => (b ? (binding === "hardcover" ? { ...b, hardcover_page_count: pages } : { ...b, page_count: pages }) : b));
       const blob = await res.blob();
       if (format === "typ") {
-        download(blob, `${name}.typ`);
+        download(blob, `${name}${binding === "hardcover" ? "-hardcover" : ""}.typ`);
         setMessage("Typst source downloaded. Compile it with: typst compile --font-path fonts book.typ");
         return;
       }
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
       setPdfUrl(URL.createObjectURL(blob));
+      setPdfBinding(binding);
+      if (binding === "hardcover") {
+        const cover = coverGeometry(hc.trim, pages, hc.paper, "hardcover");
+        const fits = pages >= HARDCOVER.minPages && pages <= HARDCOVER.maxPages;
+        setMessage(
+          `Hardcover interior built: ${pages} pages.${fits ? "" : ` KDP binds hardcovers of ${HARDCOVER.minPages} to ${HARDCOVER.maxPages} pages, so this one will be refused.`} Your hardcover cover needs a ${inches(cover.spine, 4)} spine, ${inches(cover.width)} x ${inches(cover.height)} in total with the wrap.`,
+        );
+        return;
+      }
       const cover = coverGeometry(f.trim, pages, f.paper);
       setMessage(`Print interior built: ${pages} pages. Your paperback cover needs a ${inches(cover.spine, 4)} spine, ${inches(cover.width)} x ${inches(cover.height)} in total.`);
     });
@@ -120,13 +133,33 @@ export function ExportTab({ ws }: { ws: Workspace }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card icon={FileText} title="Print interior (PDF)" text={`Press-ready ${f.trim.replace("x", '" x ')}" PDF with mirrored margins, KDP gutter for the page count, running heads and a paged contents. Built with Typst.`}>
+        <Card icon={FileText} title="Paperback interior (PDF)" text={`Press-ready ${label(f.trim)} PDF with mirrored margins, KDP gutter for the page count, running heads and a paged contents. Built with Typst.`}>
           <Button onClick={() => pdf("pdf")} disabled={!!busy}>
             {spin("pdf")} Build PDF
           </Button>
-          {pdfUrl && (
+          {pdfUrl && pdfBinding === "paperback" && (
             <Button variant="outline" asChild>
               <a href={pdfUrl} download={`${name}-interior.pdf`}>
+                <Download /> Save PDF
+              </a>
+            </Button>
+          )}
+        </Card>
+        <Card
+          icon={BookMarked}
+          title="Hardcover interior (PDF)"
+          text={
+            f.hardcover
+              ? `KDP case laminate hardcover at ${label(hc.trim)}, with a wider gutter for the stiffer binding. ${HARDCOVER.minPages} to ${HARDCOVER.maxPages} pages.`
+              : `Turn on "Also publish a hardcover" on the Format tab to sell a case laminate hardcover as well. You can still build a ${label(hc.trim)} proof here.`
+          }
+        >
+          <Button onClick={() => pdf("pdf", "hardcover")} disabled={!!busy} variant={f.hardcover ? "default" : "outline"}>
+            {spin("hc-pdf")} Build hardcover PDF
+          </Button>
+          {pdfUrl && pdfBinding === "hardcover" && (
+            <Button variant="outline" asChild>
+              <a href={pdfUrl} download={`${name}-hardcover-interior.pdf`}>
                 <Download /> Save PDF
               </a>
             </Button>
@@ -188,7 +221,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
         </section>
       )}
 
-      {pdfUrl && <iframe title="Print interior proof" src={pdfUrl} className="mt-6 h-[80vh] w-full rounded-md bg-card" />}
+      {pdfUrl && <iframe title={pdfBinding === "hardcover" ? "Hardcover interior proof" : "Print interior proof"} src={pdfUrl} className="mt-6 h-[80vh] w-full rounded-md bg-card" />}
     </div>
   );
 }

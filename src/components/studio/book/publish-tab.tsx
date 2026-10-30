@@ -9,10 +9,12 @@ import { Field, Panel } from "./details-tab";
 import { uniqueSlug } from "@/lib/studio";
 import { slugify } from "@/lib/slug";
 import { errorMessage, pb } from "@/lib/pb";
-import { coverGeometry, maxPages, MIN_PAGES, getTrim } from "@/lib/kdp";
-import { bookFormat, type BuyLink, type Quote } from "@/lib/types";
+import { coverGeometry, HARDCOVER, maxPages, MIN_PAGES, getTrim } from "@/lib/kdp";
+import { bookFormat, printEdition, type BuyLink, type Quote } from "@/lib/types";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
+import { useMySite } from "../use-my-site";
+import { SellDirect } from "./sell-direct";
 
 const STORES = ["Amazon", "Apple Books", "Kobo", "Barnes & Noble", "Google Play Books", "Bookshop.org", "Okadabooks", "Selar"];
 
@@ -22,6 +24,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
   const [slug, setSlug] = useState(book.slug);
   const [msg, setMsg] = useState("");
   const samples = ws.chapters.filter((c) => c.is_sample);
+  const { url: siteBase } = useMySite();
 
   async function saveLinks(next: BuyLink[]) {
     setLinks(next);
@@ -38,7 +41,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
             <span className="block text-sm text-soft">{book.published ? "Live now." : "Hidden. Only you can see it."}</span>
           </span>
           {book.published && (
-            <Link href={`/books/${book.slug}`} target="_blank" className="ml-auto inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
+            <Link href={`${siteBase.replace(/\/$/, "")}/books/${book.slug}`} target="_blank" className="ml-auto inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
               View page <ExternalLink className="size-3.5" />
             </Link>
           )}
@@ -50,7 +53,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
             <span className="block text-sm text-soft">The featured book leads the home page.</span>
           </span>
         </label>
-        <Field id="p-slug" label="Web address" hint={`jollofpages.com/books/${slug}`}>
+        <Field id="p-slug" label="Web address" hint={`${siteBase.replace(/^https?:\/\//, "").replace(/\/$/, "")}/books/${slug}`}>
           <div className="flex gap-2">
             <Input id="p-slug" value={slug} onChange={(e) => setSlug(slugify(e.target.value))} />
             <Button
@@ -148,6 +151,8 @@ export function PublishTab({ ws }: { ws: Workspace }) {
         </div>
       </Panel>
 
+      <SellDirect ws={ws} />
+
       <QuotesPanel ws={ws} field="praise" title="Praise" description="Quotes from people about the book, shown under Praise on its page." sourceLabel="Name" roleLabel="Who they are" />
       <QuotesPanel ws={ws} field="reviews" title="Reviews" description="Excerpts from published reviews, shown under Reviews with a link to the full review." sourceLabel="Publication" />
 
@@ -196,6 +201,9 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
   const { pages, estimated } = usePageCount(ws);
   const max = maxPages(getTrim(f.trim), f.paper);
   const cover = coverGeometry(f.trim, pages, f.paper);
+  const hard = usePageCount(ws, "hardcover");
+  const hc = printEdition(f, "hardcover");
+  const hcover = coverGeometry(hc.trim, hard.pages, hc.paper, "hardcover");
   const items: [boolean, string][] = [
     [!!book.title && !!book.expand?.author?.name, "Title and author name"],
     [!!book.description && book.description.length <= 4000, "Description under 4,000 characters"],
@@ -205,6 +213,12 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
     [!estimated && pages >= MIN_PAGES && pages <= max, `Print PDF built, ${MIN_PAGES}–${max} pages`],
     [!!book.cover, "Ebook cover (front only)"],
     [!!book.cover_full, `Paperback cover PDF, ${cover.width.toFixed(3)} x ${cover.height.toFixed(3)} in`],
+    ...(f.hardcover
+      ? ([
+          [!hard.estimated && hard.pages >= HARDCOVER.minPages && hard.pages <= HARDCOVER.maxPages, `Hardcover PDF built, ${HARDCOVER.minPages}–${HARDCOVER.maxPages} pages`],
+          [!!book.cover_hardcover, `Hardcover cover PDF, ${hcover.width.toFixed(3)} x ${hcover.height.toFixed(3)} in`],
+        ] as [boolean, string][])
+      : []),
   ];
   return (
     <Panel title="Amazon KDP checklist" description="KDP uploads stay manual. When everything here is ticked, download the files from the Export tab and upload them at kdp.amazon.com.">

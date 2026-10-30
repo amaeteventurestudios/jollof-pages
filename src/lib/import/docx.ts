@@ -43,7 +43,7 @@ export function guessKind(title: string, seenBody: boolean): string {
 
 /** "Chapter 3: Know your reader" -> "Know your reader"; "Chapter Three" alone stays as is. */
 export function cleanChapterTitle(title: string): string {
-  const m = title.match(/^chapter\s+([0-9]+|[a-z-]+)\s*[:.\-–—]\s*(.+)$/i);
+  const m = title.match(/^chapter\s+([0-9]+|[a-z-]+)\s*[:.\-–—]+\s*(.+)$/i);
   return (m ? m[2] : title).trim();
 }
 

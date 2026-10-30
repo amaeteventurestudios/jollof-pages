@@ -38,7 +38,7 @@ fi
 # Google Fonts serves TTF to old user agents; Typst needs TTF/OTF.
 fetch_family() {
   local family="$1" spec="$2" file="$3"
-  if ls "$ROOT/fonts/${file}"-*.ttf >/dev/null 2>&1; then return; fi
+  if ls "$ROOT/fonts/${file}"-[0-9]*.ttf >/dev/null 2>&1; then return; fi
   echo "Font: $family"
   local css i=0
   css="$(curl -fsSL -A "Mozilla/4.0" "https://fonts.googleapis.com/css2?family=${spec}")"
@@ -47,11 +47,8 @@ fetch_family() {
       curl -fsSL -o "$ROOT/fonts/${file}-${weight}-${style}.ttf" "$url"
     done
 }
-fetch_family "EB Garamond" "EB+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600" "EBGaramond"
-fetch_family "Literata" "Literata:ital,wght@0,400;0,700;1,400" "Literata"
-fetch_family "Source Serif 4" "Source+Serif+4:ital,wght@0,400;0,700;1,400" "SourceSerif4"
-fetch_family "Crimson Pro" "Crimson+Pro:ital,wght@0,400;0,700;1,400" "CrimsonPro"
-fetch_family "Lora" "Lora:ital,wght@0,400;0,700;1,400" "Lora"
-fetch_family "Playfair Display" "Playfair+Display:ital,wght@0,400;0,700;1,400" "PlayfairDisplay"
-fetch_family "Inter" "Inter:wght@400;600;700" "Inter"
+while IFS='|' read -r family axes file; do
+  case "$family" in ''|'#'*) continue ;; esac
+  fetch_family "$family" "${family// /+}:${axes}" "$file"
+done < "$ROOT/scripts/fonts.txt"
 echo "Tools ready."

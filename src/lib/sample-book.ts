@@ -21,7 +21,7 @@ const LOREM = [
 ];
 
 export function sampleChapters(): Omit<Chapter, "id" | "collectionId" | "book" | "owner" | "created" | "updated">[] {
-  const base = { subtitle: "", status: "draft" as const, is_sample: false, in_toc: true, numbered: false, word_count: 0 };
+  const base = { subtitle: "", status: "draft" as const, is_sample: false, in_toc: true, numbered: false, word_count: 0, options: null };
   return [
     { ...base, kind: "title_page", section: "front", order: 0, title: "Title page", content: null, in_toc: false },
     {
@@ -31,7 +31,7 @@ export function sampleChapters(): Omit<Chapter, "id" | "collectionId" | "book" |
       order: 1,
       title: "Copyright",
       in_toc: false,
-      content: doc(p(t("Copyright © 2026 Sample Author")), p(t("All rights reserved.")), p(t("Published by Jollof Pages")), p(t("First edition"))),
+      content: doc(p(t("Copyright © 2026 Tola Ekanem")), p(t("All rights reserved.")), p(t("Published by Jollof Pages")), p(t("First edition"))),
     },
     { ...base, kind: "dedication", section: "front", order: 2, title: "Dedication", in_toc: false, content: doc(p(t("For everyone who has a book in them."))) },
     { ...base, kind: "contents", section: "front", order: 3, title: "Contents", in_toc: false, content: null },
@@ -77,7 +77,7 @@ export function sampleChapters(): Omit<Chapter, "id" | "collectionId" | "book" |
       content: doc(p(t(LOREM[3])), h(2, "The three-act argument"), p(t(LOREM[0])), { type: "orderedList", attrs: { start: 1 }, content: ["Problem", "Turning point", "Method"].map((s) => ({ type: "listItem", content: [p(t(s))] })) }, p(t(LOREM[2])), h(3, "When the outline breaks"), p(t(LOREM[1]))),
     },
     { ...base, kind: "acknowledgments", section: "back", order: 0, title: "Acknowledgments", content: doc(p(t("Thank you to the readers of early drafts."))) },
-    { ...base, kind: "about_author", section: "back", order: 1, title: "About the author", content: doc(p(t("Sample Author writes practical books for first-time authors."))) },
+    { ...base, kind: "about_author", section: "back", order: 1, title: "About the author", content: doc(p(t("Tola Ekanem writes practical books for first-time authors."))) },
   ];
 }
 
@@ -118,7 +118,7 @@ export function sampleExportInput(): ExportInput {
     created: "",
     updated: "",
   };
-  const author: Author = { id: "a", collectionId: "authors", owner: "u", name: "Sample Author", slug: "sample-author", bio: "", photo: "", website: "" };
+  const author: Author = { id: "a", collectionId: "authors", owner: "u", name: "Tola Ekanem", slug: "sample-author", bio: "", photo: "", website: "" };
   const chapters = sampleChapters().map((c, i) => ({ ...c, id: `c${i}`, collectionId: "chapters", book: book.id, owner: "u", created: "", updated: "" })) as Chapter[];
   return { book, author, chapters, alsoBy: [] };
 }
@@ -130,7 +130,7 @@ export function fillerChapter(i: number): DocNode {
   const paras: DocNode[] = [];
   for (let k = 0; k < 6; k++) {
     paras.push(h(2, ["The problem", "What works", "An example", "Common mistakes", "Try this", "Before you move on"][k]));
-    for (let j = 0; j < 5; j++) paras.push(p(t(LOREM[(i + j + k) % LOREM.length]), t(" " + LOREM[(i + j + k + 1) % LOREM.length])));
+    for (let j = 0; j < 16; j++) paras.push(p(t(LOREM[(i + j + k) % LOREM.length]), t(" " + LOREM[(i + j + k + 1) % LOREM.length])));
     if (k === 2) paras.push({ type: "callout", content: [p(t("Exercise: ", ["bold"]), t("Write one paragraph that applies this to your own book."))] });
   }
   return doc(...paras);

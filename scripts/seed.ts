@@ -1,6 +1,6 @@
 /**
  * Sets up a Jollof Pages PocketBase:
- *   - the owner account (the only studio login; public sign-up is closed)
+ *   - the owner account (free studio access; its site is the publisher site at the root domain)
  *   - the publisher site settings (pen names are added in the studio, so the owner's own name
  *     never appears on the public site)
  *   - with --demo, four clearly marked sample books with covers, for trying the app out
@@ -91,6 +91,14 @@ ${body}
   );
 }
 
+/** A made-up pen name for the demo books. The older "Sample Author" is still removed by --remove-demo. */
+const DEMO_AUTHOR = {
+  name: "Tola Ekanem",
+  slug: "tola-ekanem",
+  bio: "Tola Ekanem is a made-up pen name for the demo books. Remove the demo books once your own are in.",
+};
+const DEMO_AUTHOR_SLUGS = [DEMO_AUTHOR.slug, "sample-author"];
+
 const DEMO: { title: string; subtitle: string; pitch: string; description: string; trim: string; paper: "cream" | "white"; theme: string; upcoming?: boolean; featured?: boolean; cover: CoverSpec; categories: string[] }[] = [
   {
     title: "The Book Inside You",
@@ -158,22 +166,23 @@ async function main() {
     .getFirstListItem(pb.filter("email = {:e}", { e: email }))
     .catch(() => null);
   const owner = existing
-    ? await pb.collection("users").update(existing.id, { password, passwordConfirm: password, name, verified: true })
-    : await pb.collection("users").create({ email, password, passwordConfirm: password, name, verified: true, emailVisibility: false });
+    ? await pb.collection("users").update(existing.id, { password, passwordConfirm: password, name, verified: true, access: "comp" })
+    : await pb.collection("users").create({ email, password, passwordConfirm: password, name, verified: true, emailVisibility: false, access: "comp" });
   console.log(`Owner: ${email}`);
 
   const sites = await pb.collection("site_settings").getFullList();
   if (!sites.length) {
-    await pb.collection("site_settings").create({ owner: owner.id, publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", socials: [] });
+    await pb.collection("site_settings").create({ owner: owner.id, publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", socials: [], home: true });
     console.log("Site settings created");
   }
 
   if (process.argv.includes("--remove-demo")) {
-    const sample = await pb
-      .collection("authors")
-      .getFirstListItem<Author>(pb.filter("slug = 'sample-author'"))
-      .catch(() => null);
-    if (sample) {
+    for (const slug of DEMO_AUTHOR_SLUGS) {
+      const sample = await pb
+        .collection("authors")
+        .getFirstListItem<Author>(pb.filter("slug = {:s}", { s: slug }))
+        .catch(() => null);
+      if (!sample) continue;
       for (const b of await pb.collection("books").getFullList({ filter: pb.filter("author = {:a}", { a: sample.id }) })) await pb.collection("books").delete(b.id);
       await pb.collection("authors").delete(sample.id);
     }
@@ -182,12 +191,12 @@ async function main() {
   }
   if (!demo) return;
 
-  // demo books are credited to a clearly fictional pen name, never to the owner
+  // demo books are credited to a made-up pen name, never to the owner
   let sampleAuthor = await pb
     .collection("authors")
-    .getFirstListItem<Author>(pb.filter("slug = 'sample-author'"))
+    .getFirstListItem<Author>(pb.filter("slug = {:s}", { s: DEMO_AUTHOR.slug }))
     .catch(() => null);
-  if (!sampleAuthor) sampleAuthor = await pb.collection("authors").create<Author>({ owner: owner.id, name: "Sample Author", slug: "sample-author", bio: "Sample Author is a placeholder pen name for the demo books. Delete it once your own books are in." });
+  if (!sampleAuthor) sampleAuthor = await pb.collection("authors").create<Author>({ owner: owner.id, ...DEMO_AUTHOR });
 
   for (const [i, d] of DEMO.entries()) {
     const slug = d.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -225,12 +234,12 @@ async function main() {
       cover_design: null,
     };
     for (const [k, v] of Object.entries(fields)) form.append(k, typeof v === "object" && v !== null ? JSON.stringify(v) : String(v));
-    form.append("cover", new Blob([new Uint8Array(cover(d.title, d.subtitle, "Sample Author", d.cover))], { type: "image/png" }), `${slug}-cover.png`);
+    form.append("cover", new Blob([new Uint8Array(cover(d.title, d.subtitle, DEMO_AUTHOR.name, d.cover))], { type: "image/png" }), `${slug}-cover.png`);
     const book = await pb.collection("books").create<Book>(form, { expand: "author" });
 
     const chapters: Chapter[] = [];
     const base = sampleChapters();
-    const extra = Array.from({ length: 6 + i }, (_, k) => ({ ...base.find((c) => c.kind === "chapter")!, is_sample: false, subtitle: "", title: fillerTitle(k), order: 3 + k, content: fillerChapter(k) }));
+    const extra = Array.from({ length: 16 - i * 2 }, (_, k) => ({ ...base.find((c) => c.kind === "chapter")!, is_sample: false, subtitle: "", title: fillerTitle(k), order: 3 + k, content: fillerChapter(k) }));
     for (const c of [...base, ...extra]) {
       const content = c.content;
       const created = await pb.collection("chapters").create<Chapter>({ ...c, owner: owner.id, book: book.id, word_count: countWords(content), is_sample: c.is_sample && !d.upcoming });

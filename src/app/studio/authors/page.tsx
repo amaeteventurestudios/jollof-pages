@@ -10,6 +10,7 @@ import { listAuthors, listBooks, uniqueSlug, userId } from "@/lib/studio";
 import { slugify } from "@/lib/slug";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import type { Author, Book } from "@/lib/types";
+import { toWebp } from "@/lib/webp";
 
 /** Pen names: every name a book can be published under, with the bio and photo shown on the site. */
 export default function AuthorsPage() {
@@ -100,7 +101,7 @@ function AuthorEditor({ author, books, onSaved, onDeleted }: { author: Author; b
     e.preventDefault();
     try {
       const data: Record<string, unknown> = { ...form };
-      if (photo) data.photo = photo;
+      if (photo) data.photo = await toWebp(photo);
       onSaved(await pb().collection("authors").update<Author>(id, data));
       setMsg("Saved.");
     } catch (err) {

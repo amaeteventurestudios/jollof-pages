@@ -19,7 +19,8 @@ import {
 import { authorName, orderedElements, type ExportInput } from "../book-model";
 import type { DocMark, DocNode } from "../doc/types";
 import { pageGeometry } from "../kdp";
-import { getTheme, sceneBreakGlyph } from "../themes";
+import { themeFor, sceneBreakGlyph } from "../themes";
+import { boxDef } from "../blocks";
 import { bookFormat } from "../types";
 
 export interface DocxImage {
@@ -46,8 +47,8 @@ function runOptions(marks: DocMark[] | undefined): Partial<IRunOptions> {
 export async function buildDocx(input: ExportInput, images: Map<string, DocxImage> = new Map()): Promise<Blob> {
   const { book } = input;
   const format = bookFormat(input.book);
-  const theme = getTheme(format.theme);
-  const g = pageGeometry(format.trim, input.book.page_count || 200, false);
+  const theme = themeFor(format);
+  const g = pageGeometry(format.trim, input.book.page_count || 200, false, "paperback", format.margins);
   const elements = orderedElements(input.chapters, theme);
   const footnotes: Record<number, { children: Paragraph[] }> = {};
   let noteNo = 0;
@@ -104,6 +105,33 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
         case "callout":
           out.push(...blocks(n.content, { style: "Callout" }));
           break;
+        case "box": {
+          // a Word manuscript keeps the words; the styling is the theme's job at export
+          const def = boxDef(String(n.attrs?.variant ?? ""));
+          const label = n.attrs?.label != null ? String(n.attrs.label) : (def.box?.label ?? "");
+          if (label && !def.box?.only) out.push(new Paragraph({ style: "Callout", children: [new TextRun({ text: label, bold: true })] }));
+          out.push(...blocks(n.content, { style: "Callout" }));
+          break;
+        }
+        case "chat":
+          for (const m of n.content ?? []) {
+            const name = n.attrs?.group && m.attrs?.name ? `${String(m.attrs.name)}: ` : "";
+            out.push(new Paragraph({ alignment: m.attrs?.from === "me" ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [new TextRun({ text: name, bold: true }), ...inline(m.content)] }));
+          }
+          break;
+        case "columns":
+          for (const col of n.content ?? []) out.push(...blocks(col.content));
+          break;
+        case "table":
+          for (const row of n.content ?? [])
+            out.push(new Paragraph({ children: (row.content ?? []).flatMap((cell, j) => [...(j ? [new TextRun("  |  ")] : []), ...inline((cell.content ?? []).flatMap((p) => p.content ?? []))]) }));
+          break;
+        case "pageBreak":
+          out.push(new Paragraph({ children: [new PageBreak()] }));
+          break;
+        case "spacer":
+          out.push(new Paragraph({ children: [] }));
+          break;
         case "bulletList":
         case "orderedList":
           for (const li of n.content ?? []) out.push(...blocks(li.content, { list: { ref: n.type === "bulletList" ? "bullets" : "numbers", level: 0 } }));
@@ -148,15 +176,18 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
         children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [...brk, new TextRun(e.title)] }), ...input.alsoBy.map((b) => new Paragraph({ children: [new TextRun(b.title)] })));
         return;
     }
-    if (e.label) children.push(new Paragraph({ style: "ChapterLabel", children: [...brk, new TextRun(e.label)] }));
+    // a hidden heading stays in the file, invisible, so Word's table of contents still finds it
+    const hidden = e.kind.hideTitle || e.options.hideHeading;
+    const label = hidden ? "" : e.label;
+    if (label) children.push(new Paragraph({ style: "ChapterLabel", children: [...brk, new TextRun(label)] }));
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
-        children: [...(e.label ? [] : brk), new TextRun(e.title)],
-        ...(e.kind.hideTitle ? { style: "HiddenTitle" } : {}),
+        children: [...(label ? [] : brk), new TextRun(e.title)],
+        ...(hidden ? { style: "HiddenTitle" } : {}),
       }),
     );
-    if (e.subtitle) children.push(new Paragraph({ style: "Subtitle", children: [new TextRun(e.subtitle)] }));
+    if (e.subtitle && !hidden) children.push(new Paragraph({ style: "Subtitle", children: [new TextRun(e.subtitle)] }));
     children.push(...blocks(e.chapter.content?.content));
   });
 

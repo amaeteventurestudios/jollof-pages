@@ -1,11 +1,13 @@
 /**
- * Amazon KDP print rules: trim sizes, margins, bleed, spine width and full-wrap cover size.
+ * Amazon KDP print rules: trim sizes, margins, bleed, spine width and full-wrap cover size, for
+ * paperbacks and case laminate hardcovers.
  *
- * Numbers follow KDP's paperback guidance (kdp.amazon.com "Set Trim Size, Bleed, and Margins"
- * and "Create a Paperback Cover"). All lengths are inches.
+ * Numbers follow KDP's guidance (kdp.amazon.com "Set Trim Size, Bleed, and Margins", "Create a
+ * Paperback Cover" and "Create a Hardcover Cover"). All lengths are inches.
  */
 
 export type PaperType = "white" | "cream" | "color-standard" | "color-premium";
+export type Binding = "paperback" | "hardcover";
 
 export interface TrimSize {
   id: string;
@@ -16,17 +18,43 @@ export interface TrimSize {
   wordsPerPage: number;
   /** true for sizes larger than 6.12 x 9 in, which KDP caps at fewer pages */
   large: boolean;
+  /** KDP also prints this size as a case laminate hardcover */
+  hardcover: boolean;
 }
 
+// Every paperback size KDP prints, smallest first. "large" follows KDP: wider than 6.12 in or taller than 9 in.
+const trim = (w: number, h: number, hardcover = false): TrimSize => ({
+  id: `${w}x${h}`,
+  label: `${w}" x ${h}"`,
+  width: w,
+  height: h,
+  // about 6.5 words per square inch of page at 11pt, matching 350 words on a 6 x 9 page
+  wordsPerPage: Math.round((w * h * 6.5) / 5) * 5,
+  large: w > 6.12 || h > 9,
+  hardcover,
+});
+
 export const TRIM_SIZES: TrimSize[] = [
-  { id: "5x8", label: '5" x 8"', width: 5, height: 8, wordsPerPage: 250, large: false },
-  { id: "5.25x8", label: '5.25" x 8"', width: 5.25, height: 8, wordsPerPage: 270, large: false },
-  { id: "5.5x8.5", label: '5.5" x 8.5"', width: 5.5, height: 8.5, wordsPerPage: 300, large: false },
-  { id: "6x9", label: '6" x 9"', width: 6, height: 9, wordsPerPage: 350, large: false },
-  { id: "6.14x9.21", label: '6.14" x 9.21"', width: 6.14, height: 9.21, wordsPerPage: 360, large: true },
-  { id: "7x10", label: '7" x 10"', width: 7, height: 10, wordsPerPage: 430, large: true },
-  { id: "8.5x11", label: '8.5" x 11"', width: 8.5, height: 11, wordsPerPage: 550, large: true },
+  trim(5, 8),
+  trim(5.06, 7.81),
+  trim(5.25, 8),
+  trim(5.5, 8.5, true),
+  trim(6, 9, true),
+  trim(6.14, 9.21, true),
+  trim(6.69, 9.61),
+  trim(7, 10, true),
+  trim(7.44, 9.69),
+  trim(7.5, 9.25),
+  trim(8, 10),
+  trim(8.25, 6),
+  trim(8.25, 8.25),
+  trim(8.5, 8.5),
+  trim(8.25, 11, true),
+  trim(8.5, 11),
+  trim(8.27, 11.69),
 ];
+
+export const HARDCOVER_TRIMS = TRIM_SIZES.filter((t) => t.hardcover);
 
 export const DEFAULT_TRIM = "6x9";
 
@@ -34,8 +62,41 @@ export function getTrim(id: string | undefined): TrimSize {
   return TRIM_SIZES.find((t) => t.id === id) ?? TRIM_SIZES.find((t) => t.id === DEFAULT_TRIM)!;
 }
 
+/** The hardcover size for a trim: the same size when KDP binds it in hardcover, else the nearest one it does. */
+export function hardcoverTrim(id: string | undefined): TrimSize {
+  const t = getTrim(id);
+  if (t.hardcover) return t;
+  return HARDCOVER_TRIMS.reduce((best, c) => (Math.abs(c.width * c.height - t.width * t.height) < Math.abs(best.width * best.height - t.width * t.height) ? c : best));
+}
+
 export const BLEED = 0.125;
 export const MIN_PAGES = 24;
+
+/**
+ * Case laminate hardcover. The printed cover wraps round 0.189 in boards: 0.591 in (15 mm) of it
+ * folds inside on every outer edge, each board is 0.197 in wider and 0.236 in taller than the
+ * trim, and KDP keeps text 0.4 in (10 mm) clear of the spine hinge. 75 to 550 pages on every paper.
+ */
+export const HARDCOVER = {
+  wrap: 0.591,
+  boardExtraWidth: 0.197,
+  boardExtraHeight: 0.236,
+  boardThickness: 0.189,
+  hinge: 0.4,
+  minPages: 75,
+  maxPages: 550,
+  /** extra gutter on top of KDP's minimum: a case-bound book does not open as flat as a paperback */
+  extraGutter: 0.125,
+};
+
+export function minPages(binding: Binding = "paperback"): number {
+  return binding === "hardcover" ? HARDCOVER.minPages : MIN_PAGES;
+}
+
+/** KDP binds black ink hardcovers on white or cream, and colour only as premium colour. */
+export function hardcoverPaper(paper: PaperType): PaperType {
+  return paper === "color-standard" ? "color-premium" : paper;
+}
 
 /** inches of spine per page, by paper */
 export const SPINE_PER_PAGE: Record<PaperType, number> = {
@@ -66,7 +127,8 @@ export function minOutside(bleed: boolean): number {
   return bleed ? 0.375 : 0.25;
 }
 
-export function maxPages(trim: TrimSize, paper: PaperType): number {
+export function maxPages(trim: TrimSize, paper: PaperType, binding: Binding = "paperback"): number {
+  if (binding === "hardcover") return HARDCOVER.maxPages;
   if (paper === "color-standard") return 600;
   if (paper === "color-premium") return trim.large ? 590 : 828;
   if (paper === "cream") return trim.large ? 550 : 776;
@@ -82,6 +144,7 @@ export interface Margins {
 
 export interface PageGeometry {
   trim: TrimSize;
+  binding: Binding;
   bleed: boolean;
   /** page size including bleed when bleed is on */
   pageWidth: number;
@@ -96,7 +159,7 @@ export interface PageGeometry {
  * Comfortable reading margins that always clear KDP's minimums. The gutter is KDP's minimum plus
  * a quarter inch, so text never disappears into the binding as the book grows.
  */
-export function pageGeometry(trimId: string | undefined, pageCount: number, bleed: boolean): PageGeometry {
+export function pageGeometry(trimId: string | undefined, pageCount: number, bleed: boolean, binding: Binding = "paperback", custom?: Partial<Margins>): PageGeometry {
   const trim = getTrim(trimId);
   const big = trim.width >= 7;
   const outsideBase = big ? 0.75 : 0.6;
@@ -104,14 +167,18 @@ export function pageGeometry(trimId: string | undefined, pageCount: number, blee
   const bleedAdd = bleed ? BLEED : 0;
   const gutter = minGutter(pageCount);
   const minOut = minOutside(bleed);
+  const hcExtra = binding === "hardcover" ? HARDCOVER.extraGutter : 0;
+  // an author's own margins (measured from the trim) never go below KDP's minimums
+  const own = (v: number | undefined, min: number) => (v === undefined || !Number.isFinite(v) ? undefined : Math.max(v, min));
   const margins: Margins = {
-    inside: round(gutter + 0.25),
-    outside: round(Math.max(outsideBase, minOut) + bleedAdd),
-    top: round(Math.max(vBase, minOut) + bleedAdd),
-    bottom: round(Math.max(vBase + 0.05, minOut) + bleedAdd),
+    inside: round((own(custom?.inside, gutter) ?? gutter + 0.25) + hcExtra),
+    outside: round((own(custom?.outside, minOut) ?? Math.max(outsideBase, minOut)) + bleedAdd),
+    top: round((own(custom?.top, minOut) ?? Math.max(vBase, minOut)) + bleedAdd),
+    bottom: round((own(custom?.bottom, minOut) ?? Math.max(vBase + 0.05, minOut)) + bleedAdd),
   };
   return {
     trim,
+    binding,
     bleed,
     pageWidth: round(trim.width + bleedAdd),
     pageHeight: round(trim.height + 2 * bleedAdd),
@@ -120,51 +187,85 @@ export function pageGeometry(trimId: string | undefined, pageCount: number, blee
   };
 }
 
-export function spineWidth(pageCount: number, paper: PaperType): number {
-  return round(Math.max(pageCount, 0) * SPINE_PER_PAGE[paper], 4);
+export function spineWidth(pageCount: number, paper: PaperType, binding: Binding = "paperback"): number {
+  const board = binding === "hardcover" ? HARDCOVER.boardThickness : 0;
+  return round(Math.max(pageCount, 0) * SPINE_PER_PAGE[paper] + board, 4);
+}
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface CoverGeometry {
+  binding: Binding;
   trim: TrimSize;
   pageCount: number;
   paper: PaperType;
   spine: number;
-  /** full wrap including bleed on all four sides */
+  /** what runs past the finished edge on the three outer sides: bleed on a paperback, the turn-in on a hardcover */
+  edge: number;
+  /** the finished back or front panel: the trim on a paperback, the board on a hardcover */
+  panelWidth: number;
+  panelHeight: number;
+  /** the whole printed sheet */
   width: number;
   height: number;
   /** x offsets (inches from the left edge) of the panels */
   backX: number;
   spineX: number;
   frontX: number;
-  /** KDP only allows spine text above 79 pages */
+  /** KDP only allows paperback spine text from 79 pages */
   spineTextAllowed: boolean;
-  /** margin to keep text inside the trim line */
+  /** margin to keep text inside the finished edge */
   safe: number;
+  /** where words and faces are safe on each panel */
+  safeBack: Rect;
+  safeFront: Rect;
   /** KDP places its barcode in a 2 x 1.2 in box on the back cover */
-  barcode: { x: number; y: number; width: number; height: number };
+  barcode: Rect;
 }
 
-export function coverGeometry(trimId: string | undefined, pageCount: number, paper: PaperType): CoverGeometry {
-  const trim = getTrim(trimId);
-  const spine = spineWidth(pageCount, paper);
-  const width = round(BLEED + trim.width + spine + trim.width + BLEED, 4);
-  const height = round(BLEED + trim.height + BLEED, 4);
-  const backX = BLEED;
-  const spineX = round(BLEED + trim.width, 4);
+export function coverGeometry(trimId: string | undefined, pageCount: number, paper: PaperType, binding: Binding = "paperback"): CoverGeometry {
+  const hard = binding === "hardcover";
+  const trim = hard ? hardcoverTrim(trimId) : getTrim(trimId);
+  const spine = spineWidth(pageCount, paper, binding);
+  const edge = hard ? HARDCOVER.wrap : BLEED;
+  const panelWidth = round(trim.width + (hard ? HARDCOVER.boardExtraWidth : 0), 4);
+  const panelHeight = round(trim.height + (hard ? HARDCOVER.boardExtraHeight : 0), 4);
+  const width = round(edge + panelWidth + spine + panelWidth + edge, 4);
+  const height = round(edge + panelHeight + edge, 4);
+  const backX = edge;
+  const spineX = round(edge + panelWidth, 4);
   const frontX = round(spineX + spine, 4);
+  // a hardcover board's outer edge rounds over and its spine side bends at the hinge
+  const safe = hard ? 0.375 : 0.125;
+  const hinge = hard ? HARDCOVER.hinge : safe;
+  const safeH = round(panelHeight - 2 * safe, 4);
+  const safeW = round(panelWidth - safe - hinge, 4);
+  const barcodeBottom = hard ? 0.76 : 0.25;
+  const barcodeSide = hard ? HARDCOVER.hinge + 0.25 : 0.25;
   return {
+    binding,
     trim,
     pageCount,
     paper,
     spine,
+    edge,
+    panelWidth,
+    panelHeight,
     width,
     height,
     backX,
     spineX,
     frontX,
-    spineTextAllowed: pageCount >= 79,
-    safe: 0.125,
-    barcode: { x: round(spineX - 0.25 - 2, 4), y: round(height - BLEED - 0.25 - 1.2, 4), width: 2, height: 1.2 },
+    spineTextAllowed: hard || pageCount >= 79,
+    safe,
+    safeBack: { x: round(edge + safe, 4), y: round(edge + safe, 4), width: safeW, height: safeH },
+    safeFront: { x: round(frontX + hinge, 4), y: round(edge + safe, 4), width: safeW, height: safeH },
+    barcode: { x: round(spineX - barcodeSide - 2, 4), y: round(height - edge - barcodeBottom - 1.2, 4), width: 2, height: 1.2 },
   };
 }
 

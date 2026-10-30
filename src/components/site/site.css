@@ -123,6 +123,26 @@
   justify-content: center;
   overflow: hidden;
 }
+.site .book3d-spine { box-shadow: inset 4px 0 6px -3px rgba(255, 255, 255, 0.25), inset -6px 0 8px -4px rgba(0, 0, 0, 0.45); }
+/* page edges: fine lines of paper, slightly shaded towards the binding */
+.site .book3d-pages {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(60, 40, 20, 0.14) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 35%);
+  transition: width 500ms var(--ease-out), left 500ms var(--ease-out);
+}
+.site .book3d-top {
+  left: 0;
+  transform-origin: center bottom;
+  transform: rotateX(90deg);
+  background-image: repeating-linear-gradient(0deg, rgba(60, 40, 20, 0.14) 0 1px, transparent 1px 3px);
+}
+.site .book3d-back { position: absolute; inset: 0; backface-visibility: hidden; }
 .site .book3d-spine span {
   writing-mode: vertical-rl;
   white-space: nowrap;

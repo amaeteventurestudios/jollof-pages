@@ -48,3 +48,6 @@ next-env.d.ts
 /.taste-skill/
 /e2e/output/
 !.env.example
+/dist
+/.assistant
+/local_cache

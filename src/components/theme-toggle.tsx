@@ -38,3 +38,30 @@ export function ThemeToggle({ className, label = false }: { className?: string; 
     </button>
   );
 }
+
+export type ThemeChoice = Theme | "system";
+
+/** The saved colour choice ("system" follows the device), and a setter that applies it at once. */
+export function useThemeChoice(): [ThemeChoice, (c: ThemeChoice) => void] {
+  // only shown inside menus that open after a click, so reading storage up front can't mismatch the server
+  const [choice, setChoice] = useState<ThemeChoice>(() => {
+    try {
+      const s = typeof window === "undefined" ? null : localStorage.getItem(THEME_KEY);
+      return s === "light" || s === "dark" ? s : "system";
+    } catch {
+      return "system";
+    }
+  });
+  return [
+    choice,
+    (c) => {
+      setChoice(c);
+      const d = document.documentElement;
+      try {
+        if (c === "system") localStorage.removeItem(THEME_KEY);
+        else localStorage.setItem(THEME_KEY, c);
+      } catch {}
+      d.dataset.theme = c === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : c;
+    },
+  ];
+}

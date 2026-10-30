@@ -1,10 +1,14 @@
 import JSZip from "jszip";
-import { authorName, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
+import { backgroundStyle, chapterHeadHtml, ornamentHtml } from "../render-element";
+import { authorName, bookImages, elementBackground, forEdition, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { docToHtml, escapeHtml } from "../doc/html";
-import { collectImages } from "../doc/types";
-import { themeCss } from "../theme-css";
-import { getTheme, sceneBreakGlyph } from "../themes";
+import { collectOrnaments, subheads } from "../doc/types";
+import { paletteOf, themeCss } from "../theme-css";
+import { sceneBreakGlyph, textStyle, themeFor } from "../themes";
 import { bookFormat } from "../types";
+import { ornamentSvg } from "../ornaments";
+import { backgroundArt, textOverBackground } from "../backgrounds";
+import { isLibraryBackground, libraryId } from "../background-ref";
 
 export interface BinaryAsset {
   bytes: Uint8Array;
@@ -38,7 +42,24 @@ const EPUB_TYPE: Record<string, string> = {
   about_author: "backmatter",
   also_by: "backmatter",
   review_request: "backmatter",
+  half_title: "frontmatter halftitlepage",
+  frontispiece: "frontmatter",
+  praise: "frontmatter",
+  also_by_front: "frontmatter",
+  illustrations: "frontmatter loi",
+  tables_list: "frontmatter lot",
+  abbreviations: "frontmatter",
+  cast: "frontmatter dramatis-personae",
+  prologue: "bodymatter prologue",
+  epilogue: "bodymatter epilogue",
+  appendix: "backmatter appendix",
+  index: "backmatter index",
+  references: "backmatter bibliography",
+  colophon: "backmatter colophon",
+  contributors: "backmatter contributors",
 };
+
+const SECTION_TYPE = { front: "frontmatter", body: "bodymatter", back: "backmatter" } as const;
 
 function ext(mediaType: string): string {
   if (mediaType.includes("png")) return "png";
@@ -72,10 +93,10 @@ export function epubFileName(e: BookElement, i: number): string {
 export async function buildEpub(input: ExportInput, assets: EpubAssets = {}): Promise<Uint8Array> {
   const { book } = input;
   const format = bookFormat(book);
-  const theme = getTheme(format.theme);
+  const theme = themeFor(format);
   const lang = book.language || "en";
   const author = authorName(input);
-  const elements = orderedElements(input.chapters, theme);
+  const elements = forEdition(orderedElements(input.chapters, theme), "ebook");
   const zip = new JSZip();
   zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
   zip.file(
@@ -88,24 +109,56 @@ export async function buildEpub(input: ExportInput, assets: EpubAssets = {}): Pr
   );
   zip.file("OEBPS/styles.css", themeCss(theme, { dropCaps: format.dropCaps, lineHeight: format.lineHeight, epub: true }));
 
-  // images used in the manuscript
+  // images used in the manuscript and chapter openings
   const imageHref = new Map<string, string>();
   const manifestImages: string[] = [];
   let imgNo = 0;
-  for (const c of input.chapters) {
-    for (const src of collectImages(c.content)) {
-      if (imageHref.has(src)) continue;
-      const asset = assets.images?.get(src);
-      if (!asset) continue;
-      const name = `img-${++imgNo}.${ext(asset.mediaType)}`;
-      zip.file(`OEBPS/images/${name}`, asset.bytes);
-      imageHref.set(src, `../images/${name}`);
-      manifestImages.push(`<item id="img${imgNo}" href="images/${name}" media-type="${asset.mediaType}"/>`);
-    }
+  for (const src of bookImages(input.chapters, format)) {
+    const asset = assets.images?.get(src);
+    if (!asset) continue;
+    const name = `img-${++imgNo}.${ext(asset.mediaType)}`;
+    zip.file(`OEBPS/images/${name}`, asset.bytes);
+    imageHref.set(src, `../images/${name}`);
+    manifestImages.push(`<item id="img${imgNo}" href="images/${name}" media-type="${asset.mediaType}"/>`);
   }
 
+  // drawn ornaments and library backgrounds, as SVG files
+  const ornamentHref = new Map<string, string>();
+  const ornamentIds = new Set([theme.ornament]);
+  for (const e of elements) collectOrnaments(e.chapter.content, ornamentIds);
+  for (const id of ornamentIds) {
+    const art = ornamentSvg(id, theme.accent);
+    if (!art) continue;
+    zip.file(`OEBPS/images/orn-${id}.svg`, art.svg);
+    ornamentHref.set(id, `../images/orn-${id}.svg`);
+    manifestImages.push(`<item id="orn-${id}" href="images/orn-${id}.svg" media-type="image/svg+xml"/>`);
+  }
+  const backgroundHref = (src: string, strength: number): string | null => {
+    if (!isLibraryBackground(src)) return imageHref.get(src) ?? null;
+    const id = libraryId(src);
+    const key = `bg-${id}-${Math.round(strength * 100)}`;
+    if (!imageHref.has(key)) {
+      const art = backgroundArt(id, strength);
+      if (!art) return null;
+      zip.file(`OEBPS/images/${key}.svg`, art.svg);
+      imageHref.set(key, `../images/${key}.svg`);
+      manifestImages.push(`<item id="${key}" href="images/${key}.svg" media-type="image/svg+xml"/>`);
+    }
+    return imageHref.get(key)!;
+  };
+
   const files = elements.map((e, i) => epubFileName(e, i));
-  const tocEntries = elements.map((e, i) => ({ e, file: files[i] })).filter(({ e }) => e.inToc);
+  // with sub-chapters on, each chapter lists its headings under it
+  const tocEntries = elements.map((e, i) => ({ e, file: files[i], subs: format.tocSubheads && e.kind.id !== "part" ? subheads(e.chapter.content) : [] })).filter(({ e }) => e.inToc);
+  const subList = (file: string, subs: string[], prefix = "") =>
+    subs.length ? `<ol>${subs.map((t, j) => `<li><a href="${prefix}${file}#sub-${j + 1}">${escapeHtml(t)}</a></li>`).join("")}</ol>` : "";
+
+  // with endnotes for the whole book, the chapters before the Notes page send theirs there
+  const notesAt = textStyle(theme).endnotes === "book" ? elements.findIndex((e) => e.kind.id === "notes") : -1;
+  const noteGroups: { title: string; items: string[] }[] = [];
+  // index entries from every chapter before the Index page
+  const indexAt = elements.findIndex((e) => e.kind.id === "index");
+  const indexOut: { term: string; href: string }[] = [];
 
   elements.forEach((e, i) => {
     const c = e.chapter;
@@ -121,29 +174,56 @@ ${book.imprint ? `<p class="tp-imprint">${escapeHtml(book.imprint)}</p>` : ""}
         break;
       case "contents":
         body = `<section class="toc"><h1>${escapeHtml(e.title)}</h1>
-<ol>${tocEntries.map(({ e: t, file }) => `<li><a href="${file}">${escapeHtml(tocText(t))}</a></li>`).join("")}</ol></section>`;
+<ol>${tocEntries.map(({ e: t, file, subs }) => `<li><a href="${file}">${escapeHtml(tocText(t))}</a>${subList(file, subs)}</li>`).join("")}</ol></section>`;
+        break;
+      case "half_title":
+        body = `<section class="half-title"><p class="tp-title">${escapeHtml(book.title)}</p></section>`;
         break;
       case "also_by":
+      case "also_by_front":
         body = `<section><header class="chapter-head"><h1>${escapeHtml(e.title)}</h1></header>
 ${input.alsoBy.length ? input.alsoBy.map((b) => `<p class="first">${escapeHtml(b.title)}${b.subtitle ? `: <em>${escapeHtml(b.subtitle)}</em>` : ""}</p>`).join("\n") : "<p>More books coming soon.</p>"}</section>`;
         break;
       default: {
+        const group = i < notesAt ? { title: tocText(e), items: [] as string[] } : null;
+        if (group) noteGroups.push(group);
         const { html, notes } = docToHtml(c.content, {
           mode: "epub",
           imageHref: (src) => imageHref.get(src) ?? src,
           sceneBreak: sceneBreakGlyph(theme),
+          palette: paletteOf(theme),
           notePrefix: `n${i + 1}`,
+          ...(group ? { bookNotes: { file: files[notesAt], back: files[i], out: group.items } } : {}),
+          ...(i < indexAt ? { index: { file: files[i], out: indexOut } } : {}),
+          ornament: (own) => ornamentHtml(theme, own, true, (id) => ornamentHref.get(id) ?? null),
+          target: "ebook",
         });
         if (e.kind.id === "copyright") body = `<section class="copyright">${html}</section>`;
         else if (e.kind.id === "dedication" || e.kind.id === "epigraph") body = `<section class="centered dedication">${html}</section>`;
-        else if (e.kind.id === "part")
-          body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}</h1></header>${html}</section>`;
-        else
-          body = `<section><header class="chapter-head">${e.label ? `<span class="chapter-label">${escapeHtml(e.label)}</span>` : ""}<h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>
-${html}${notes}</section>`;
+        else if (e.kind.layout === "full_image") body = `<section class="full-image">${e.image ? `<img src="${escapeHtml(imageHref.get(e.image) ?? e.image)}" alt=""/>` : ""}${html}</section>`;
+        else if (e.kind.id === "part" || e.kind.id === "act")
+          body = `<section class="part-page"><header class="chapter-head"><span class="chapter-label">${escapeHtml(e.label)}</span><h1>${escapeHtml(e.title)}${e.subtitle ? `<span class="chapter-subtitle">${escapeHtml(e.subtitle)}</span>` : ""}</h1></header>${html}</section>`;
+        else {
+          const cls = e.kind.layout === "centered" ? ' class="centered-verse"' : "";
+          const collected =
+            i === indexAt && indexOut.length
+              ? indexHtml(indexOut)
+              : i === notesAt
+              ? noteGroups
+                  .filter((g) => g.items.length)
+                  .map((g) => `<section class="endnotes" epub:type="endnotes"><h2>${escapeHtml(g.title)}</h2><ol>${g.items.join("")}</ol></section>`)
+                  .join("\n")
+              : "";
+          body = `<section${cls}>${chapterHeadHtml(e, e.image ? (imageHref.get(e.image) ?? null) : null)}
+${html}${e.kind.layout === "lined" ? '<div class="blk-lines" style="height:24em"></div>' : ""}${notes}${collected}</section>`;
+        }
       }
     }
-    zip.file(`OEBPS/text/${files[i]}`, xhtml(e.title, lang, body, EPUB_TYPE[e.kind.id] ?? ""));
+    // a background wraps the section: behind all of it, or only behind its opening
+    const bg = elementBackground(e, format, theme);
+    const style = bg ? backgroundStyle(bg, (src) => backgroundHref(src, bg.strength)) : "";
+    if (style) body = bg!.openerOnly ? `<div class="has-bg bg-opener"><div class="opener-bg" style="${escapeHtml(style)}"></div>${body}</div>` : `<div class="has-bg${textOverBackground(bg!.src) ? " bg-dark" : ""}" style="${escapeHtml(style)}">${body}</div>`;
+    zip.file(`OEBPS/text/${files[i]}`, xhtml(e.title, lang, body, EPUB_TYPE[e.kind.id] ?? SECTION_TYPE[e.section]));
   });
 
   let coverItem = "";
@@ -175,7 +255,7 @@ ${html}${notes}</section>`;
 <body>
 <nav epub:type="toc" id="toc" class="toc"><h1>Contents</h1>
 <ol>
-${tocEntries.map(({ e, file }) => `<li><a href="text/${file}">${escapeHtml(tocText(e))}</a></li>`).join("\n")}
+${tocEntries.map(({ e, file, subs }) => `<li><a href="text/${file}">${escapeHtml(tocText(e))}</a>${subList(file, subs, "text/")}</li>`).join("\n")}
 </ol>
 </nav>
 <nav epub:type="landmarks" hidden="hidden"><h2>Guide</h2>
@@ -195,10 +275,10 @@ ${firstBody >= 0 ? `<li><a epub:type="bodymatter" href="text/${files[firstBody]}
     "OEBPS/toc.ncx",
     `<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="${lang}">
-<head><meta name="dtb:uid" content="${escapeHtml(uid)}"/><meta name="dtb:depth" content="1"/><meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>
+<head><meta name="dtb:uid" content="${escapeHtml(uid)}"/><meta name="dtb:depth" content="${tocEntries.some((t) => t.subs.length) ? 2 : 1}"/><meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>
 <docTitle><text>${escapeHtml(book.title)}</text></docTitle>
 <navMap>
-${tocEntries.map(({ e, file }, i) => `<navPoint id="np${i + 1}" playOrder="${i + 1}"><navLabel><text>${escapeHtml(tocText(e))}</text></navLabel><content src="text/${file}"/></navPoint>`).join("\n")}
+${ncxPoints(tocEntries)}
 </navMap>
 </ncx>
 `,
@@ -240,4 +320,41 @@ ${tocEntries.map(({ e, file }, i) => `<navPoint id="np${i + 1}" playOrder="${i +
   );
 
   return zip.generateAsync({ type: "uint8array", mimeType: "application/epub+zip", compression: "DEFLATE" });
+}
+
+/** The NCX nav points (older Kindles read these), with sub-chapters nested under their chapter. */
+function ncxPoints(entries: { e: BookElement; file: string; subs: string[] }[]): string {
+  let order = 0;
+  return entries
+    .map(({ e, file, subs }) => {
+      const id = ++order;
+      const kids = subs
+        .map((t, j) => `<navPoint id="np${++order}" playOrder="${order}"><navLabel><text>${escapeHtml(t)}</text></navLabel><content src="text/${file}#sub-${j + 1}"/></navPoint>`)
+        .join("");
+      return `<navPoint id="np${id}" playOrder="${id}"><navLabel><text>${escapeHtml(tocText(e))}</text></navLabel><content src="text/${file}"/>${kids}</navPoint>`;
+    })
+    .join("\n");
+}
+
+/** The Index page: terms A to Z, each with numbered links to where it is used (an ebook has no page numbers). */
+function indexHtml(entries: { term: string; href: string }[]): string {
+  const byTerm = new Map<string, string[]>();
+  for (const e of entries) byTerm.set(e.term, [...(byTerm.get(e.term) ?? []), e.href]);
+  const terms = [...byTerm.keys()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  let letter = "";
+  const out: string[] = [];
+  for (const t of terms) {
+    const l = t.charAt(0).toUpperCase();
+    if (l !== letter) {
+      if (letter) out.push("</ul>");
+      letter = l;
+      out.push(`<h2 class="index-letter">${escapeHtml(l)}</h2><ul class="index">`);
+    }
+    out.push(`<li>${escapeHtml(t)}, ${byTerm
+      .get(t)!
+      .map((h, i) => `<a href="${escapeHtml(h)}">${i + 1}</a>`)
+      .join(", ")}</li>`);
+  }
+  if (letter) out.push("</ul>");
+  return `<section class="book-index" epub:type="index">${out.join("")}</section>`;
 }

@@ -1,5 +1,6 @@
-import type { PaperType } from "./kdp";
+import { hardcoverPaper, hardcoverTrim, type Binding, type PaperType } from "./kdp";
 import type { DocNode } from "./doc/types";
+import type { ThemeCustom } from "./themes";
 
 export type BookStatus = "idea" | "drafting" | "revising" | "editing" | "ready" | "published";
 
@@ -23,13 +24,48 @@ export interface BookFormat {
   bleed: boolean;
   /** start every chapter on a right-hand page in print */
   chaptersOnRight: boolean;
+  /** start the first chapter on a right-hand page even when the others run on */
+  firstChapterOnRight?: boolean;
+  /** number the front matter in the same count as the body (1, 2, 3…), instead of starting at 1 on the first chapter */
+  countFrontMatter?: boolean;
   dropCaps: boolean;
   /** show a running header with author and chapter title in print */
   runningHeads: boolean;
   /** print the table of contents at the front */
   printToc: boolean;
+  /** list each chapter's headings (sub-chapters) under it in the contents, print and ebook */
+  tocSubheads: boolean;
   /** large-print edition: 16pt body, wider leading */
   largePrint: boolean;
+  /** also publish a case laminate hardcover edition */
+  hardcover: boolean;
+  /** hardcover trim; empty means the paperback trim, or the nearest hardcover size to it */
+  hardcoverTrim: string;
+  /** the author's changes on top of the theme: fonts, colour, headings, ornament, drop cap */
+  custom?: ThemeCustom;
+  /** the author's own print margins in inches from the trim; KDP's minimums still apply. Missing = automatic */
+  margins?: CustomMargins;
+  /** how lengths are shown in the studio */
+  units?: "in" | "mm";
+  /** a background behind the book's pages, from the library ("bg:<id>") or an uploaded image URL */
+  pageBackground?: PageBackground;
+}
+
+export interface CustomMargins {
+  inside?: number;
+  outside?: number;
+  top?: number;
+  bottom?: number;
+  /** how far a full-page picture stays from the binding; 0 or missing runs it into the gutter */
+  pictureGutter?: number;
+}
+
+export interface PageBackground {
+  src: string;
+  /** 0.1 to 1: how strongly it shows; lower keeps text easy to read */
+  strength: number;
+  /** every page, or only the first page of each chapter */
+  where: "all" | "openers";
 }
 
 export const DEFAULT_FORMAT: BookFormat = {
@@ -43,7 +79,10 @@ export const DEFAULT_FORMAT: BookFormat = {
   dropCaps: true,
   runningHeads: true,
   printToc: true,
+  tocSubheads: false,
   largePrint: false,
+  hardcover: false,
+  hardcoverTrim: "",
 };
 
 export interface BookGoal {
@@ -85,6 +124,7 @@ export interface Book {
   language: string;
   isbn_ebook: string;
   isbn_paperback: string;
+  isbn_hardcover?: string;
   imprint: string;
   publication_date: string;
   status: BookStatus;
@@ -101,9 +141,50 @@ export interface Book {
   accent: string;
   word_count: number;
   page_count: number;
+  /** pages in the hardcover interior, which has its own trim and a wider gutter */
+  hardcover_page_count?: number;
+  cover_hardcover?: string;
+  /** sold straight from the author's site, paid into their own Stripe account (Pro) */
+  sell_direct?: boolean;
+  ebook_price_cents?: number;
+  ebook_file?: string;
   created: string;
   updated: string;
+  /** people the owner shared the book with (see src/lib/collab.ts) */
+  cowriters?: string[];
+  editors?: string[];
+  commenters?: string[];
+  /** a box set: the books it was assembled from, in order */
+  box_set?: { books: string[] } | null;
   expand?: { author?: Author };
+}
+
+/** Per-chapter layout switches, like the gear menu in Atticus. All off by default. */
+export interface ChapterOptions {
+  /** opening image above (or behind) the chapter title; a file URL from the image library */
+  image?: string;
+  hideImage?: boolean;
+  /** no title block at all: the text starts at the top of the page */
+  hideHeading?: boolean;
+  hidePageNumber?: boolean;
+  /** no running head on this chapter's pages */
+  hideHeader?: boolean;
+  smallTitle?: boolean;
+  /** white title set over the chapter image */
+  invert?: boolean;
+  /** on a part: it opens one book of a box set ("Book One"), and chapter numbers start again */
+  volume?: boolean;
+  /** a background for this section's pages ("bg:<id>" or an image URL); "none" turns off the book's */
+  background?: string;
+  backgroundStrength?: number;
+  /** only behind the section's first page */
+  backgroundOpener?: boolean;
+  /** this section appears only in the ebook, or only in print */
+  only?: "ebook" | "print";
+}
+
+export function chapterOptions(c: Pick<Chapter, "options">): ChapterOptions {
+  return c.options && typeof c.options === "object" ? c.options : {};
 }
 
 export interface Chapter {
@@ -122,6 +203,9 @@ export interface Chapter {
   is_sample: boolean;
   in_toc: boolean;
   numbered: boolean;
+  options: ChapterOptions | null;
+  /** current live-editing generation, set by the collab server */
+  collab_gen?: string;
   created: string;
   updated: string;
 }
@@ -157,10 +241,24 @@ export interface SiteSettings {
   logo: string;
   socials: { label: string; url: string }[] | null;
   hero_book: string;
+  /** <subdomain>.jollofpages.com; empty for the publisher's own site */
+  subdomain?: string;
+  /** the site served at the root domain (jollofpages.com) */
+  home?: boolean;
+  custom_domain?: string;
+  /** Author Site Pro is active until this date (own domain); the publisher's home site always has it */
+  pro_until?: string;
+  design?: import("./site-design").SiteDesign | null;
 }
 
 export function bookFormat(b: Pick<Book, "format">): BookFormat {
   return { ...DEFAULT_FORMAT, ...(b.format ?? {}) };
+}
+
+/** The trim and paper of one print edition. */
+export function printEdition(f: BookFormat, binding: Binding): { trim: string; paper: PaperType } {
+  if (binding === "paperback") return { trim: f.trim, paper: f.paper };
+  return { trim: hardcoverTrim(f.hardcoverTrim || f.trim).id, paper: hardcoverPaper(f.paper) };
 }
 
 export function bookGoal(b: Pick<Book, "goal">): BookGoal {
