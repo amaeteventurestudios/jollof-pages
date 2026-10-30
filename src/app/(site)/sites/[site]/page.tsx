@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title: { absolute: site.tagline ? `${name}: ${site.tagline}` : name },
     description: site.intro || `Books by ${name}.`,
     openGraph: { title: name, description: site.intro || undefined, siteName: name },
+    twitter: { card: "summary", title: name, description: site.intro || undefined },
   };
 }
 

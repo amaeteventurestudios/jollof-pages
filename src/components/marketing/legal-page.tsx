@@ -12,7 +12,7 @@ export function ContactLine({ topic }: { topic: keyof typeof LEGAL_EMAILS }) {
   return <a href={`mailto:${email}`}>{email}</a>;
 }
 
-export function LegalPage({ title, sub, updated, children }: { title: string; sub: string; updated: string; children: React.ReactNode }) {
+export function LegalPage({ title, sub, updated, children }: { title: string; sub: string; updated?: string; children: React.ReactNode }) {
   return (
     <>
       <SiteHeader name="Jollof Pages" overHero />
@@ -20,7 +20,7 @@ export function LegalPage({ title, sub, updated, children }: { title: string; su
         <Pattern id="p-legal" kind="adire" color="var(--char)" opacity={0.16} />
         <div className="relative px-4 sm:px-8">
           <SectionHead as="h1" title={title} sub={sub} />
-          <p className="t-small mt-6 text-center text-cream/85">Last updated {updated}</p>
+          {updated && <p className="t-small mt-6 text-center text-cream/85">Last updated {updated}</p>}
         </div>
       </section>
       <main className="bg-ground py-[clamp(3rem,8vw,6rem)]">
