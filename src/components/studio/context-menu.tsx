@@ -39,6 +39,10 @@ import {
   GraduationCap,
   Shapes,
   BookmarkPlus,
+  BarChart3,
+  FilePlus2,
+  FolderInput,
+  Timer,
 } from "lucide-react";
 import { nameOf } from "./block-handle";
 import { useBlockLibrary } from "./block-library";
@@ -51,6 +55,15 @@ import { cn } from "@/lib/utils";
 /** Dialogs and panels the menus open. The editor toolbar and block bar listen for these. */
 export type EditorOpen = "insert" | "link" | "footnote" | "endnote" | "image" | "emoji" | "style";
 export type EditorTool = "assistant" | "comments";
+
+/** Chapter-level tools the write tab lends the menu. */
+export interface ChapterTools {
+  split?: () => void;
+  stats: () => void;
+  /** the book's owner can start a sprint from here */
+  sprint?: boolean;
+  moveTo?: { chapters: { id: string; title: string }[]; run: (id: string | null) => void };
+}
 
 export function openInEditor(editor: Editor, what: EditorOpen) {
   editor.view.dom.dispatchEvent(new CustomEvent("jp-open", { detail: what }));
@@ -98,7 +111,7 @@ interface Ctx {
  * notes; on an empty spot it offers inserts; on a block it offers duplicate, move and delete.
  * Shift + right-click still opens the browser's menu (spelling suggestions live there).
  */
-export function EditorContextMenu({ editor, onTool, children }: { editor: Editor; onTool?: (t: EditorTool) => void; children: React.ReactNode }) {
+export function EditorContextMenu({ editor, onTool, chapter, children }: { editor: Editor; onTool?: (t: EditorTool) => void; chapter?: ChapterTools; children: React.ReactNode }) {
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [note, setNote] = useState("");
   const lib = useBlockLibrary();
@@ -273,6 +286,17 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
               <Item icon={BookMarked} label="Open the writing assistant" on={() => onTool?.("assistant")} />
               <Sep />
               <TransformSub editor={editor} />
+              {chapter?.moveTo && (
+                <Sub icon={FolderInput} label="Move to">
+                  <Item icon={FilePlus2} label="A new chapter after this one" on={() => chapter.moveTo!.run(null)} />
+                  {chapter.moveTo.chapters.length > 0 && <Sep />}
+                  <div className="max-h-72 overflow-y-auto">
+                    {chapter.moveTo.chapters.map((x) => (
+                      <Item key={x.id} label={`End of \u201c${x.title}\u201d`} on={() => chapter.moveTo!.run(x.id)} />
+                    ))}
+                  </div>
+                </Sub>
+              )}
             </>
           )}
           {ctx?.mode === "cursor" && (
@@ -290,6 +314,16 @@ export function EditorContextMenu({ editor, onTool, children }: { editor: Editor
               </Sub>
               <Item icon={Sparkles} label="Continue writing with AI" on={() => runAi(editor, "continue")} />
               <Item icon={Feather} label="Write a chapter transition" on={() => runAi(editor, "transition")} />
+              {(chapter?.split || chapter?.stats) && <Sep />}
+              {chapter?.split && <Item icon={Scissors} label="Split the chapter here" on={chapter.split} />}
+              {chapter && <Item icon={BarChart3} label="Chapter stats" on={chapter.stats} />}
+              {chapter?.sprint && (
+                <Sub icon={Timer} label="Start a writing sprint">
+                  {[15, 25, 45, 60].map((m) => (
+                    <Item key={m} label={`${m} minutes`} on={() => window.dispatchEvent(new CustomEvent("jp-sprint", { detail: m }))} />
+                  ))}
+                </Sub>
+              )}
             </>
           )}
           {ctx && b && blockOps && (

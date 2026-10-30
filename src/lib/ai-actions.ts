@@ -5,7 +5,7 @@
  */
 import type { DocNode } from "@/lib/doc/types";
 
-export type AiGroup = "write" | "fiction" | "nonfiction" | "explain";
+export type AiGroup = "write" | "fiction" | "nonfiction" | "explain" | "chapter";
 
 /**
  * replace: swaps the selected words. after: goes after the paragraph. block: a special block after
@@ -17,8 +17,8 @@ export interface AiAction {
   id: string;
   label: string;
   group: AiGroup;
-  /** selection: needs selected words. cursor: works from the text before the cursor */
-  needs: "selection" | "cursor";
+  /** selection: needs selected words. cursor: works from the text before the cursor. chapter: the whole chapter */
+  needs: "selection" | "cursor" | "chapter";
   output: AiOutput;
   /** the special block a "block" action fills */
   block?: string;
@@ -33,6 +33,7 @@ export const AI_GROUPS: Record<AiGroup, string> = {
   fiction: "Fiction",
   nonfiction: "Nonfiction and teaching",
   explain: "Understand",
+  chapter: "Chapter",
 };
 
 export const AI_ACTIONS: AiAction[] = [
@@ -74,6 +75,10 @@ export const AI_ACTIONS: AiAction[] = [
   { id: "transition", label: "Write a chapter transition", group: "nonfiction", needs: "cursor", output: "after", prompt: "Write a short paragraph that closes this chapter and leads the reader into the next one." },
 
   { id: "explain", label: "Explain this", group: "explain", needs: "selection", output: "note", prompt: "Explain this passage simply, as if to a curious reader." },
+
+  { id: "chapter_outline", label: "Outline this chapter", group: "chapter", needs: "chapter", output: "note", prompt: "Outline this chapter as it stands: a numbered list of its parts in order, each with its main point in one line." },
+  { id: "chapter_summary", label: "Summarise this chapter", group: "chapter", needs: "chapter", output: "note", prompt: "Summarise this chapter in one paragraph of about 80 words, for the author's own notes." },
+  { id: "chapter_continuity", label: "Continuity review", group: "chapter", needs: "chapter", output: "note", prompt: "Review this chapter for continuity: names, ages, dates, places, objects and facts that contradict each other within it. For each problem, quote both places." },
 ];
 
 export const aiAction = (id: string) => AI_ACTIONS.find((a) => a.id === id) ?? null;

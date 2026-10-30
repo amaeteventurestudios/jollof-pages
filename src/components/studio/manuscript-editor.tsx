@@ -40,7 +40,7 @@ import { BLOCKS, blockTemplate, boxDef, BOXES, type BlockDef, type BookBoxStyles
 import { BoxStylePanel, PresetPicker, boxLookAtCursor } from "./box-style-panel";
 import { BlockHandle } from "./block-handle";
 import { SelectionToolbar } from "./selection-toolbar";
-import { EditorContextMenu, type EditorOpen, type EditorTool } from "./context-menu";
+import { EditorContextMenu, type ChapterTools, type EditorOpen, type EditorTool } from "./context-menu";
 import { AiReview } from "./ai-review";
 import { SlashMenu, insertSaved } from "./slash-menu";
 import { ORNAMENTS } from "@/lib/ornaments";
@@ -81,6 +81,8 @@ interface Props {
   onTool?: (t: EditorTool) => void;
   /** the book's block styles scoped to .jp-preview, for the Insert menu's previews */
   previewCss?: string;
+  /** split here, stats and moving words to other chapters, from the right-click menu */
+  chapterTools?: ChapterTools;
 }
 
 /** Calls back when a menu asks the editor to open one of its dialogs. */
@@ -97,7 +99,7 @@ function useEditorOpen(editor: Editor, on: (what: EditorOpen) => void) {
   }, [editor]);
 }
 
-export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss, accent, book, onBookStyles, onTool, previewCss }: Props) {
+export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFamily, settings, onEditor, onFind, live, me, tracking, readOnly, onCommentClick, blockCss, accent, book, onBookStyles, onTool, previewCss, chapterTools }: Props) {
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -162,7 +164,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
         >
           {editor && !readOnly ? (
             <>
-              <EditorContextMenu editor={editor} onTool={onTool}>
+              <EditorContextMenu editor={editor} onTool={onTool} chapter={chapterTools}>
                 <EditorContent editor={editor} />
               </EditorContextMenu>
               <BlockHandle editor={editor} />

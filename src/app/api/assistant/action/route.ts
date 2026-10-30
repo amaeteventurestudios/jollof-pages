@@ -55,7 +55,13 @@ export async function POST(req: Request) {
   ]
     .filter(Boolean)
     .join("\n\n");
-  const target = a.needs === "selection" ? `<selection>\n${selection}\n</selection>` : `The text so far ends:\n<before>\n${before || chapter.slice(-6000)}\n</before>`;
+  if (a.needs === "chapter" && !chapter) return json({ error: "This chapter has no text yet." }, 400);
+  const target =
+    a.needs === "selection"
+      ? `<selection>\n${selection}\n</selection>`
+      : a.needs === "chapter"
+        ? "Work on the whole chapter given above."
+        : `The text so far ends:\n<before>\n${before || chapter.slice(-6000)}\n</before>`;
 
   let stream: ReadableStream<string>;
   try {

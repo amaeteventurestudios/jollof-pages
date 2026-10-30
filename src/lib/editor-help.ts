@@ -21,6 +21,8 @@ export const WHATS_NEW: NewsItem[] = [
       "AI tools in the right-click menu for writing, fiction and teaching. Every suggestion shows what changed, and nothing goes in until you accept it.",
       "Insert blocks by what you want to do, with previews in your book's style. Type / on the page to insert by name or plain words.",
       "Star favourite blocks, see the ones you used last, and save any block to reuse in all your books.",
+      "Right-click a chapter in the list to rename, duplicate, move, split, merge, outline or summarise it with AI, check its continuity, see its stats, download it or delete it.",
+      "Select words and right-click to move them to another chapter or into a new one.",
     ],
   },
   {
