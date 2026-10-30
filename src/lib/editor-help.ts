@@ -23,6 +23,7 @@ export const WHATS_NEW: NewsItem[] = [
       "Star favourite blocks, see the ones you used last, and save any block to reuse in all your books.",
       "Right-click a chapter in the list to rename, duplicate, move, split, merge, outline or summarise it with AI, check its continuity, see its stats, download it or delete it.",
       "Select words and right-click to move them to another chapter or into a new one.",
+      "Research tools on the right-click menu: cite a source as a footnote or endnote, leave research notes, mark facts to check, bookmark a place, find similar passages, add a term to the glossary and point to another chapter.",
     ],
   },
   {

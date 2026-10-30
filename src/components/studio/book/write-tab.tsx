@@ -11,6 +11,9 @@ import { runAi } from "@/components/studio/ai-review";
 import { PromptDialog } from "@/components/studio/prompt-dialog";
 import { chapterStats, docToMarkdown, splitDoc } from "@/lib/doc/markdown";
 import { countWords, plainText } from "@/lib/doc/types";
+import { similarPassages, type Passage } from "@/lib/similar";
+import { orderedElements } from "@/lib/book-model";
+import { indexText, locate } from "@/components/studio/comment-highlights";
 import { Preview } from "./preview";
 import { ToolRail, type ChapterEdit, type RailPanel } from "./tool-rail";
 import type { Editor } from "@tiptap/react";
@@ -371,6 +374,63 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     remove: (c) => void removeChapter(c),
   };
 
+  /* ---------- research ---------- */
+
+  const [similar, setSimilar] = useState<{ text: string; found: Passage[] } | null>(null);
+  // a passage picked in another chapter is shown once that chapter is open
+  const pendingJump = useRef<{ id: string; text: string } | null>(null);
+  useEffect(() => {
+    const j = pendingJump.current;
+    if (!j || !editor || j.id !== activeId) return;
+    pendingJump.current = null;
+    const at = locate(indexText(editor.state.doc), { quote: j.text, prefix: "", suffix: "" });
+    if (at) editor.chain().focus().setTextSelection(at).scrollIntoView().run();
+  }, [editor, activeId]);
+
+  function findSimilar(text: string) {
+    const list = chapters
+      .filter((c) => !elementKind(c.kind).smart)
+      .map((c) => ({ id: c.id, title: c.title || elementKind(c.kind).label, text: plainText(contentOf(c), "\n") }));
+    setSimilar({ text, found: similarPassages(text, list) });
+  }
+
+  function jumpTo(p: Passage) {
+    setSimilar(null);
+    pendingJump.current = { id: p.chapterId, text: p.text.trim() };
+    if (p.chapterId === activeId) {
+      const at = editor && locate(indexText(editor.state.doc), { quote: p.text.trim(), prefix: "", suffix: "" });
+      pendingJump.current = null;
+      if (at) editor!.chain().focus().setTextSelection(at).scrollIntoView().run();
+    } else void select(p.chapterId);
+  }
+
+  /** a term and its meaning on the Glossary page, made at the end of the book if there is none */
+  async function addToGlossary(term: string, definition: string) {
+    const entry: DocNode = { type: "box", attrs: { variant: "glossary_term" }, content: [{ type: "paragraph", content: [{ type: "text", text: term }] }, { type: "paragraph", content: [{ type: "text", text: definition }] }] };
+    const page = chaptersRef.current.find((c) => c.kind === "glossary");
+    try {
+      if (page && page.id === activeId && editor) {
+        editor.chain().insertContentAt(editor.state.doc.content.size, entry).run();
+        return;
+      }
+      await flush();
+      if (page) {
+        const base = contentOf(page) ?? { type: "doc", content: [] };
+        const content: DocNode = { type: "doc", content: [...(base.content ?? []).filter((n) => n.type !== "paragraph" || n.content?.length), entry] };
+        await update(page, { content, word_count: countWords(content) });
+      } else {
+        const order = Math.max(-1, ...chaptersRef.current.filter((c) => c.section === "back").map((c) => c.order)) + 1;
+        const created = await ws.track(createChapter(book, { kind: "glossary", order, title: "Glossary", content: { type: "doc", content: [entry] } }));
+        setChapters((all) => [...all, created]);
+      }
+    } catch (e) {
+      alert(`Could not add to the glossary: ${errorMessage(e)}`);
+    }
+  }
+  const crossRefs = orderedElements(chapters, theme)
+    .filter((e) => e.chapter.id !== activeId && !elementKind(e.chapter.kind).smart && e.chapter.section === "body")
+    .map((e) => ({ id: e.chapter.id, label: e.label, title: e.chapter.title }));
+
   /** move the selected words to another chapter's end, or into a new chapter after this one */
   async function moveSelection(to: Chapter | null) {
     if (!editor || !active || editor.state.selection.empty) return;
@@ -666,6 +726,9 @@ export function WriteTab({ ws }: { ws: Workspace }) {
               split: structural && !live ? () => active && menu.split(active) : undefined,
               stats: () => active && setStatsFor(active),
               sprint: role === "owner",
+              similar: findSimilar,
+              glossary: structural && !live ? (t, d) => void addToGlossary(t, d) : undefined,
+              crossRefs,
               moveTo:
                 structural && !live
                   ? {
@@ -781,6 +844,29 @@ export function WriteTab({ ws }: { ws: Workspace }) {
           void update(naming.c, { [naming.field]: value });
         }}
       />
+      <Dialog open={!!similar} onOpenChange={(o) => !o && setSimilar(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
+          <DialogTitle>Similar passages</DialogTitle>
+          <DialogDescription className="line-clamp-2">Places in the book that say much the same as “{similar?.text.slice(0, 120)}”</DialogDescription>
+          {similar && !similar.found.length ? (
+            <p className="py-4 text-sm text-soft">Nothing close elsewhere in the book. That is usually good news.</p>
+          ) : (
+            <ol className="grid gap-2">
+              {similar?.found.map((p, i) => (
+                <li key={i}>
+                  <button type="button" onClick={() => jumpTo(p)} className="block w-full rounded-md border border-border p-3 text-left hover:border-primary">
+                    <span className="flex justify-between text-xs text-soft">
+                      <span>{p.chapterTitle}</span>
+                      <span>{Math.round(p.score * 100)}% alike</span>
+                    </span>
+                    <span className="mt-1 block text-sm">{p.text}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+        </DialogContent>
+      </Dialog>
       <ChapterStatsDialog
         chapter={statsFor}
         doc={statsFor ? (statsFor.id === activeId && editor ? (editor.getJSON() as DocNode) : (chapters.find((c) => c.id === statsFor.id)?.content ?? null)) : null}

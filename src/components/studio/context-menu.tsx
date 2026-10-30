@@ -43,10 +43,21 @@ import {
   FilePlus2,
   FolderInput,
   Timer,
+  FlaskConical,
+  SearchCheck,
+  Bookmark,
+  Quote as QuoteIcon,
+  Library,
+  ScanSearch,
+  BookA,
+  Signpost,
 } from "lucide-react";
 import { nameOf } from "./block-handle";
 import { useBlockLibrary } from "./block-library";
 import { PromptDialog } from "./prompt-dialog";
+import { askForNote, type NoteKind } from "./book/comments-panel";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { runAi } from "./ai-review";
 import { AI_ACTIONS, AI_GROUPS, type AiGroup } from "@/lib/ai-actions";
 import { BOXES } from "@/lib/blocks";
@@ -63,6 +74,12 @@ export interface ChapterTools {
   /** the book's owner can start a sprint from here */
   sprint?: boolean;
   moveTo?: { chapters: { id: string; title: string }[]; run: (id: string | null) => void };
+  /** passages elsewhere in the book that say much the same */
+  similar?: (text: string) => void;
+  /** adds a term to the book's glossary page */
+  glossary?: (term: string, definition: string) => void;
+  /** other chapters to point the reader to */
+  crossRefs?: { id: string; label: string; title: string }[];
 }
 
 export function openInEditor(editor: Editor, what: EditorOpen) {
@@ -113,9 +130,15 @@ interface Ctx {
  */
 export function EditorContextMenu({ editor, onTool, chapter, children }: { editor: Editor; onTool?: (t: EditorTool) => void; chapter?: ChapterTools; children: React.ReactNode }) {
   const [ctx, setCtx] = useState<Ctx | null>(null);
-  const [note, setNote] = useState("");
+  const [toast, setToast] = useState("");
   const lib = useBlockLibrary();
   const [saving, setSaving] = useState<Block | null>(null);
+  const [citing, setCiting] = useState(false);
+  const [glossing, setGlossing] = useState<string | null>(null);
+  const note = (k: NoteKind | "") => {
+    askForNote(k);
+    onTool?.("comments");
+  };
   // the selection before a right-button press: on a Mac the press selects the word under the pointer
   const before = useRef<{ from: number; to: number } | null>(null);
 
@@ -148,7 +171,7 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
     const s = editor.state.selection;
     const words = mode === "text" ? countWords(editor.state.doc.textBetween(s.from, s.to, " ")) : editor.storage.characterCount.words();
     setCtx({ mode, block: hit ? blockAt(editor, hit.pos, hit.inside) : null, words });
-    setNote("");
+    setToast("");
   }
 
   const c = () => editor.chain().focus();
@@ -167,9 +190,10 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
     setSpeaking(true);
     synth.speak(u);
   }
+  const selectedText = () => editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " ");
   const flash = (t: string) => {
-    setNote(t);
-    setTimeout(() => setNote(""), 2400);
+    setToast(t);
+    setTimeout(() => setToast(""), 2400);
   };
 
   function clip(kind: "cut" | "copy") {
@@ -273,10 +297,20 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
                 <Sep />
                 <Item icon={RemoveFormatting} label="Clear formatting" on={() => c().unsetAllMarks().run()} />
               </Sub>
-              <Item icon={MessageSquarePlus} label="Comment" on={() => onTool?.("comments")} />
+              <Item icon={MessageSquarePlus} label="Comment" on={() => note("")} />
               <Item icon={Link2} label="Link…" on={() => openInEditor(editor, "link")} />
-              <Item icon={NotebookPen} label="Footnote…" on={() => openInEditor(editor, "footnote")} />
-              <Item icon={BookOpenText} label="Endnote…" on={() => openInEditor(editor, "endnote")} />
+              <Sub icon={Library} label="Research">
+                <Item icon={QuoteIcon} label="Cite a source…" on={() => setCiting(true)} />
+                <Item icon={NotebookPen} label="Footnote…" on={() => openInEditor(editor, "footnote")} />
+                <Item icon={BookOpenText} label="Endnote…" on={() => openInEditor(editor, "endnote")} />
+                <Sep />
+                <Item icon={FlaskConical} label="Research note" on={() => note("research")} />
+                <Item icon={SearchCheck} label="Mark for fact-check" on={() => note("factcheck")} />
+                <Item icon={Bookmark} label="Bookmark this" on={() => note("bookmark")} />
+                {(chapter?.similar || chapter?.glossary) && <Sep />}
+                {chapter?.similar && <Item icon={ScanSearch} label="Find similar passages" on={() => chapter.similar!(selectedText())} />}
+                {chapter?.glossary && <Item icon={BookA} label="Add to the glossary…" on={() => setGlossing(selectedText().trim().slice(0, 80))} />}
+              </Sub>
               <Sep />
               <AiSub editor={editor} group="write" icon={Wand2} />
               <AiSub editor={editor} group="fiction" icon={Feather} />
@@ -312,6 +346,15 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
                 <Item icon={BookOpenText} label="Endnote…" on={() => openInEditor(editor, "endnote")} />
                 <Item icon={Smile} label="Emoji…" on={() => openInEditor(editor, "emoji")} />
               </Sub>
+              {chapter?.crossRefs && chapter.crossRefs.length > 0 && (
+                <Sub icon={Signpost} label="Cross-reference">
+                  <div className="max-h-72 overflow-y-auto">
+                    {chapter.crossRefs.map((x) => (
+                      <Item key={x.id} label={x.label && x.label !== x.title ? `${x.label}: ${x.title}` : x.title} on={() => c().insertContent(crossRefText(x)).run()} />
+                    ))}
+                  </div>
+                </Sub>
+              )}
               <Item icon={Sparkles} label="Continue writing with AI" on={() => runAi(editor, "continue")} />
               <Item icon={Feather} label="Write a chapter transition" on={() => runAi(editor, "transition")} />
               {(chapter?.split || chapter?.stats) && <Sep />}
@@ -371,6 +414,26 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
           )}
         </CM.Content>
       </CM.Portal>
+      <CitationDialog
+        open={citing}
+        onClose={() => setCiting(false)}
+        onCite={(text, endnote) =>
+          editor
+            .chain()
+            .focus()
+            .setTextSelection(editor.state.selection.to)
+            .insertContent({ type: "footnote", attrs: { text, endnote } })
+            .run()
+        }
+      />
+      <GlossaryDialog
+        term={glossing}
+        onClose={() => setGlossing(null)}
+        onAdd={(term, def) => {
+          chapter?.glossary?.(term, def);
+          flash(`\u201c${term}\u201d added to the glossary`);
+        }}
+      />
       <PromptDialog
         open={!!saving}
         title="Save as a reusable block"
@@ -386,9 +449,9 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
           );
         }}
       />
-      {note && (
+      {toast && (
         <p role="status" className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md bg-ink px-3 py-2 text-sm text-paper shadow-lg">
-          {note}
+          {toast}
         </p>
       )}
     </CM.Root>
@@ -473,5 +536,106 @@ function TransformSub({ editor }: { editor: Editor }) {
       <CM.Separator className="-mx-1 my-1 h-px bg-border" />
       <p className="max-w-56 px-2 py-1 text-[11px] leading-snug text-muted-foreground">Checklists, quizzes and takeaways written for you are under Nonfiction and teaching.</p>
     </Sub>
+  );
+}
+
+/** "(see Chapter 3, “Title”)" with the label it has now; plain text, so every format prints it. */
+function crossRefText(x: { label: string; title: string }) {
+  if (!x.title) return ` (see ${x.label})`;
+  return x.label && x.label !== x.title ? ` (see ${x.label}, \u201c${x.title}\u201d)` : ` (see \u201c${x.title}\u201d)`;
+}
+
+const field = "h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm";
+
+/** A source as a footnote or endnote, written out in a standard style. */
+function CitationDialog({ open, onClose, onCite }: { open: boolean; onClose: () => void; onCite: (text: string, endnote: boolean) => void }) {
+  const [f, setF] = useState({ author: "", title: "", publisher: "", year: "", page: "", url: "" });
+  const [endnote, setEndnote] = useState(false);
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const where = [f.publisher.trim(), f.year.trim()].filter(Boolean).join(", ");
+  const text = [
+    [f.author.trim(), f.title.trim() && f.title.trim() + (where ? ` (${where})` : "")].filter(Boolean).join(", "),
+    f.page.trim() && (/^\d+$/.test(f.page.trim()) ? `p. ${f.page.trim()}` : f.page.trim()),
+  ]
+    .filter(Boolean)
+    .join(", ")
+    .concat(f.title || f.author ? "." : "")
+    .concat(f.url.trim() ? ` ${f.url.trim()}` : "");
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogTitle>Cite a source</DialogTitle>
+        <DialogDescription>It goes in as a note after the selected words.</DialogDescription>
+        <form
+          className="grid gap-2.5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!text.trim()) return;
+            onCite(text.trim(), endnote);
+            setF({ author: "", title: "", publisher: "", year: "", page: "", url: "" });
+            onClose();
+          }}
+        >
+          <input className={field} placeholder="Author, e.g. Chinua Achebe" value={f.author} onChange={set("author")} aria-label="Author" autoFocus />
+          <input className={field} placeholder="Title of the book, article or page" value={f.title} onChange={set("title")} aria-label="Title" />
+          <div className="grid grid-cols-[1fr_6rem] gap-2">
+            <input className={field} placeholder="Publisher or website" value={f.publisher} onChange={set("publisher")} aria-label="Publisher or website" />
+            <input className={field} placeholder="Year" value={f.year} onChange={set("year")} aria-label="Year" inputMode="numeric" />
+          </div>
+          <div className="grid grid-cols-[6rem_1fr] gap-2">
+            <input className={field} placeholder="Page" value={f.page} onChange={set("page")} aria-label="Page" />
+            <input className={field} placeholder="Web address (optional)" value={f.url} onChange={set("url")} aria-label="Web address" />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={endnote} onChange={(e) => setEndnote(e.target.checked)} /> Put it in the endnotes instead of a footnote
+          </label>
+          {text.trim() && <p className="border-l-2 border-primary pl-2 text-[13px] text-ink-2">{text}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={!text.trim()}>
+              Add citation
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function GlossaryDialog({ term, onClose, onAdd }: { term: string | null; onClose: () => void; onAdd: (term: string, definition: string) => void }) {
+  return (
+    <Dialog open={term !== null} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogTitle>Add to the glossary</DialogTitle>
+        <DialogDescription>It goes on the book&apos;s Glossary page, which is made for you if the book has none.</DialogDescription>
+        {term !== null && (
+          <form
+            className="grid gap-2.5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const t = String(fd.get("term") ?? "").trim();
+              const d = String(fd.get("def") ?? "").trim();
+              if (!t || !d) return;
+              onAdd(t, d);
+              onClose();
+            }}
+          >
+            <input name="term" className={field} defaultValue={term} aria-label="Term" />
+            <textarea name="def" className="min-h-20 rounded-md border border-input bg-background p-2.5 text-sm" placeholder="What it means" aria-label="Definition" autoFocus />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" size="sm">
+                Add to the glossary
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

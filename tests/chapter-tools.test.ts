@@ -42,3 +42,17 @@ describe("chapter tools", () => {
     expect(second.content).toEqual([p("b")]);
   });
 });
+
+import { similarPassages } from "@/lib/similar";
+
+describe("similar passages", () => {
+  it("finds a passage that repeats an idea, not the selection itself", () => {
+    const sel = "Every book begins as a promise to a particular reader.";
+    const found = similarPassages(sel, [
+      { id: "a", title: "One", text: `${sel} Then other words follow here.` },
+      { id: "b", title: "Two", text: "A book is a promise made to one particular reader, and it begins there. Rice needs salt." },
+    ]);
+    expect(found[0]?.chapterId).toBe("b");
+    expect(found.every((f) => !f.text.includes("Every book begins"))).toBe(true);
+  });
+});
