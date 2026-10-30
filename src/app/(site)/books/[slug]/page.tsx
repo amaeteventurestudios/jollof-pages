@@ -35,6 +35,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       description: book.pitch || book.subtitle,
       images: book.cover ? [fileUrl(book, book.cover, "960x0")] : [],
     },
+    twitter: {
+      card: book.cover ? "summary_large_image" : "summary",
+      title: book.title,
+      description: book.pitch || book.subtitle,
+      images: book.cover ? [fileUrl(book, book.cover, "960x0")] : [],
+    },
   };
 }
 

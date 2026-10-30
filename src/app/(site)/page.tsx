@@ -15,8 +15,10 @@ import "@/components/marketing/marketing.css";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: { absolute: "Jollof Pages · Write, format and publish your book" },
-  description: "The book studio for authors. Write your manuscript, format a KDP-ready paperback and ebook, design the cover and export files that pass first time. Novels, memoir, guides and more.",
+  title: { absolute: "Jollof Pages: write, format and publish your book. An Atticus alternative" },
+  description:
+    "Write your manuscript, format a KDP-ready paperback, hardcover and ebook, design the cover, and publish to your own author website. AI writing help, live co-writing and track changes. $119 once, no subscription.",
+  alternates: { canonical: "/" },
 };
 
 /** The three things the studio does, each a panel that slides over the last. */
@@ -114,7 +116,7 @@ const SAFE = [
   { k: "Any screen", v: "Desktop, laptop, tablet or phone, installed like an app." },
 ];
 
-/** Atticus's column comes from its own published table on atticus.io (October 2026). */
+/** Atticus's column comes from its own published table and home page on atticus.io (October 2026). */
 const COMPARE: { row: string; us: string | boolean; them: string | boolean | null }[] = [
   { row: "Platforms", us: "Windows, Mac, Linux, Chromebook", them: "Windows, Mac, Linux, Chromebook" },
   { row: "Importing", us: "Word, EPUB, RTF, ODT, Markdown, HTML, text", them: "Word" },
@@ -124,6 +126,11 @@ const COMPARE: { row: string; us: string | boolean; them: string | boolean | nul
   { row: "Callout boxes", us: true, them: true },
   { row: "Large print", us: true, them: true },
   { row: "Cloud storage and backups", us: true, them: true },
+  { row: "Writing assistant (Claude, ChatGPT or OpenRouter)", us: true, them: null },
+  { row: "Live co-writing with others", us: true, them: null },
+  { row: "Track changes and comments", us: true, them: null },
+  { row: "Hardcover (KDP case laminate)", us: true, them: null },
+  { row: "AI cover artwork", us: "Pay as you go", them: null },
   { row: "Paperback cover wrap designer", us: true, them: null },
   { row: "KDP cover check before upload", us: true, them: null },
   { row: "Spine width worked out for you", us: true, them: null },
@@ -131,6 +138,9 @@ const COMPARE: { row: string; us: string | boolean; them: string | boolean | nul
   { row: "A page for every book, with a free sample", us: true, them: null },
   { row: "Reader list sign-ups", us: true, them: null },
   { row: "Site design from your cover colours", us: true, them: null },
+  { row: "Newsletters, direct ebook sales and analytics", us: "With Author Site Pro", them: null },
+  { row: "Video guides", us: "One for every feature", them: "Tutorials" },
+  { row: "Free design studio for social posts and ads", us: "Jollof Studio", them: null },
   { row: "Price, one time", us: "$119", them: "$147" },
 ];
 
@@ -217,11 +227,34 @@ const FAQ = [
   },
 ];
 
+/** What search engines read about the product, price and common questions. */
+const STRUCTURED = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Jollof Pages",
+    url: "https://jollofpages.com",
+    applicationCategory: "BusinessApplication",
+    applicationSubCategory: "Book writing and formatting",
+    operatingSystem: "Windows, macOS, Linux, ChromeOS, iPadOS, Android (installs from the browser)",
+    description: "Write, format and publish print books and ebooks ready for Amazon KDP, with a cover designer and a free author website.",
+    image: "https://jollofpages.com/og/jollof-pages.jpg",
+    offers: { "@type": "Offer", price: "119", priceCurrency: "USD", description: "One payment, every future update included. No subscription." },
+    publisher: { "@type": "Organization", name: "Amaete Venture Studios", email: "support@jollofpages.com" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  },
+];
+
 export default async function Home() {
   const site = await getSite();
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED).replace(/</g, "\\u003c") }} />
       <Intro name="Jollof Pages" />
       <SiteHeader name="Jollof Pages" overHero />
       <ScrollFx />
@@ -580,7 +613,7 @@ export default async function Home() {
                 ))}
               </tbody>
             </table>
-            <p className="t-small mt-4 text-center text-char/75">Atticus details are taken from the comparison table on atticus.io in October 2026. A dash means the feature is not listed there.</p>
+            <p className="t-small mt-4 text-center text-char/75">Atticus details are taken from atticus.io in October 2026. A dash means the feature is not listed there.</p>
           </div>
         </section>
 
