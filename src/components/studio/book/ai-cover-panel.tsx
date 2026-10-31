@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Download, Loader2, RefreshCw, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LETTERING_MARK, STYLES, buildCoverPrompt, type Quality, type StyleId, type Target } from "@/lib/cover-ai";
+import Link from "next/link";
+import { DEFAULT_OPENROUTER_IMAGE_MODEL, LETTERING_MARK, OPENROUTER_IMAGE_MODELS, STYLES, buildCoverPrompt, type Quality, type StyleId, type Target } from "@/lib/cover-ai";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
 import { AiSuggest } from "../ai-suggest";
@@ -26,7 +27,12 @@ interface Account {
   setupError: string;
   costs: Record<Quality, number>;
   packs: Pack[];
+  /** the writer saved an OpenRouter key on the AI assistant page */
+  openrouter: boolean;
 }
+
+type Engine = "credits" | "openrouter";
+const MODEL_KEY = "jp-cover-image-model";
 interface Picture {
   id: string;
   url: string;
@@ -85,6 +91,11 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [pictures, setPictures] = useState<Picture[]>([]);
+  // credits by default; a writer with an OpenRouter key can switch to it
+  const [engine, setEngine] = useState<Engine>("credits");
+  const [model, setModel] = useState(() => (typeof window === "undefined" ? DEFAULT_OPENROUTER_IMAGE_MODEL : localStorage.getItem(MODEL_KEY) || DEFAULT_OPENROUTER_IMAGE_MODEL));
+  const custom = !OPENROUTER_IMAGE_MODELS.some((m) => m.id === model);
+  const own = engine === "openrouter";
 
   const reference = matchCurrent ? (target === "front" ? design.imageUrl : design.backImageUrl || design.imageUrl) : "";
   const built = buildCoverPrompt({
@@ -186,13 +197,22 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
           count: opts?.count ?? count,
           referenceUrl: opts?.referenceUrl ?? (reference || undefined),
           palette: { bg: design.bg, fg: design.fg, accent: design.accent },
+          ...(own ? { engine: "openrouter", model } : {}),
         }),
       });
       const d = await res.json();
       if (typeof d.credits === "number") setAccount((a) => (a ? { ...a, credits: d.credits } : a));
       if (!res.ok) throw new Error(d.error || res.statusText);
       setPictures((p) => [...d.images, ...p]);
-      setMsg(d.test ? "Test mode: these are sample pictures, not real artwork. Add a fal.ai key on the server for real ones." : d.charged ? `Done. ${d.charged} credits used.` : "Done.");
+      setMsg(
+        own
+          ? "Done. Made on your OpenRouter key; OpenRouter bills you directly."
+          : d.test
+            ? "Test mode: these are sample pictures, not real artwork. Add a fal.ai key on the server for real ones."
+            : d.charged
+              ? `Done. ${d.charged} credits used.`
+              : "Done.",
+      );
     } catch (e) {
       setMsg(errorMessage(e));
     } finally {
@@ -200,8 +220,8 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
     }
   }
 
-  const cost = account ? account.costs[quality] * count : 0;
-  const short = account && !account.free && account.credits < cost;
+  const cost = account && !own ? account.costs[quality] * count : 0;
+  const short = account && !own && !account.free && account.credits < cost;
 
   return (
     <div id="ai-artwork" className="mt-8 scroll-mt-20 rounded-md border border-border bg-card p-4 sm:p-6">
@@ -322,6 +342,69 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
             <span className="text-[13px] text-soft">Written for you from the choices above. Edit it freely. Portrait {aspect}, sized for your trim.</span>
           </label>
 
+          <fieldset className="grid gap-2">
+            <legend className="mb-1 font-medium">Pay with</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(["credits", "openrouter"] as const).map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  aria-pressed={engine === e}
+                  onClick={() => setEngine(e)}
+                  className={cn("rounded-md border p-3 text-left", engine === e ? "border-primary bg-primary-soft" : "border-input bg-card hover:bg-muted")}
+                >
+                  <span className="block font-medium">{e === "credits" ? "Jollof Pages credits" : "My OpenRouter key"}</span>
+                  <span className="text-[13px] text-soft">
+                    {e === "credits" ? "Nano Banana, paid from your credit balance." : "Nano Banana or GPT Image. OpenRouter bills you, we charge nothing."}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {own && account && !account.openrouter && (
+              <p className="rounded bg-paper-2 p-3 text-[13px]">
+                Add your OpenRouter key first: open{" "}
+                <Link href="/studio/assistant" className="font-medium text-primary underline">
+                  AI assistant
+                </Link>
+                , choose OpenRouter and paste a key from openrouter.ai/settings/keys. Then come back here.
+              </p>
+            )}
+            {own && (
+              <label className="grid gap-1">
+                <span>Image model</span>
+                <select
+                  value={custom ? "other" : model}
+                  onChange={(e) => {
+                    const v = e.target.value === "other" ? "" : e.target.value;
+                    setModel(v);
+                    if (v) localStorage.setItem(MODEL_KEY, v);
+                  }}
+                  className="h-9 rounded-md border border-input bg-card px-2"
+                >
+                  {OPENROUTER_IMAGE_MODELS.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                  <option value="other">Another OpenRouter image model…</option>
+                </select>
+                {custom ? (
+                  <input
+                    value={model}
+                    onChange={(e) => {
+                      setModel(e.target.value.trim());
+                      localStorage.setItem(MODEL_KEY, e.target.value.trim());
+                    }}
+                    placeholder="vendor/model, as named on openrouter.ai/models"
+                    className="h-9 rounded-md border border-input bg-card px-2"
+                  />
+                ) : (
+                  <span className="text-[13px] text-soft">{OPENROUTER_IMAGE_MODELS.find((m) => m.id === model)?.hint}</span>
+                )}
+              </label>
+            )}
+          </fieldset>
+
           <div className="grid gap-2 sm:grid-cols-2">
             {(["draft", "print"] as const).map((q) => (
               <button
@@ -331,7 +414,7 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
                 className={cn("rounded-md border p-3 text-left", quality === q ? "border-primary bg-primary-soft" : "border-input bg-card hover:bg-muted")}
               >
                 <span className="block font-medium">
-                  {q === "draft" ? "Draft" : "Print-ready 4K"} {account && <span className="font-normal text-ink-2">· {account.costs[q]} credits each</span>}
+                  {q === "draft" ? "Draft" : "Print-ready 4K"} {account && !own && <span className="font-normal text-ink-2">· {account.costs[q]} credits each</span>}
                 </span>
                 <span className="text-[13px] text-soft">{q === "draft" ? "Fast and cheap, for trying ideas." : "Large enough for a paperback at 300 dpi."}</span>
               </button>
@@ -347,14 +430,14 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
                 ))}
               </select>
             </label>
-            <Button onClick={() => generate()} disabled={!!busy || !account?.ready || Boolean(short) || text.trim().length < 10}>
+            <Button onClick={() => generate()} disabled={!!busy || !account?.ready || Boolean(short) || text.trim().length < 10 || (own && (!account?.openrouter || !model))}>
               {busy === "generate" ? <Loader2 className="animate-spin" /> : <Wand2 />}
               Make {count} picture{count > 1 ? "s" : ""}
-              {account && !account.free ? ` · ${cost} credits` : ""}
+              {account && !account.free && !own ? ` · ${cost} credits` : ""}
             </Button>
           </div>
 
-          {account && !account.free && (
+          {account && !account.free && !own && (
             <div className="grid gap-2 border-t border-border pt-4">
               <p className="font-medium">{short ? "Top up to make these pictures" : "Top up credits"}</p>
               <div className="grid gap-2 sm:grid-cols-3">

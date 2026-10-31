@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { PB_URL, fileUrl } from "@/lib/pb";
 import { serverPb } from "@/lib/pb-server";
-import { creditsFor, generationFileName, type Quality, type Target } from "@/lib/cover-ai";
+import { DEFAULT_OPENROUTER_IMAGE_MODEL, creditsFor, generationFileName, isOpenRouterModel, type Quality, type Target } from "@/lib/cover-ai";
 import { bearer } from "@/lib/server/load-book";
 import { addLedger, adminConfigured, adminPb, balance, caller, isFree, withUserLock } from "@/lib/server/credits";
 import { falConfigured, generateImages, mockImages, type GenerateInput } from "@/lib/server/fal";
+import { generateWithOpenRouter } from "@/lib/server/openrouter-images";
+import { resolve } from "@/lib/server/assistant";
 import type { Book } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -24,6 +26,10 @@ interface Body {
   /** a picture to match: a PocketBase file URL, such as the current front artwork or an earlier result */
   referenceUrl?: string;
   palette?: { bg?: string; fg?: string; accent?: string };
+  /** "openrouter" runs on the writer's own OpenRouter key and spends no credits */
+  engine?: "credits" | "openrouter";
+  /** the OpenRouter image model, e.g. google/gemini-2.5-flash-image */
+  model?: string;
 }
 
 /** Fetches a picture from this site's PocketBase and inlines it, so fal.ai never needs to reach the server. */
@@ -39,7 +45,7 @@ async function inlineReference(url: string, token: string): Promise<string | nul
   return `data:${type};base64,${buf.toString("base64")}`;
 }
 
-/** POST: makes 1–4 pictures for a book's cover, spending the writer's credits. */
+/** POST: makes 1–4 pictures for a book's cover, spending the writer's credits or using their own OpenRouter key. */
 export async function POST(req: Request) {
   const token = bearer(req);
   const me = await caller(token);
@@ -69,8 +75,16 @@ export async function POST(req: Request) {
     fg: HEX.test(b.palette?.fg ?? "") ? b.palette!.fg! : "#ffffff",
     accent: HEX.test(b.palette?.accent ?? "") ? b.palette!.accent! : "#f2c14e",
   };
-  const test = !falConfigured();
-  const cost = isFree(me.email) ? 0 : creditsFor(quality, count);
+  let openrouter: { key: string; model: string } | null = null;
+  if (b.engine === "openrouter") {
+    const r = await resolve(me, "openrouter");
+    if (typeof r === "string") return NextResponse.json({ error: "Add your OpenRouter API key on the AI assistant page first (account menu, AI assistant)." }, { status: 400 });
+    const model = String(b.model ?? "").trim() || DEFAULT_OPENROUTER_IMAGE_MODEL;
+    if (!isOpenRouterModel(model)) return NextResponse.json({ error: "That does not look like an OpenRouter model name (vendor/model)." }, { status: 400 });
+    openrouter = { key: r.key, model };
+  }
+  const test = !openrouter && !falConfigured();
+  const cost = openrouter || isFree(me.email) ? 0 : creditsFor(quality, count);
   const admin = await adminPb();
 
   // charge first, under a per-writer lock, and refund if the model fails
@@ -117,7 +131,7 @@ export async function POST(req: Request) {
   const input: GenerateInput = { prompt, aspect, quality, count, references };
 
   try {
-    const out = test ? mockImages(input, palette, book.title) : await generateImages(input);
+    const out = openrouter ? await generateWithOpenRouter(input, openrouter.key, openrouter.model) : test ? mockImages(input, palette, book.title) : await generateImages(input);
     const saved = await Promise.all(
       gens.map(async (g, i) => {
         const img = out.images[i];
@@ -143,6 +157,6 @@ export async function POST(req: Request) {
     const message = e instanceof Error ? e.message : String(e);
     await Promise.all(gens.map((g) => admin.collection("cover_generations").update(g.id, { status: "failed", error: message.slice(0, 1900) }).catch(() => undefined)));
     if (charge && cost) await addLedger({ owner: me.id, delta: cost, reason: "refund", generation: gens[0].id, note: "Generation failed" }).catch(() => undefined);
-    return NextResponse.json({ error: `${message.replace(/fetch failed/, "Could not reach the image service").replace(/\.?$/, ".")} Your credits were returned.`, credits: await balance(me.id).catch(() => undefined) }, { status: 502 });
+    return NextResponse.json({ error: `${message.replace(/fetch failed/, "Could not reach the image service").replace(/\.?$/, ".")}${cost ? " Your credits were returned." : ""}`, credits: await balance(me.id).catch(() => undefined) }, { status: 502 });
   }
 }
