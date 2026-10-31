@@ -76,9 +76,12 @@ export function verifyWebhook(payload: string, header: string | null, secret: st
   });
 }
 
-/** The studio itself: one payment, a lifetime account. STUDIO_PRICE_CENTS defaults to $129. */
+/**
+ * The studio itself: one payment of $129, a lifetime account. Fixed here, not in the server's
+ * environment, so the sign-up page, Stripe and the sales page can never show different prices.
+ */
 export function studioPriceCents(): number {
-  return Number(process.env.STUDIO_PRICE_CENTS) || 12900;
+  return 12900;
 }
 
 export function createStudioCheckout(p: { userId: string; email: string; successUrl: string; cancelUrl: string }) {
