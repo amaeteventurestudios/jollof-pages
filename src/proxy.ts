@@ -22,7 +22,7 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  if (/^\/(studio|login|signup)(\/|$)/.test(pathname)) {
+  if (/^\/(studio|login|signup|join)(\/|$)/.test(pathname)) {
     const root = host.split(":")[0].endsWith(".localhost") ? `http://localhost${host.includes(":") ? ":" + host.split(":")[1] : ""}` : `https://${rootDomain()}`;
     return NextResponse.redirect(`${root}${pathname}${search}`);
   }

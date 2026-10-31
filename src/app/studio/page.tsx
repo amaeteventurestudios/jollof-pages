@@ -112,6 +112,7 @@ export default function StudioHome() {
           ))}
         </dl>
 
+        <TesterNote />
         <LearnCard />
 
         {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load your books: {error}</p>}
@@ -589,5 +590,39 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Beta testers came in through an invite link: point them at the two places their feedback goes. */
+function TesterNote() {
+  // the studio only renders in the browser, after the sign-in check, so both are readable here
+  const [hidden, setHidden] = useState(() => !pb().authStore.record?.tester_invite || localStorage.getItem("jp-tester-note") === "hide");
+  if (hidden) return null;
+  return (
+    <aside className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border border-primary/40 bg-primary-soft p-4 text-sm">
+      <p className="min-w-60 flex-1 text-ink">
+        <strong>You are a Jollof Pages beta tester.</strong> Every feature is open to you. When something breaks, confuses you or delights you, tell us. It shapes what we build next.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="sm">
+          <Link href="/studio/help#contact">
+            <LifeBuoy /> Report a problem
+          </Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/studio/ideas">Suggest a feature</Link>
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            localStorage.setItem("jp-tester-note", "hide");
+            setHidden(true);
+          }}
+        >
+          Hide
+        </Button>
+      </div>
+    </aside>
   );
 }

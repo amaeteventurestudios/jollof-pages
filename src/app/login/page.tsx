@@ -15,7 +15,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const next = params.get("next");
-  const target = next && /^\/(studio|invite)(\/|$)/.test(next) ? next : "/studio";
+  const target = next && /^\/(studio|invite|join)(\/|$)/.test(next) ? next : "/studio";
 
   return (
     <div className="auth-card p-6 sm:p-9">
