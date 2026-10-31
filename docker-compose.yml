@@ -34,7 +34,6 @@ services:
       COVER_AI_FREE_EMAILS: ${COVER_AI_FREE_EMAILS:-}
       # author accounts and sites (docs/author-sites.md)
       STUDIO_SIGNUP: ${STUDIO_SIGNUP:-}
-      STUDIO_PRICE_CENTS: ${STUDIO_PRICE_CENTS:-}
       ROOT_DOMAIN: ${ROOT_DOMAIN:-}
       # Author Site Pro (docs/author-sites.md)
       PRO_MONTH_CENTS: ${PRO_MONTH_CENTS:-}

@@ -27,7 +27,6 @@ site land on that author's list, which only that author can read.
 | Name | Value | What it does |
 | --- | --- | --- |
 | `STUDIO_SIGNUP` | `paid`, `free` or `closed` | `paid`: sign up, then pay through Stripe. `free`: no payment (beta). `closed`: no sign-up. Unset = `paid` when `STRIPE_SECRET_KEY` is set, else `closed`. |
-| `STUDIO_PRICE_CENTS` | `12900` | The one-time price. |
 | `ROOT_DOMAIN` | `jollofpages.com` | Optional; defaults to the host of `SITE_URL`. |
 | `PB_SUPERUSER_EMAIL`, `PB_SUPERUSER_PASSWORD` | as for AI covers | Needed: sign-up creates accounts as a superuser. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | as for AI covers | The same webhook (`/api/credits/webhook`) also opens paid studios. |

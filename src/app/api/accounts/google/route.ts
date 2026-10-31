@@ -5,6 +5,8 @@ import { allowSignup, signupMode, subdomainAvailability } from "@/lib/server/acc
 import { publicOrigin } from "@/lib/server/origin";
 import { createStudioCheckout } from "@/lib/server/stripe";
 import { slugify } from "@/lib/slug";
+import { admitTester, usableInvite } from "@/lib/server/invites";
+import type { TesterInvite } from "@/lib/invites";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,17 +14,23 @@ export const dynamic = "force-dynamic";
 /**
  * POST { name, subdomain } finishes a studio account that started with "Sign up with Google". The
  * PocketBase hook made the user (access "pending"); this adds the author site and first pen name,
- * then opens the studio (free mode) or hands back the Stripe Checkout address (paid mode).
+ * then opens the studio (free mode, or a tester invite) or hands back the Stripe Checkout address.
  */
 export async function POST(req: Request) {
-  const mode = signupMode();
+  const body = (await req.json().catch(() => ({}))) as { name?: string; subdomain?: string; invite?: string };
+  let invite: TesterInvite | null = null;
+  if (body.invite) {
+    const found = await usableInvite(String(body.invite));
+    if ("problem" in found) return NextResponse.json({ error: found.problem }, { status: 403 });
+    invite = found.invite;
+  }
+  const mode = invite ? "free" : signupMode();
   if (mode === "closed") return NextResponse.json({ error: "Sign-up is not open yet. Join the early-access list on the home page." }, { status: 403 });
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in with Google first." }, { status: 401 });
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
   if (!allowSignup(ip)) return NextResponse.json({ error: "Too many sign-ups from here. Try again in an hour." }, { status: 429 });
 
-  const body = (await req.json().catch(() => ({}))) as { name?: string; subdomain?: string };
   const name = String(body.name ?? "").trim().slice(0, 120);
   const subdomain = String(body.subdomain ?? "").trim().toLowerCase();
   if (!name) return NextResponse.json({ error: "Enter the name readers know you by." }, { status: 400 });
@@ -40,6 +48,7 @@ export async function POST(req: Request) {
     try {
       await pb.collection("authors").create({ owner: me.id, name, slug: slugify(name) || "author" });
       await pb.collection("users").update(me.id, { name, ...(mode === "free" ? { access: "comp" } : {}) });
+      if (invite) await admitTester(pb, invite, me.id);
     } catch (e) {
       await pb.collection("site_settings").delete(site.id).catch(() => undefined);
       throw e;

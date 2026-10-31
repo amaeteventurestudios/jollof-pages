@@ -13,6 +13,8 @@ export interface AdminUser {
   access?: Access | "";
   paid_cents?: number;
   paid_at?: string;
+  /** the tester invite link they signed up through, if any */
+  tester_invite?: string;
   created: string;
 }
 export interface AdminBook {
@@ -61,12 +63,12 @@ export interface AdminData {
   ledger: AdminLedger[];
   orders: AdminOrder[];
   billing: AdminBilling[];
-  tickets: { status: string }[];
-  ideas: { status: string }[];
+  tickets: { status: string; owner?: string }[];
+  ideas: { status: string; owner?: string }[];
 }
 
 export interface Overview {
-  writers: { total: number; paid: number; comp: number; pending: number; collaborator: number; new7: number; new30: number };
+  writers: { total: number; paid: number; comp: number; pending: number; collaborator: number; testers: number; new7: number; new30: number };
   /** the last 30 days, oldest first */
   signups: { date: string; count: number }[];
   money: {
@@ -101,6 +103,11 @@ export interface Writer {
   pro: boolean;
   credits: number;
   spentCents: number;
+  /** id of the tester invite link they joined through, "" if none */
+  tester: string;
+  /** support tickets they opened and feature ideas they posted: a tester's feedback */
+  tickets: number;
+  ideas: number;
 }
 
 export type MoneyKind = "studio" | "credits" | "ebook";
@@ -130,7 +137,7 @@ export function overview(d: AdminData, listPrice: number, now = new Date()): Ove
   const month = today.slice(0, 7);
   const signups = Array.from({ length: 30 }, (_, i) => ({ date: ago(29 - i), count: 0 }));
   const byDay = new Map(signups.map((s) => [s.date, s]));
-  const w = { total: d.users.length, paid: 0, comp: 0, pending: 0, collaborator: 0, new7: 0, new30: 0 };
+  const w = { total: d.users.length, paid: 0, comp: 0, pending: 0, collaborator: 0, testers: 0, new7: 0, new30: 0 };
   const m: Overview["money"] = {
     studioCents: 0,
     studioCount: 0,
@@ -147,6 +154,7 @@ export function overview(d: AdminData, listPrice: number, now = new Date()): Ove
   for (const u of d.users) {
     const a = u.access || "pending";
     if (a in w) w[a]++;
+    if (u.tester_invite) w.testers++;
     const c = day(u.created);
     if (c > ago(7)) w.new7++;
     if (c > ago(30)) w.new30++;
@@ -198,6 +206,13 @@ export function writers(d: AdminData, listPrice: number): Writer[] {
   }
   for (const l of d.log) seen(l.owner, l.date);
   const sites = new Map(d.sites.map((s) => [s.owner, s]));
+  const count = (rows: { owner?: string }[]) => {
+    const m = new Map<string, number>();
+    for (const r of rows) if (r.owner) m.set(r.owner, (m.get(r.owner) ?? 0) + 1);
+    return m;
+  };
+  const tickets = count(d.tickets);
+  const ideas = count(d.ideas);
   const pro = new Set(d.billing.filter((b) => ACTIVE.has(b.status ?? "")).map((b) => b.owner));
   const credits = new Map<string, number>();
   const spent = new Map<string, number>();
@@ -221,6 +236,9 @@ export function writers(d: AdminData, listPrice: number): Writer[] {
         pro: pro.has(u.id),
         credits: credits.get(u.id) ?? 0,
         spentCents: paidCents + (spent.get(u.id) ?? 0),
+        tester: u.tester_invite ?? "",
+        tickets: tickets.get(u.id) ?? 0,
+        ideas: ideas.get(u.id) ?? 0,
       };
     })
     .sort((a, b) => b.created.localeCompare(a.created));
