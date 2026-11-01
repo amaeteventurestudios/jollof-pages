@@ -257,6 +257,8 @@ export interface SiteSettings {
   paused?: boolean;
   /** an admin took the site down (server-only) */
   offline?: boolean;
+  /** the writer's own Amazon Associates store tag; empty uses Jollof Pages' */
+  amazon_tag?: string;
 }
 
 export function bookFormat(b: Pick<Book, "format">): BookFormat {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AMAZON_DISCLOSURE, amazonTag, tagBuyLinks } from "@/lib/affiliate";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
 import { hasPro, rootDomain } from "@/lib/sites";
@@ -57,7 +58,7 @@ export default async function BookPage({ params }: { params: Params }) {
   const name = site?.publisher_name || "Jollof Pages";
   const sb = toStageBook(book);
   const f = bookFormat(book);
-  const links = (book.buy_links ?? []).filter((l) => l.url);
+  const { links, tagged } = tagBuyLinks((book.buy_links ?? []).filter((l) => l.url), amazonTag(site));
   const praise = (book.praise ?? []).filter((q) => q.quote);
   const reviews = (book.reviews ?? []).filter((q) => q.quote);
   const author = book.expand?.author;
@@ -167,7 +168,7 @@ export default async function BookPage({ params }: { params: Params }) {
                         href={l.url}
                         data-track={l.label || "Amazon"}
                         target="_blank"
-                        rel="noreferrer"
+                        rel={tagged ? "noreferrer sponsored" : "noreferrer"}
                         className={cn("buy-row flex h-16 items-center justify-between gap-4 border-2 px-5 font-semibold", dark ? "border-cream/60" : "border-char/60")}
                       >
                         <span>{l.label || "Amazon"}</span>
@@ -188,6 +189,7 @@ export default async function BookPage({ params }: { params: Params }) {
                   <ArrowRight className="arrow size-5" aria-hidden />
                 </Link>
               )}
+              {tagged && <p className="mt-3 text-sm opacity-75">{AMAZON_DISCLOSURE}</p>}
             </Block>
 
             {author && (author.bio || author.photo) && (

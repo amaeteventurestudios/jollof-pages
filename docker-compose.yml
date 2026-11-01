@@ -60,6 +60,7 @@ services:
       AMAZON_PAAPI_ACCESS_KEY: ${AMAZON_PAAPI_ACCESS_KEY:-}
       AMAZON_PAAPI_SECRET_KEY: ${AMAZON_PAAPI_SECRET_KEY:-}
       AMAZON_PAAPI_PARTNER_TAG: ${AMAZON_PAAPI_PARTNER_TAG:-}
+      AMAZON_ASSOCIATE_TAG: ${AMAZON_ASSOCIATE_TAG:-sevenfc-20}
       SUPPORT_ADDRESS: ${SUPPORT_ADDRESS:-}
       # writing assistant (docs/assistant.md): the publisher's own keys, for COVER_AI_FREE_EMAILS accounts only
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
