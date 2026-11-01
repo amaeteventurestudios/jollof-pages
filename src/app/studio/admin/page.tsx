@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowRight, CheckCircle2, Globe, Inbox, Lightbulb, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ArrowRight, BellRing, CheckCircle2, Globe, Inbox, Lightbulb, ShieldAlert } from "lucide-react";
 import { call, Columns, num, PageHead, Panel, RangePicker, short, Tile, useAdmin } from "@/components/admin/kit";
 import { money, RANGES, type Insights, type NeedItem } from "@/lib/admin";
 
-const NEED_ICON: Record<NeedItem["kind"], typeof Inbox> = { ticket: Inbox, idea: Lightbulb, spam: ShieldAlert, domain: Globe, nosite: Globe, notstarted: AlertTriangle };
+const NEED_ICON: Record<NeedItem["kind"], typeof Inbox> = { ticket: Inbox, idea: Lightbulb, spam: ShieldAlert, domain: Globe, nosite: Globe, notstarted: AlertTriangle, reminder: BellRing };
 
 /** The admin's front page: today's headline numbers and anything waiting on you. */
 export default function AdminOverview() {

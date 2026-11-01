@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { rootDomain, siteKeyOf } from "@/lib/sites";
+import { freeDomainsOpen } from "@/lib/server/flags";
 
 /** A plain description of Jollof Pages for AI assistants and crawlers. Author sites don't have one. */
 export async function GET() {
@@ -34,7 +35,7 @@ export async function GET() {
 - Export a print PDF, EPUB 3, Word file, cover wrap and a full backup
 - A KDP checklist that walks through Amazon's forms
 - A free author website at yourname.jollofpages.com, with a page for every book, a free sample chapter, buy links and a reader list
-- Author Site Pro ($10 a month or $96 a year): your own domain with a free .com for the first year, newsletters, direct ebook sales and analytics
+- Author Site Pro ($10 a month or $96 a year): your own domain ${(await freeDomainsOpen()) ? "with a free .com for the first year" : "(a free .com for the first year is coming soon)"}, newsletters, direct ebook sales and analytics
 
 ## Help
 - [Help and video guides](${o}/help): a short video for every studio feature

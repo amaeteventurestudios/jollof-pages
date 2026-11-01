@@ -51,7 +51,7 @@ export function useProStatus(): { status: ProStatus | null; reload: () => void }
   return { status, reload };
 }
 
-const PRO_FEATURES = ["Your own domain, with a free .com for the first year on the yearly plan", "Newsletters to your reader list", "Sell ebooks straight from your site; the money goes to you", "Analytics: visits, where readers come from, sign-ups and sales"];
+const proFeatures = (freeCom: boolean) => [freeCom ? "Your own domain, with a free .com for the first year on the yearly plan" : "Your own domain (a free .com on the yearly plan is coming soon)", "Newsletters to your reader list", "Sell ebooks straight from your site; the money goes to you", "Analytics: visits, where readers come from, sign-ups and sales"];
 
 /** Author Site Pro: the plan, the free .com and where ebook money is paid. */
 export function ProPanel({ status, reload, home = false }: { status: ProStatus | null; reload: () => void; home?: boolean }) {
@@ -89,7 +89,7 @@ export function ProPanel({ status, reload, home = false }: { status: ProStatus |
   return (
     <Panel title="Author Site Pro" description={active ? `Active${status.interval ? `, billed ${status.interval === "year" ? "yearly" : "monthly"}` : ""}${status.status === "canceling" ? ". Ends at the close of this period" : ""}.` : "Optional. Your free site and studio stay yours whether or not you have Pro."}>
       <ul className="grid gap-1.5 text-sm">
-        {PRO_FEATURES.map((f) => (
+        {proFeatures(Boolean(status?.freeDomain.configured)).map((f) => (
           <li key={f} className="flex items-start gap-2">
             <Check className="mt-0.5 size-4 shrink-0 text-primary" />
             {f}

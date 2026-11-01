@@ -17,6 +17,7 @@ import {
   Palette,
   ScrollText,
   Shapes,
+  ToggleRight,
   ShieldCheck,
   Users,
   UsersRound,
@@ -117,6 +118,7 @@ const TREE: { heading: string; nodes: Node[] }[] = [
     nodes: [
       { id: "team", href: "/studio/admin/team", label: "Team and roles", icon: UsersRound },
       { id: "brands", href: "/studio/admin/brands", label: "Brands", icon: Palette },
+      { id: "switches", href: "/studio/admin/switches", label: "Switches", icon: ToggleRight },
       { id: "audit", href: "/studio/admin/audit", label: "Audit log", icon: ScrollText },
     ],
   },

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { listPrice, loadAdminData, loadInsightData, requireAdmin } from "@/lib/server/admin";
 import { needsYou, overview, sinceDate, websites, writers } from "@/lib/admin";
 import { canSee, sectionsFor } from "@/lib/admin-roles";
+import { FLAGS, type FlagKey } from "@/lib/flags";
+import { getFlags } from "@/lib/server/flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,10 +19,13 @@ export async function GET(req: Request) {
   const data = await loadAdminData();
   const o = overview(data, listPrice());
   const sites = canSee(me.role, "websites") ? websites(data, await loadInsightData(sinceDate(30))) : null;
+  // switches the owner has left off, with what to do before turning them on
+  const flags = canSee(me.role, "switches") ? await getFlags() : null;
+  const reminders = flags ? (Object.keys(FLAGS) as FlagKey[]).filter((k) => !flags[k]).map((k) => ({ label: FLAGS[k].reminder, href: "/studio/admin/switches" })) : [];
   return NextResponse.json({
     me: { email: me.email, role: me.role, sections: sectionsFor(me.role) },
     overview: canSee(me.role, "money") ? o : { ...o, money: null },
-    needs: needsYou(o, writers(data, listPrice()), sites),
+    needs: needsYou(o, writers(data, listPrice()), sites, reminders),
     sites: sites ? { live: sites.filter((s) => !s.offline).length, ownDomain: sites.filter((s) => s.domain === "connected").length, visitors30: sites.reduce((n, s) => n + s.visitors, 0) } : null,
   });
 }

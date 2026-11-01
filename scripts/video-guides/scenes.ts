@@ -637,6 +637,29 @@ export const SCENES: Record<string, Scene> = {
     },
   },
 
+  "own-email": {
+    start: "/studio/readers",
+    async run(d) {
+      await d.say("Newsletters can go out on your own free Resend account. It comes with 3,000 emails a month.");
+      await d.title("Step 1", "Sign up at resend.com", "Click Sign up. You can use Continue with Google.", 3200);
+      await d.title("Step 2", "Make an API key", "In the left menu click API Keys, then Create API Key. Name it Jollof Pages.", 3600);
+      await d.title("Step 3", "Give it Full access", "Choose Full access, click Add, and copy the key. It starts with re_.", 3600);
+      await d.say("Back in the studio, open <b>Readers</b> and find <b>Send on your own free Resend account</b>.");
+      const form = d.page.getByLabel("Your own free sending");
+      await d.scrollTo(form);
+      await d.say("Paste your key, then type a domain you own. A mail address on it works well, like mail.yourname.com.");
+      await d.type(d.page.getByLabel("Resend API key"), "re_demo_key_1234");
+      await d.type(d.page.getByLabel("Send from this domain"), "mail.adaeze.com");
+      await d.click(btn(d, "Connect"), { after: 1500 });
+      await d.say("Resend gives you three DNS records. Copy each one into your domain's DNS settings. In Cloudflare, turn the proxy off.");
+      await d.point(d.page.getByRole("table"), { ring: true });
+      await d.ring(null);
+      await d.say("Then click <b>Check</b>. Records can take a few minutes to show up.");
+      await d.click(btn(d, "Check"), { after: 1800 });
+      await d.say("Verified. Your newsletters now go out from your own address, and replies still come to you.");
+    },
+  },
+
   analytics: {
     start: "/studio/stats",
     async run(d) {

@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { CreditPack } from "../cover-ai";
+import type { EmailPack } from "../email-quota";
 
 /**
  * Stripe Checkout for credit top-ups: one-off payments, no subscriptions, no Stripe SDK.
@@ -53,6 +54,28 @@ export function createCheckout(p: { pack: CreditPack; userId: string; email: str
       "metadata[user]": p.userId,
       "metadata[credits]": String(p.pack.credits),
       "metadata[kind]": "cover-credits",
+    },
+  });
+}
+
+/** Extra newsletter emails on top of the monthly allowance; they never expire. */
+export function createEmailCheckout(p: { pack: EmailPack; userId: string; email: string; successUrl: string; cancelUrl: string }) {
+  return stripe<CheckoutSession>("checkout/sessions", {
+    method: "POST",
+    form: {
+      mode: "payment",
+      success_url: p.successUrl,
+      cancel_url: p.cancelUrl,
+      client_reference_id: p.userId,
+      ...(p.email ? { customer_email: p.email } : {}),
+      "line_items[0][quantity]": "1",
+      "line_items[0][price_data][currency]": "usd",
+      "line_items[0][price_data][unit_amount]": String(p.pack.cents),
+      "line_items[0][price_data][product_data][name]": `${p.pack.emails.toLocaleString("en-US")} newsletter emails`,
+      "line_items[0][price_data][product_data][description]": "Jollof Pages newsletters. Used after your monthly allowance; they never expire.",
+      "metadata[user]": p.userId,
+      "metadata[emails]": String(p.pack.emails),
+      "metadata[kind]": "email-credits",
     },
   });
 }

@@ -107,6 +107,11 @@ home site always has Pro. Each part stays hidden or marked "coming soon" until i
 
 ### The free .com
 
+It is offered only when the Name.com login is set **and** the owner has switched it on in
+Admin > Switches (the `app_flags` row `free_domains`, off by default). While it is off, the front page,
+llms.txt and the Pro panel say the free .com is coming soon, and Admin > Overview > Needs you shows a
+reminder to add Name.com credit first.
+
 When the yearly plan is paid, the webhook registers the domain at Name.com in the author's name with
 WHOIS privacy and auto-renew on, adds `A @ → SERVER_IP` and `CNAME www → domain`, and connects it
 to the site; Caddy issues the certificate on the first visit. Only `FREE_DOMAIN_TLDS` under
@@ -119,6 +124,20 @@ account; about $18 a year at current prices. Test first with `NAMECOM_API=https:
 Sent from `<subdomain>@MAIL_FROM_DOMAIN` with replies going to the author's own email, with a one-click
 unsubscribe link and header. In Resend, add `MAIL_FROM_DOMAIN` (Domains → Add) and put the DNS records
 it shows into Cloudflare (DNS only).
+
+Authors can connect their own free Resend account on the Readers page (key with Full access plus
+a domain they own; the studio adds the domain in their account and shows the DNS records). Once it
+is verified their newsletters go out on it, from `news@<their domain>`, and don't touch the shared
+allowance. Keys are sealed (`secret-box.ts`) in the server-only `mail_accounts` collection. The
+Learn video `own-email` walks through it.
+
+Everyone else sends through the publisher's one Resend account, so each Pro author has a monthly
+allowance (`NEWSLETTER_MONTHLY_EMAILS`, default 300 to fit Resend's free plan; one email per reader per send) that refills on the 1st
+(UTC). Use is summed from that month's sent newsletters. With `NEWSLETTER_SELL_EMAILS=1` authors can also buy packs of extra
+emails (`EMAIL_PACKS` in `src/lib/email-quota.ts`: 10,000 for $6, 100,000 for $54) through Stripe
+Checkout (`kind=email-credits`); bought emails live in `email_ledger`, never expire and are used
+after the allowance. A send that does not fit is refused before anything goes out. Accounts in
+`COVER_AI_FREE_EMAILS` send without a limit. `RESEND_API_URL` points at a test double locally.
 
 ### Analytics
 

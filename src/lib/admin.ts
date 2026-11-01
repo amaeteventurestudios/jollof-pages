@@ -681,14 +681,14 @@ export function bookRows(d: AdminData, x: InsightData): BookRow[] {
 }
 
 export interface NeedItem {
-  kind: "ticket" | "idea" | "spam" | "domain" | "nosite" | "notstarted";
+  kind: "ticket" | "idea" | "spam" | "domain" | "nosite" | "notstarted" | "reminder";
   label: string;
   count: number;
   href: string;
 }
 
 /** What is waiting on the owner, most urgent first. Items with nothing waiting are left out. */
-export function needsYou(o: Overview, list: Writer[], sites: Website[] | null): NeedItem[] {
+export function needsYou(o: Overview, list: Writer[], sites: Website[] | null, reminders: { label: string; href: string }[] = []): NeedItem[] {
   const spam = list.filter((w) => w.spam.length && !w.suspended).length;
   const items: NeedItem[] = [
     { kind: "ticket", label: "Support tickets waiting for an answer", count: o.tickets.open, href: "/studio/admin/tickets" },
@@ -704,6 +704,7 @@ export function needsYou(o: Overview, list: Writer[], sites: Website[] | null): 
     });
     items.push({ kind: "nosite", label: "Websites with no books on them", count: sites.filter((s) => !s.books && !s.home && !s.offline).length, href: "/studio/admin/websites?show=empty" });
   }
+  for (const r of reminders) items.push({ kind: "reminder", label: r.label, count: 1, href: r.href });
   return items.filter((i) => i.count > 0);
 }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSite } from "@/lib/pb-server";
+import { freeDomainsOpen } from "@/lib/server/flags";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SpineCalculator } from "@/components/site/spine-calculator";
@@ -177,7 +178,10 @@ const PLAN = [
   "Every update we ship, included",
 ];
 
-const FAQ = [
+/** The free .com line, which says "coming soon" while it is switched off in Admin > Switches. */
+const freeComText = (open: boolean) => (open ? "with a free .com for the first year" : "with a free .com coming soon");
+
+const faqFor = (freeCom: string) => [
   {
     q: "Do I need to be good with computers?",
     a: "No. If you can write an email you can make a book here. You type, pick a look from the menu and press export. There is no software to download: it installs straight from your browser.",
@@ -212,7 +216,7 @@ const FAQ = [
   },
   {
     q: "What is the free author website?",
-    a: "Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. To use your own domain, like yourname.com, upgrade to Author Site Pro from the studio for $10 a month, or $96 a year with a free .com for the first year. Pro also adds analytics, with newsletters and direct ebook sales coming soon.",
+    a: `Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. To use your own domain, like yourname.com, upgrade to Author Site Pro from the studio for $10 a month, or $96 a year ${freeCom}. Pro also adds analytics, with newsletters and direct ebook sales coming soon.`,
   },
   {
     q: "Can I bring books I already published?",
@@ -233,7 +237,7 @@ const FAQ = [
 ];
 
 /** What search engines read about the product, price and common questions. */
-const STRUCTURED = [
+const structuredFor = (faq: ReturnType<typeof faqFor>) => [
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -250,16 +254,18 @@ const STRUCTURED = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   },
 ];
 
 export default async function Home() {
   const site = await getSite();
+  const freeCom = freeComText(await freeDomainsOpen());
+  const FAQ = faqFor(freeCom);
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredFor(FAQ)).replace(/</g, "\\u003c") }} />
       <Intro name="Jollof Pages" />
       <SiteHeader name="Jollof Pages" overHero />
       <ScrollFx />
@@ -743,7 +749,7 @@ export default async function Home() {
               <div>
                 <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Optional upgrade</p>
                 <p className="wide mt-1 text-[1.5rem] font-bold">Author Site Pro</p>
-                <p className="mt-1 max-w-[52ch]">Your author website on your own domain, like yourname.com, with analytics. Newsletters and direct ebook sales are coming soon. $10 a month, or $96 a year with a free .com for the first year.</p>
+                <p className="mt-1 max-w-[52ch]">Your author website on your own domain, like yourname.com, with analytics. Newsletters and direct ebook sales are coming soon. $10 a month, or $96 a year {freeCom}.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
