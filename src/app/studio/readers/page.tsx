@@ -11,6 +11,7 @@ import { useProStatus } from "@/components/studio/pro-panel";
 import { errorMessage, pb } from "@/lib/pb";
 import { userId } from "@/lib/studio";
 import { EMAIL_PACKS, allowanceLeft, type EmailQuota } from "@/lib/email-quota";
+import type { MailAccount } from "@/lib/mail-account";
 
 interface Reader {
   id: string;
@@ -39,11 +40,15 @@ export default function ReadersPage() {
   const [open, setOpen] = useState<Letter | null>(null);
   const { status } = useProStatus();
   const [quota, setQuota] = useState<EmailQuota | null>(null);
+  const [account, setAccount] = useState<MailAccount | null>(null);
 
   const load = useCallback(() => {
     pb()
       .collection("subscribers")
-      .getFullList<Reader>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-created" })
+      .getFullList<Reader>({
+        filter: pb().filter("owner = {:u}", { u: userId() }),
+        sort: "-created",
+      })
       .then(setReaders)
       .catch(() => undefined);
     pb()
@@ -51,15 +56,24 @@ export default function ReadersPage() {
       .getFullList<Letter>({ sort: "-updated" })
       .then(setLetters)
       .catch(() => undefined);
-    fetch("/api/newsletters/quota", { headers: { Authorization: pb().authStore.token } })
+    fetch("/api/newsletters/quota", {
+      headers: { Authorization: pb().authStore.token },
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((q: EmailQuota | null) => q && setQuota(q))
+      .catch(() => undefined);
+    fetch("/api/newsletters/account", {
+      headers: { Authorization: pb().authStore.token },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((a: MailAccount | null) => a && setAccount(a))
       .catch(() => undefined);
   }, []);
   useEffect(load, [load]);
 
   const active = readers.filter((r) => !r.unsubscribed);
-  const canSend = !!status?.pro && !!status?.mail;
+  const ownReady = !!account?.verified;
+  const canSend = !!status?.pro && (!!status?.mail || ownReady);
 
   return (
     <>
@@ -70,10 +84,11 @@ export default function ReadersPage() {
         <Panel title="Newsletters" description="Write to everyone on your list. Each email carries an unsubscribe link, and replies come to you.">
           {!status?.pro ? (
             <p className="rounded-md bg-muted p-3 text-sm">Newsletters come with Author Site Pro (Website page). You can write drafts now.</p>
-          ) : !status.mail ? (
-            <p className="rounded-md bg-muted p-3 text-sm">Sending is being set up on the server. You can write drafts now.</p>
+          ) : !status.mail && !ownReady ? (
+            <p className="rounded-md bg-muted p-3 text-sm">Connect your free Resend account below to start sending. You can write drafts now.</p>
           ) : null}
-          {status?.pro && quota && <EmailAllowance quota={quota} onChange={setQuota} />}
+          {status?.pro && quota && !ownReady && <EmailAllowance quota={quota} onChange={setQuota} />}
+          {status?.pro && account && <OwnSending account={account} onChange={setAccount} />}
           {open ? (
             <Composer letter={open} readers={active.length} canSend={canSend} onClose={() => (setOpen(null), load())} />
           ) : (
@@ -81,7 +96,12 @@ export default function ReadersPage() {
               <div>
                 <Button
                   onClick={async () => {
-                    const l = await pb().collection("newsletters").create<Letter>({ owner: userId(), subject: "", body: "", status: "draft" });
+                    const l = await pb().collection("newsletters").create<Letter>({
+                      owner: userId(),
+                      subject: "",
+                      body: "",
+                      status: "draft",
+                    });
                     setOpen(l);
                   }}
                 >
@@ -94,7 +114,13 @@ export default function ReadersPage() {
                     <button type="button" onClick={() => setOpen(l)} className="flex w-full items-center justify-between gap-3 rounded-md bg-card p-3 text-left hover:bg-muted">
                       <span className="font-medium">{l.subject || "Untitled draft"}</span>
                       <span className="text-sm text-soft">
-                        {l.status === "sent" ? `Sent to ${l.sent_count} on ${l.sent_at.slice(0, 10)}` : l.status === "failed" ? `Stopped after ${l.sent_count}: ${l.error}` : l.status === "sending" ? "Sending…" : "Draft"}
+                        {l.status === "sent"
+                          ? `Sent to ${l.sent_count} on ${l.sent_at.slice(0, 10)}`
+                          : l.status === "failed"
+                            ? `Stopped after ${l.sent_count}: ${l.error}`
+                            : l.status === "sending"
+                              ? "Sending…"
+                              : "Draft"}
                       </span>
                     </button>
                   </li>
@@ -159,7 +185,14 @@ function EmailAllowance({ quota, onChange }: { quota: EmailQuota; onChange: (q: 
       queueMicrotask(() => setMsg("Payment cancelled. Nothing was charged."));
       return;
     }
-    fetch("/api/newsletters/quota", { method: "POST", headers: { Authorization: pb().authStore.token, "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: session }) })
+    fetch("/api/newsletters/quota", {
+      method: "POST",
+      headers: {
+        Authorization: pb().authStore.token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sessionId: session }),
+    })
       .then((r) => r.json())
       .then((out: { paid?: boolean; quota?: EmailQuota; error?: string }) => {
         if (out.quota) onChange(out.quota);
@@ -172,7 +205,14 @@ function EmailAllowance({ quota, onChange }: { quota: EmailQuota; onChange: (q: 
     setBusy(pack);
     setMsg("");
     try {
-      const res = await fetch("/api/newsletters/topup", { method: "POST", headers: { Authorization: pb().authStore.token, "Content-Type": "application/json" }, body: JSON.stringify({ pack }) });
+      const res = await fetch("/api/newsletters/topup", {
+        method: "POST",
+        headers: {
+          Authorization: pb().authStore.token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pack }),
+      });
       const out = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !out.url) throw new Error(out.error);
       window.location.assign(out.url);
@@ -196,15 +236,162 @@ function EmailAllowance({ quota, onChange }: { quota: EmailQuota; onChange: (q: 
       <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Allowance used">
         <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
       </div>
-      <p className="text-[13px] text-soft">Each reader counts as one email per newsletter. Extra emails are used after your monthly allowance, and they never expire.</p>
-      <div className="flex flex-wrap gap-2">
-        {EMAIL_PACKS.map((p) => (
-          <Button key={p.id} variant="outline" size="sm" disabled={!!busy} onClick={() => buy(p.id)}>
-            {busy === p.id ? "Opening checkout…" : `Buy ${n(p.emails)} emails, ${p.label}`}
+      <p className="text-[13px] text-soft">
+        Each reader counts as one email per newsletter.{" "}
+        {quota.packs ? "Extra emails are used after your monthly allowance, and they never expire." : "For more, connect your own free Resend account below: it has its own 3,000 emails a month."}
+      </p>
+      {quota.packs && (
+        <div className="flex flex-wrap gap-2">
+          {EMAIL_PACKS.map((p) => (
+            <Button key={p.id} variant="outline" size="sm" disabled={!!busy} onClick={() => buy(p.id)}>
+              {busy === p.id ? "Opening checkout…" : `Buy ${n(p.emails)} emails, ${p.label}`}
+            </Button>
+          ))}
+        </div>
+      )}
+      {msg && (
+        <p className="text-sm" role="status">
+          {msg}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** The author's own free Resend account: key, sending domain, the DNS records to add, and a check. */
+function OwnSending({ account, onChange }: { account: MailAccount; onChange: (a: MailAccount) => void }) {
+  const [key, setKey] = useState("");
+  const [domain, setDomain] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function call(method: "POST" | "DELETE", body?: unknown) {
+    setBusy(true);
+    setMsg("");
+    try {
+      const res = await fetch("/api/newsletters/account", {
+        method,
+        headers: {
+          Authorization: pb().authStore.token,
+          "Content-Type": "application/json",
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const out = (await res.json()) as MailAccount & { error?: string };
+      if (!res.ok) throw new Error(out.error);
+      onChange(out);
+      setKey("");
+      return out;
+    } catch (e) {
+      setMsg(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!account.connected)
+    return (
+      <form
+        className="grid gap-3 rounded-md bg-card p-4"
+        aria-label="Your own free sending"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void call("POST", { key, domain });
+        }}
+      >
+        <div>
+          <p className="font-medium">Send on your own free Resend account</p>
+          <p className="text-[13px] text-soft">
+            Every Resend account comes with 3,000 free emails a month. Sign up at{" "}
+            <a className="underline" href="https://resend.com/signup" target="_blank" rel="noreferrer">
+              resend.com
+            </a>
+            , create an API key with <b>Full access</b>, and paste it here with a domain you own. Watch “Send newsletters from your own free account” on the Learn page for every click.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="rs-key">Resend API key</Label>
+            <Input id="rs-key" type="password" autoComplete="off" placeholder="re_…" value={key} onChange={(e) => setKey(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="rs-domain">Send from this domain</Label>
+            <Input id="rs-domain" placeholder="mail.yourname.com" value={domain} onChange={(e) => setDomain(e.target.value)} />
+          </div>
+        </div>
+        <div>
+          <Button type="submit" disabled={busy || !key.trim() || !domain.trim()}>
+            {busy ? "Connecting…" : "Connect"}
           </Button>
-        ))}
+        </div>
+        {msg && (
+          <p className="text-sm text-destructive" role="alert">
+            {msg}
+          </p>
+        )}
+      </form>
+    );
+
+  return (
+    <div className="grid gap-3 rounded-md bg-card p-4" aria-label="Your own free sending">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-medium">{account.verified ? "Sending on your own Resend account" : "Almost there: add these records where your domain’s DNS lives"}</p>
+        <span className="text-sm text-soft">
+          {account.domain} · {account.keyHint}
+        </span>
       </div>
-      {msg && <p className="text-sm" role="status">{msg}</p>}
+      {account.verified ? (
+        <p className="text-[13px] text-soft">
+          Newsletters go out from {account.fromLocal}@{account.domain} on your free 3,000 a month. Replies still come to you.
+        </p>
+      ) : (
+        <>
+          <p className="text-[13px] text-soft">Copy each record into your domain’s DNS settings (in Cloudflare, turn the proxy off). Then click Check. It can take a few minutes, sometimes an hour.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[13px]">
+              <thead className="text-soft">
+                <tr>
+                  <th className="py-1 pr-4 font-normal">Type</th>
+                  <th className="py-1 pr-3 font-normal">Name</th>
+                  <th className="py-1 pr-3 font-normal">Value</th>
+                  <th className="py-1 pr-3 font-normal">Priority</th>
+                  <th className="py-1 font-normal">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(account.records ?? []).map((r, i) => (
+                  <tr key={i} className="border-t border-border align-top">
+                    <td className="py-1.5 pr-4">{r.type}</td>
+                    <td className="py-1.5 pr-3 font-mono">{r.name}</td>
+                    <td className="max-w-[22rem] break-all py-1.5 pr-3 font-mono">
+                      <button type="button" className="text-left hover:underline" title="Copy" onClick={() => void navigator.clipboard?.writeText(r.value)}>
+                        {r.value}
+                      </button>
+                    </td>
+                    <td className="py-1.5 pr-3">{r.priority ?? ""}</td>
+                    <td className="py-1.5">{r.status ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {!account.verified && (
+          <Button size="sm" disabled={busy} onClick={() => void call("POST", { check: true }).then((a) => a && !a.verified && setMsg("Not verified yet. Give it a few minutes and check again."))}>
+            {busy ? "Checking…" : "Check"}
+          </Button>
+        )}
+        <Button size="sm" variant="ghost" disabled={busy} onClick={() => void call("DELETE")}>
+          Disconnect
+        </Button>
+      </div>
+      {msg && (
+        <p className="text-sm" role="status">
+          {msg}
+        </p>
+      )}
     </div>
   );
 }
@@ -227,8 +414,19 @@ function Composer({ letter, readers, canSend, onClose }: { letter: Letter; reade
     setMsg("");
     try {
       await save();
-      const res = await fetch("/api/newsletters/send", { method: "POST", headers: { Authorization: pb().authStore.token, "Content-Type": "application/json" }, body: JSON.stringify({ id: letter.id, test }) });
-      const out = (await res.json()) as { sent?: number; to?: string; error?: string };
+      const res = await fetch("/api/newsletters/send", {
+        method: "POST",
+        headers: {
+          Authorization: pb().authStore.token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: letter.id, test }),
+      });
+      const out = (await res.json()) as {
+        sent?: number;
+        to?: string;
+        error?: string;
+      };
       if (!res.ok) throw new Error(out.error);
       if (test) setMsg(`Test sent to ${out.to}.`);
       else onClose();

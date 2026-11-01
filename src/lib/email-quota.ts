@@ -16,7 +16,11 @@ export const EMAIL_PACKS: EmailPack[] = [
   { id: "e100k", emails: 100_000, cents: 5400, label: "$54" },
 ];
 
-export const DEFAULT_MONTHLY_EMAILS = 5000;
+/**
+ * Small while the shared account is on Resend's free plan (3,000 a month for everyone). Authors
+ * who connect their own free Resend account send on that instead and are not limited here.
+ */
+export const DEFAULT_MONTHLY_EMAILS = 300;
 
 export function monthlyAllowance(raw: string | undefined = process.env.NEWSLETTER_MONTHLY_EMAILS): number {
   const n = Number(raw);
@@ -40,6 +44,8 @@ export interface EmailQuota {
   /** ISO date the allowance refills */
   resets: string;
   unlimited?: boolean;
+  /** extra emails are on sale (NEWSLETTER_SELL_EMAILS=1) */
+  packs?: boolean;
 }
 
 export const allowanceLeft = (q: EmailQuota) => Math.max(0, q.allowance - q.used);

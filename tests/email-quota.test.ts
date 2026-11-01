@@ -28,6 +28,7 @@ describe("newsletter allowance", () => {
     expect(monthlyAllowance(undefined)).toBe(DEFAULT_MONTHLY_EMAILS);
     expect(monthlyAllowance("")).toBe(DEFAULT_MONTHLY_EMAILS);
     expect(monthlyAllowance("12000")).toBe(12000);
+    expect(DEFAULT_MONTHLY_EMAILS).toBeLessThanOrEqual(3000);
     expect(monthlyAllowance("lots")).toBe(DEFAULT_MONTHLY_EMAILS);
   });
 

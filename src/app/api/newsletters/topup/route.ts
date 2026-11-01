@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   const { pack: packId } = (await req.json().catch(() => ({}))) as { pack?: string };
   const pack = EMAIL_PACKS.find((p) => p.id === packId);
   if (!pack) return NextResponse.json({ error: "Pick a pack of emails." }, { status: 400 });
+  if (process.env.NEWSLETTER_SELL_EMAILS !== "1") return NextResponse.json({ error: "Extra emails are not on sale yet." }, { status: 403 });
   if (!stripeConfigured()) return NextResponse.json({ error: "Payments are not set up yet." }, { status: 503 });
   try {
     const back = `${publicOrigin(req)}/studio/readers`;

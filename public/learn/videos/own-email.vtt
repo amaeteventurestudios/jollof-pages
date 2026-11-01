@@ -1,0 +1,41 @@
+WEBVTT
+
+1
+00:00:00.004 --> 00:00:07.643
+Send newsletters from your own free account
+
+2
+00:00:14.285 --> 00:00:19.130
+Sign up at resend.com
+
+3
+00:00:19.637 --> 00:00:27.703
+Make an API key
+
+4
+00:00:28.215 --> 00:00:33.956
+Give it Full access
+
+5
+00:00:08.153 --> 00:00:34.462
+Newsletters can go out on your own free Resend account. It comes with 3,000 emails a month.
+
+6
+00:00:34.464 --> 00:00:40.568
+Back in the studio, open Readers and find Send on your own free Resend account.
+
+7
+00:00:40.570 --> 00:00:55.144
+Paste your key, then type a domain you own. A mail address on it works well, like mail.yourname.com.
+
+8
+00:00:55.146 --> 00:01:04.749
+Resend gives you three DNS records. Copy each one into your domain's DNS settings. In Cloudflare, turn the proxy off.
+
+9
+00:01:04.751 --> 00:01:11.702
+Then click Check. Records can take a few minutes to show up.
+
+10
+00:01:11.705 --> 00:01:17.107
+Verified. Your newsletters now go out from your own address, and replies still come to you.

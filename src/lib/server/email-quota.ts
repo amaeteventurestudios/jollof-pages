@@ -17,7 +17,7 @@ export async function emailQuota(user: { id: string; email: string }, now = new 
   if (isFree(user.email)) return { allowance, used: 0, extra: 0, resets, unlimited: true };
   const [letters, ledger] = await Promise.all([
     pb.collection("newsletters").getFullList<{ sent_count: number; from_extra: number }>({
-      filter: pb.filter("owner = {:u} && sent_at >= {:s} && sent_count > 0", { u: user.id, s: pbDate(start) }),
+      filter: pb.filter("owner = {:u} && sent_at >= {:s} && sent_count > 0 && own_account != true", { u: user.id, s: pbDate(start) }),
       fields: "sent_count,from_extra",
     }),
     pb.collection("email_ledger").getFullList<{ delta: number }>({ filter: pb.filter("owner = {:u}", { u: user.id }), fields: "delta" }),
@@ -25,7 +25,7 @@ export async function emailQuota(user: { id: string; email: string }, now = new 
   // emails paid for from bought ones do not count against the allowance
   const used = letters.reduce((s, l) => s + Math.max(0, (l.sent_count || 0) - (l.from_extra || 0)), 0);
   const extra = Math.max(0, ledger.reduce((s, r) => s + (r.delta || 0), 0));
-  return { allowance, used, extra, resets };
+  return { allowance, used, extra, resets, packs: process.env.NEWSLETTER_SELL_EMAILS === "1" };
 }
 
 /** Credits a paid Checkout session for extra emails once. Returns false when it was already credited. */

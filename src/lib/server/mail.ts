@@ -10,6 +10,12 @@ export function mailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.MAIL_FROM_DOMAIN);
 }
 
+/** An author's own Resend account; without one, mail goes out on the publisher's account. */
+export interface Sender {
+  key: string;
+  domain: string;
+}
+
 export interface Mail {
   to: string;
   subject: string;
@@ -21,11 +27,11 @@ export interface Mail {
   unsubscribeUrl?: string;
 }
 
-function payload(m: Mail) {
+function payload(m: Mail, sender?: Sender) {
   const local = (m.fromLocal || "books").replace(/[^a-z0-9.-]/gi, "") || "books";
   const name = m.fromName.replace(/["<>\r\n]/g, "").slice(0, 80);
   return {
-    from: `"${name}" <${local}@${process.env.MAIL_FROM_DOMAIN}>`,
+    from: `"${name}" <${local}@${sender?.domain ?? process.env.MAIL_FROM_DOMAIN}>`,
     to: [m.to],
     subject: m.subject,
     html: m.html,
@@ -35,26 +41,26 @@ function payload(m: Mail) {
   };
 }
 
-async function post(path: string, body: unknown): Promise<void> {
+/** Calls Resend's API with the publisher's key, or with `key` for an author's own account. */
+export async function resend<T = unknown>(path: string, init: { method?: string; body?: unknown; key?: string } = {}): Promise<T> {
   const res = await fetch(`${process.env.RESEND_API_URL || "https://api.resend.com"}/${path}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    method: init.method ?? (init.body === undefined ? "GET" : "POST"),
+    headers: { Authorization: `Bearer ${init.key ?? process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
     signal: AbortSignal.timeout(30000),
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(`Email: ${err.message ?? res.status}`);
-  }
+  const out = (await res.json().catch(() => ({}))) as T & { message?: string };
+  if (!res.ok) throw new Error(`Email: ${out.message ?? res.status}`);
+  return out;
 }
 
-export async function sendMail(m: Mail): Promise<void> {
-  await post("emails", payload(m));
+export async function sendMail(m: Mail, sender?: Sender): Promise<void> {
+  await resend("emails", { body: payload(m, sender), key: sender?.key });
 }
 
 /** Up to 100 per request, which is Resend's batch limit. */
-export async function sendBatch(mails: Mail[]): Promise<void> {
-  for (let i = 0; i < mails.length; i += 100) await post("emails/batch", mails.slice(i, i + 100).map(payload));
+export async function sendBatch(mails: Mail[], sender?: Sender): Promise<void> {
+  for (let i = 0; i < mails.length; i += 100) await resend("emails/batch", { body: mails.slice(i, i + 100).map((m) => payload(m, sender)), key: sender?.key });
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

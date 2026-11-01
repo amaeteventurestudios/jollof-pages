@@ -120,9 +120,15 @@ Sent from `<subdomain>@MAIL_FROM_DOMAIN` with replies going to the author's own 
 unsubscribe link and header. In Resend, add `MAIL_FROM_DOMAIN` (Domains → Add) and put the DNS records
 it shows into Cloudflare (DNS only).
 
-All authors send through the one Resend account, so each Pro author has a monthly allowance
-(`NEWSLETTER_MONTHLY_EMAILS`, default 5,000; one email per reader per send) that refills on the 1st
-(UTC). Use is summed from that month's sent newsletters. On top of it authors can buy packs of extra
+Authors can connect their own free Resend account on the Readers page (key with Full access plus
+a domain they own; the studio adds the domain in their account and shows the DNS records). Once it
+is verified their newsletters go out on it, from `news@<their domain>`, and don't touch the shared
+allowance. Keys are sealed (`secret-box.ts`) in the server-only `mail_accounts` collection. The
+Learn video `own-email` walks through it.
+
+Everyone else sends through the publisher's one Resend account, so each Pro author has a monthly
+allowance (`NEWSLETTER_MONTHLY_EMAILS`, default 300 to fit Resend's free plan; one email per reader per send) that refills on the 1st
+(UTC). Use is summed from that month's sent newsletters. With `NEWSLETTER_SELL_EMAILS=1` authors can also buy packs of extra
 emails (`EMAIL_PACKS` in `src/lib/email-quota.ts`: 10,000 for $6, 100,000 for $54) through Stripe
 Checkout (`kind=email-credits`); bought emails live in `email_ledger`, never expire and are used
 after the allowance. A send that does not fit is refused before anything goes out. Accounts in
