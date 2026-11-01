@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
 import { toWebp } from "@/lib/webp";
+import { RefitCover, type RefitResult } from "./refit-cover";
 
 function dataUrlToBlob(url: string): Blob {
   const [head, b64] = url.split(",");
@@ -161,6 +162,19 @@ export function CoverTab({ ws }: { ws: Workspace }) {
     }
   }
 
+  /** An existing wrap, cut into its back and front, becomes this cover's artwork round a new spine. */
+  async function refit(r: RefitResult) {
+    const asset = async (file: File, alt: string) => {
+      const rec = await pb()
+        .collection("assets")
+        .create({ owner: userId(), book: book.id, file: await toWebp(file), alt });
+      return fileUrl(rec, rec.file);
+    };
+    const [imageUrl, backImageUrl] = await Promise.all([asset(r.front, "Front cover"), asset(r.back, "Back cover")]);
+    update({ imageUrl, backImageUrl, template: "art", frontText: false, showBlurb: false, ...(r.spineBg ? { spineBg: r.spineBg, fg: r.spineInk } : {}) });
+    setMsg(`Your cover is refitted round a ${inches(g.spine, 3)} spine for ${pages} pages. Check it below, then export the cover PDF.`);
+  }
+
   async function uploadOwn(field: "cover" | "cover_full" | "cover_hardcover", file: File) {
     setBusy(field);
     try {
@@ -297,6 +311,8 @@ export function CoverTab({ ws }: { ws: Workspace }) {
             </div>
           </div>
         )}
+
+        {wrap && <RefitCover g={g} trimId={edition.trim} paper={edition.paper} onApply={refit} />}
 
         <Button variant="outline" onClick={() => document.getElementById("ai-artwork")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
           <Sparkles className="text-primary" /> Make artwork with AI
