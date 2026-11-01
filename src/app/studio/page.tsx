@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowRight, ArrowUp, BookPlus, FileUp, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
+import { Welcome } from "@/components/studio/welcome";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,7 @@ export default function StudioHome() {
           ))}
         </dl>
 
+        <Welcome />
         <TesterNote />
         <LearnCard />
 

@@ -30,12 +30,12 @@ export async function getSite(): Promise<SiteSettings | null> {
   }
 }
 
-/** An author's site by its subdomain (ada for ada.jollofpages.com). */
+/** An author's site by its subdomain (ada for ada.jollofpages.com). Sites the admin took offline answer as missing. */
 export async function getSiteBySubdomain(sub: string): Promise<SiteSettings | null> {
   try {
     return await serverPb()
       .collection("site_settings")
-      .getFirstListItem<SiteSettings>(serverPb().filter("subdomain = {:s}", { s: sub.toLowerCase() }));
+      .getFirstListItem<SiteSettings>(serverPb().filter("subdomain = {:s} && offline != true", { s: sub.toLowerCase() }));
   } catch {
     return null;
   }
@@ -46,7 +46,7 @@ export async function getSiteByDomain(domain: string): Promise<SiteSettings | nu
   try {
     const site = await serverPb()
       .collection("site_settings")
-      .getFirstListItem<SiteSettings>(serverPb().filter("custom_domain = {:d}", { d: domain.toLowerCase() }));
+      .getFirstListItem<SiteSettings>(serverPb().filter("custom_domain = {:d} && offline != true", { d: domain.toLowerCase() }));
     // an own domain answers only while Author Site Pro is paid up
     return hasPro(site) ? site : null;
   } catch {

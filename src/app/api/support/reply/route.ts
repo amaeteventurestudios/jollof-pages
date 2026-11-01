@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     .collection("support_requests")
     .getOne<SupportRequest>(String(b.id ?? ""))
     .catch(() => null);
-  const team = isSupport(me.email);
+  const team = await isSupport(me.email);
   if (!r || (!team && r.owner !== me.id)) return NextResponse.json({ error: "Not found." }, { status: 404 });
   const text = String(b.text ?? "").trim().slice(0, 10000);
   const from: SupportReply["from"] = team && r.owner !== me.id ? "support" : "writer";

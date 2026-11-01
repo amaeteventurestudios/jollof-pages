@@ -10,6 +10,7 @@ import { countWords, type DocNode } from "@/lib/doc/types";
 import { withoutSuggestions } from "@/lib/doc/suggestions";
 import { LANGUAGES, languageName, planTranslation } from "@/lib/translate";
 import { slugify } from "@/lib/slug";
+import { trackUsage } from "@/lib/usage";
 import { uniqueSlug, userId } from "@/lib/studio";
 import type { Book, Chapter } from "@/lib/types";
 import { Panel } from "./details-tab";
@@ -123,6 +124,7 @@ export function TranslatePanel({ ws }: { ws: Workspace }) {
           });
       }
       setStep({ done: total, total, label: "" });
+      trackUsage("translate", lang);
       setMade({ id: created.id, title: created.title });
     } catch (e) {
       setError({ text: `${e instanceof Error ? e.message : String(e)} The ${name} copy so far is kept in your books; you can delete it and start again.`, setup: (e as { setup?: boolean }).setup });

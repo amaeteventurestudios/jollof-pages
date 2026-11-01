@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   if (!adminConfigured()) return NextResponse.json({ error: "Help requests are not set up on this server yet." }, { status: 503 });
-  const team = isSupport(me.email);
+  const team = await isSupport(me.email);
   const pb = await adminPb();
   const requests = await pb.collection("support_requests").getFullList<SupportRequest>({ sort: "-updated", ...(team ? {} : { filter: pb.filter("owner = {:o}", { o: me.id }) }) });
   return NextResponse.json({ team, requests });

@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   if (!adminConfigured()) return NextResponse.json({ error: "Feature requests are not set up on this server yet." }, { status: 503 });
   const pb = await adminPb();
   const rows = await pb.collection("feature_requests").getFullList<IdeaRow>({ sort: "-votes,-created" });
-  return NextResponse.json({ team: isSupport(me.email), ideas: rows.map((r) => toIdea(r, me.id)) });
+  return NextResponse.json({ team: await isSupport(me.email), ideas: rows.map((r) => toIdea(r, me.id)) });
 }
 
 /** POST { title, details }: a new idea, with the writer's own vote on it. */
