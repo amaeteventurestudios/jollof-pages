@@ -648,37 +648,40 @@ export default async function Home() {
             <SectionHead id="why-title" title="Why choose Jollof Pages" sub="Side by side with Atticus, row by row." />
           </div>
           <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1100px] px-4 sm:px-8" data-reveal>
-            <table className="compare w-full text-left">
-              <caption className="sr-only">Jollof Pages compared with Atticus</caption>
-              <thead>
-                <tr className="bg-char text-cream">
-                  <th scope="col" className="p-3 sm:p-5">
-                    <span className="sr-only">Feature</span>
-                  </th>
-                  <th scope="col" className="bg-jollof p-3 text-center font-bold sm:p-5">
-                    Jollof Pages
-                  </th>
-                  <th scope="col" className="p-3 text-center font-semibold sm:p-5">
-                    Atticus
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARE.map((c) => (
-                  <tr key={c.row} className="compare-row">
-                    <th scope="row" className="p-3 font-semibold sm:p-5">
-                      {c.row}
+            {/* on a narrow phone the table scrolls inside its box instead of widening the page */}
+            <div className="overflow-x-auto">
+              <table className="compare w-full text-left">
+                <caption className="sr-only">Jollof Pages compared with Atticus</caption>
+                <thead>
+                  <tr className="bg-char text-cream">
+                    <th scope="col" className="p-3 sm:p-5">
+                      <span className="sr-only">Feature</span>
                     </th>
-                    <td className="compare-us p-3 text-center font-semibold sm:p-5">
-                      <Cell v={c.us} />
-                    </td>
-                    <td className="p-3 text-center sm:p-5">
-                      <Cell v={c.them} />
-                    </td>
+                    <th scope="col" className="bg-jollof p-3 text-center font-bold sm:p-5">
+                      Jollof Pages
+                    </th>
+                    <th scope="col" className="p-3 text-center font-semibold sm:p-5">
+                      Atticus
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {COMPARE.map((c) => (
+                    <tr key={c.row} className="compare-row">
+                      <th scope="row" className="p-3 font-semibold sm:p-5">
+                        {c.row}
+                      </th>
+                      <td className="compare-us p-3 text-center font-semibold sm:p-5">
+                        <Cell v={c.us} />
+                      </td>
+                      <td className="p-3 text-center sm:p-5">
+                        <Cell v={c.them} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <p className="t-small mt-4 text-center text-char/75">Atticus details are taken from atticus.io in October 2026. A dash means the feature is not listed there.</p>
           </div>
         </section>
