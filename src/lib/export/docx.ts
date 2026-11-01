@@ -27,6 +27,7 @@ import { pageGeometry } from "../kdp";
 import { themeFor, sceneBreakGlyph } from "../themes";
 import { boxDef } from "../blocks";
 import { bookFormat } from "../types";
+import { pictureAlign, pictureWidth } from "../picture";
 import { runningHeads, type HeadContent, type RunningHeads } from "../running-heads";
 
 export interface DocxImage {
@@ -152,8 +153,11 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
           const type = img.mediaType.includes("png") ? "png" : img.mediaType.includes("gif") ? "gif" : "jpg";
           const w = img.width ?? 600;
           const h = img.height ?? 400;
-          const scale = Math.min(1, maxImgWidth / w);
-          out.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type, data: img.bytes, transformation: { width: w * scale, height: h * scale } })] }));
+          // the picture's width is a share of the text column, as in the editor
+          const scale = Math.min(1, (maxImgWidth * pictureWidth(n.attrs)) / 100 / w);
+          const align = pictureAlign(n.attrs?.layout);
+          const alignment = align === "left" ? AlignmentType.LEFT : align === "right" ? AlignmentType.RIGHT : AlignmentType.CENTER;
+          out.push(new Paragraph({ alignment, children: [new ImageRun({ type, data: img.bytes, transformation: { width: w * scale, height: h * scale } })] }));
           if (n.attrs?.title) out.push(new Paragraph({ style: "Caption", children: [new TextRun(String(n.attrs.title))] }));
           break;
         }

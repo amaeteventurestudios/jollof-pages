@@ -5,6 +5,14 @@ import { ContextMenu as CM } from "radix-ui";
 import type { Editor } from "@tiptap/react";
 import type { Node as PmNode } from "@tiptap/pm/model";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Captions,
+  Download,
+  ImageUp,
+  Maximize2,
+  Type,
   ArrowDown,
   ArrowUp,
   Asterisk,
@@ -54,6 +62,7 @@ import {
   ListPlus,
   ListX,
 } from "lucide-react";
+import { pictureWidth } from "@/lib/picture";
 import { nameOf } from "./block-handle";
 import { useBlockLibrary } from "./block-library";
 import { PromptDialog } from "./prompt-dialog";
@@ -66,7 +75,7 @@ import { BOXES } from "@/lib/blocks";
 import { cn } from "@/lib/utils";
 
 /** Dialogs and panels the menus open. The editor toolbar and block bar listen for these. */
-export type EditorOpen = "insert" | "link" | "footnote" | "endnote" | "image" | "emoji" | "style";
+export type EditorOpen = "insert" | "link" | "footnote" | "endnote" | "image" | "emoji" | "style" | "image-caption" | "image-alt" | "image-replace";
 export type EditorTool = "assistant" | "comments";
 
 /** Chapter-level tools the write tab lends the menu. */
@@ -116,6 +125,18 @@ function blockAt(editor: Editor, pos: number, inside: number): Block | null {
   return null;
 }
 
+/** The picture whose box was clicked, if any (a picture floated beside the text has no text position under it). */
+function pictureAt(editor: Editor, target: EventTarget | null): Block | null {
+  const dom = target instanceof Element ? target.closest(".node-image") : null;
+  if (!dom) return null;
+  let found: Block | null = null;
+  editor.state.doc.descendants((node, pos) => {
+    if (found) return false;
+    if (node.type.name === "image" && editor.view.nodeDOM(pos) === dom) found = { pos, node };
+  });
+  return found;
+}
+
 const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 const key = (k: string) => (mac ? `⌘${k}` : `Ctrl+${k}`);
 
@@ -161,6 +182,14 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
     before.current = null;
     const sel = editor.state.selection;
     let mode: Ctx["mode"] = "cursor";
+    const picture = pictureAt(editor, e.target) ?? (hit ? blockAt(editor, hit.pos, hit.inside) : null);
+    if (picture?.node.type.name === "image") {
+      // right-clicking a picture selects it, so its toolbar shows too
+      editor.commands.setNodeSelection(picture.pos);
+      setCtx({ mode, block: picture, words: editor.storage.characterCount.words() });
+      setToast("");
+      return;
+    }
     if (was && was.from !== was.to && hit && hit.pos >= was.from && hit.pos <= was.to) {
       // clicked inside the words already selected: keep them
       editor.commands.setTextSelection(was);
@@ -173,7 +202,8 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
     }
     const s = editor.state.selection;
     const words = mode === "text" ? countWords(editor.state.doc.textBetween(s.from, s.to, " ")) : editor.storage.characterCount.words();
-    setCtx({ mode, block: hit ? blockAt(editor, hit.pos, hit.inside) : null, words });
+    const block = hit ? blockAt(editor, hit.pos, hit.inside) : null;
+    setCtx({ mode, block, words });
     setToast("");
   }
 
@@ -225,6 +255,20 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
   const b = ctx?.block && (ctx.mode === "cursor" || !["paragraph", "heading"].includes(ctx.block.node.type.name)) ? ctx.block : null;
   const box = b?.node.type.name === "box";
   const textBlock = b && (b.node.type.name === "paragraph" || b.node.type.name === "heading");
+  const picture = b?.node.type.name === "image";
+  const setPicture = (attrs: Record<string, unknown>) => {
+    if (!b) return;
+    const n = editor.state.doc.nodeAt(b.pos);
+    if (n?.type.name !== "image") return;
+    editor.view.dispatch(editor.state.tr.setNodeMarkup(b.pos, undefined, { ...n.attrs, ...attrs }));
+    editor.chain().focus().setNodeSelection(b.pos).run();
+  };
+  const openPicture = (what: EditorOpen) => {
+    if (!b) return;
+    editor.commands.setNodeSelection(b.pos);
+    // after the menu closes and gives focus back
+    setTimeout(() => openInEditor(editor, what), 0);
+  };
   const blockOps = b && {
     duplicate: () => c().insertContentAt(b.pos + b.node.nodeSize, b.node.toJSON()).run(),
     copy: async () => {
@@ -392,6 +436,25 @@ export function EditorContextMenu({ editor, onTool, chapter, children }: { edito
                     </Sub>
                   ))}
                 </Sub>
+              )}
+              {picture && (
+                <>
+                  <Sub icon={AlignCenter} label="Place">
+                    <Item icon={AlignLeft} label="Left, text flows round it" on={() => setPicture({ layout: "left", width: Math.min(pictureWidth(b.node.attrs), 60) })} />
+                    <Item icon={AlignCenter} label="Centred" on={() => setPicture({ layout: "center", width: Math.min(pictureWidth(b.node.attrs), 85) })} />
+                    <Item icon={AlignRight} label="Right, text flows round it" on={() => setPicture({ layout: "right", width: Math.min(pictureWidth(b.node.attrs), 60) })} />
+                    <Item icon={Maximize2} label="Full width" on={() => setPicture({ layout: "full", width: 100 })} />
+                  </Sub>
+                  <Sub label="Size">
+                    {[25, 33, 50, 75, 100].map((w) => (
+                      <Item key={w} label={`${w}% of the text width`} on={() => setPicture({ width: w, layout: w === 100 ? "full" : b.node.attrs.layout === "full" ? "center" : b.node.attrs.layout })} />
+                    ))}
+                  </Sub>
+                  <Item icon={Captions} label={b.node.attrs.title ? "Edit caption…" : "Add a caption…"} on={() => openPicture("image-caption")} />
+                  <Item icon={Type} label="Alt text…" on={() => openPicture("image-alt")} />
+                  <Item icon={ImageUp} label="Replace picture…" on={() => openPicture("image-replace")} />
+                  <Item icon={Download} label="Open the original" on={() => window.open(String(b.node.attrs.src), "_blank", "noopener")} />
+                </>
               )}
               {textBlock && (
                 <Sub label="Turn into">

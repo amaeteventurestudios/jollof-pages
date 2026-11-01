@@ -28,6 +28,8 @@ import FindAndReplace from "@tiptap/extension-find-and-replace";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import { manuscriptExtensions } from "./editor-extensions";
+import { EditableBookImage } from "./image-view";
+import { PictureDialogs, pictureFiles, placePictures } from "./picture-tools";
 import { TrackChanges } from "./track-changes";
 import { CommentHighlights, setCommentHandler } from "./comment-highlights";
 import { colorFor, type LiveChapter } from "./use-live-chapter";
@@ -105,10 +107,16 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
     onChangeRef.current = onChange;
   }, [onChange]);
   const doc = live?.doc ?? null;
+  const editorRef = useRef<Editor | null>(null);
+  const bookIdRef = useRef(bookId);
+  useEffect(() => {
+    bookIdRef.current = bookId;
+  }, [bookId]);
+  const [pictureError, setPictureError] = useState("");
   const editor = useEditor(
     {
       extensions: [
-        ...manuscriptExtensions(readOnly ? "" : "Start writing…", { live: !!live }),
+        ...manuscriptExtensions(readOnly ? "" : "Start writing…", { live: !!live, image: EditableBookImage }),
         FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 120 }),
         TrackChanges.configure({ enabled: !!tracking, username: me.name, userId: me.id }),
         CommentHighlights,
@@ -120,6 +128,28 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
       immediatelyRender: false,
       editorProps: {
         attributes: { class: "prose-manuscript", "aria-label": "Manuscript", spellcheck: "true" },
+        handleDOMEvents: {
+          // a right-click on a picture opens our menu; ProseMirror's own click handling would take the focus back and shut it
+          mousedown: (_view, event) => event.button === 2 && event.target instanceof Element && !!event.target.closest(".node-image"),
+        },
+        // pictures dragged in from the computer, or pasted, land where they are dropped
+        handleDrop: (view, event, _slice, moved) => {
+          const files = moved ? [] : pictureFiles(event.dataTransfer);
+          const ed = editorRef.current;
+          if (!files.length || !ed || !view.editable) return false;
+          event.preventDefault();
+          const at = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          void placePictures(ed, files, at?.pos ?? view.state.selection.from, bookIdRef.current, setPictureError);
+          return true;
+        },
+        handlePaste: (view, event) => {
+          const files = pictureFiles(event.clipboardData);
+          const ed = editorRef.current;
+          if (!files.length || !ed || !view.editable) return false;
+          event.preventDefault();
+          void placePictures(ed, files, view.state.selection.from, bookIdRef.current, setPictureError);
+          return true;
+        },
       },
       onUpdate: ({ editor }) => {
         onChangeRef.current(editor.getJSON() as DocNode, editor.storage.characterCount.words());
@@ -131,6 +161,9 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
     if (editor) setCommentHandler(editor, (id) => onCommentClick?.(id));
   }, [editor, onCommentClick]);
   useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
+  useEffect(() => {
     onEditor?.(editor);
     return () => onEditor?.(null);
   }, [editor, onEditor]);
@@ -140,6 +173,15 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
       {blockCss && <style>{blockCss}</style>}
       {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} previewCss={previewCss} fontFamily={fontFamily} />}
       {editor && !readOnly && <BlockBar editor={editor} bookId={bookId} accent={accent ?? "#b0412e"} book={book ?? {}} onBookStyles={onBookStyles} />}
+      {pictureError && (
+        <p role="alert" className="flex items-center justify-between gap-3 border-b border-border bg-red-50 px-4 py-1.5 text-[13px] text-red-700 dark:bg-red-950 dark:text-red-200">
+          {pictureError}
+          <button type="button" className="underline" onClick={() => setPictureError("")}>
+            Dismiss
+          </button>
+        </p>
+      )}
+      {editor && !readOnly && <PictureDialogs editor={editor} bookId={bookId} />}
       {live && (live.problem || !live.synced) && (
         <p role="status" className="border-b border-border bg-paper-2 px-4 py-1.5 text-[13px] text-ink-2">
           {live.problem || "Connecting to the shared copy of this chapter…"}
@@ -471,7 +513,6 @@ function BlockBar({
       group: e.isActive("chat") ? !!e.getAttributes("chat").group : false,
       box: e.isActive("box") ? (e.getAttributes("box") as { variant: string; label: string | null; src: string | null }) : null,
       table: e.isActive("table"),
-      image: e.isActive("image") ? (e.getAttributes("image") as { layout: string }) : null,
       hr: e.isActive("horizontalRule") ? (e.getAttributes("horizontalRule") as { ornament: string | null }) : null,
       own: boxLookAtCursor(e),
     }),
@@ -482,7 +523,7 @@ function BlockBar({
   useEditorOpen(editor, (what) => {
     if (what === "style") setStyling(true);
   });
-  if (!s.msg && !s.box && !s.table && !s.image && !s.hr) return null;
+  if (!s.msg && !s.box && !s.table && !s.hr) return null;
   const btn = "h-7 shrink-0 rounded border border-border bg-card px-2 text-[13px] hover:border-primary";
   const sel = "h-7 shrink-0 rounded border border-border bg-card px-1.5 text-[13px]";
   const run = (f: (c: ReturnType<Editor["chain"]>) => ReturnType<Editor["chain"]>) => f(editor.chain().focus()).run();
@@ -573,20 +614,6 @@ function BlockBar({
           <button type="button" className={btn} onClick={() => run((c) => c.deleteTable())}>
             Delete table
           </button>
-        </>
-      )}
-      {s.image && (
-        <>
-          <label htmlFor="img-layout" className="shrink-0 font-medium text-ink-2">
-            Picture
-          </label>
-          <select id="img-layout" className={sel} value={s.image.layout || "center"} onChange={(e) => run((c) => c.updateAttributes("image", { layout: e.target.value }))}>
-            <option value="center">Centred</option>
-            <option value="small">Small, centred</option>
-            <option value="full">Full width</option>
-            <option value="left">Left, small</option>
-            <option value="right">Right, small</option>
-          </select>
         </>
       )}
       {s.hr && (

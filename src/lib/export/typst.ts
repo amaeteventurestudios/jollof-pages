@@ -10,6 +10,7 @@ import { backgroundArt, textOverBackground } from "../backgrounds";
 import { headTitles, runningHeads, type HeadContent } from "../running-heads";
 import { isLibraryBackground, libraryId } from "../background-ref";
 import { bookFormat, printEdition, type BookFormat } from "../types";
+import { pictureAlign, pictureWidth } from "../picture";
 
 /**
  * Print interior as Typst source. Typst (Apache-2.0) turns this into a press-ready PDF with
@@ -273,10 +274,9 @@ export function docToTypst(doc: DocNode | null | undefined, opts: DocTypstOption
         const path = imagePath(n.attrs?.src);
         if (!path) return "";
         const caption = n.attrs?.title ? `, caption: [#${str(String(n.attrs.title))}]` : "";
-        const layout = String(n.attrs?.layout ?? "center");
-        const width = layout === "full" ? "100%" : layout === "left" || layout === "right" || layout === "small" ? "45%" : "85%";
-        const fig = `figure(image(${str(path)}, width: ${width})${caption})`;
-        return layout === "left" || layout === "right" ? `#align(${layout}, ${fig})` : `#${fig}`;
+        const align = pictureAlign(n.attrs?.layout);
+        const fig = `figure(image(${str(path)}, width: ${pictureWidth(n.attrs)}%)${caption})`;
+        return align === "left" || align === "right" ? `#align(${align}, ${fig})` : `#${fig}`;
       }
       case "doc": {
         const out = blocks(n.content);

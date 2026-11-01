@@ -37,7 +37,7 @@ async function listAssets(): Promise<Asset[]> {
   });
 }
 
-async function uploadAssets(files: File[], bookId?: string): Promise<Asset[]> {
+export async function uploadAssets(files: File[], bookId?: string): Promise<Asset[]> {
   const out: Asset[] = [];
   for (const file of files) {
     if (!file.type.startsWith("image/")) continue;
