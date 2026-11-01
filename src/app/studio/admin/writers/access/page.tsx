@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { call, Loading, num, PageHead, Problem, Table, Td, Tile, useAdmin } from "@/components/admin/kit";
+import { call, Loading, num, PageHead, Pill, Problem, Table, Td, Tile, TONES, useAdmin } from "@/components/admin/kit";
 import { can } from "@/lib/admin-roles";
-import type { Writer } from "@/lib/admin";
+import type { AccessPerson } from "@/lib/studio-admin";
 import { cn } from "@/lib/utils";
 
-type App = keyof Writer["apps"];
+type App = keyof AccessPerson["apps"];
 const APPS: { id: App; label: string; about: string }[] = [
   { id: "studio", label: "Jollof Studio", about: "The design tool at studio.jollofpages.com. On for everyone unless you switch it off." },
   { id: "aiWriter", label: "AI writer", about: "The AI co-writing app. Off until you switch it on for someone." },
@@ -31,26 +31,33 @@ function Toggle({ on, busy, disabled, label, onChange }: { on: boolean; busy: bo
   );
 }
 
-/** Writers > Access: which apps each writer may use, one switch per app. */
+/**
+ * Writers > Access: which apps each person may use, one switch per app. Jollof Pages and Jollof
+ * Studio keep separate accounts, so the list joins them by email: everyone from both is here.
+ */
 export default function AccessPage() {
   const { home } = useAdmin();
   const manage = can(home.me.role, "writer.apps");
-  const [list, setList] = useState<Writer[] | null>(null);
+  const [list, setList] = useState<AccessPerson[] | null>(null);
+  const [studioError, setStudioError] = useState("");
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState("");
   useEffect(() => {
-    call<{ writers: Writer[] }>("/api/admin/writers")
-      .then((j) => setList(j.writers.filter((w) => w.access !== "collaborator")))
+    call<{ people: AccessPerson[]; studioError: string }>("/api/admin/access")
+      .then((j) => {
+        setList(j.people);
+        setStudioError(j.studioError);
+      })
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  const flip = async (w: Writer, app: App, on: boolean) => {
-    setBusy(`${w.id}-${app}`);
+  const flip = async (w: AccessPerson, app: App, on: boolean) => {
+    setBusy(`${w.email}-${app}`);
     setError("");
     try {
-      const j = await call<{ writer: Writer }>("/api/admin/writers", { id: w.id, action: "apps", app, on });
-      setList((all) => (all ?? []).map((x) => (x.id === w.id ? j.writer : x)));
+      await call("/api/admin/access", { email: w.email, app, on });
+      setList((all) => (all ?? []).map((x) => (x.email === w.email ? { ...x, apps: { ...x.apps, [app]: on } } : x)));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -64,29 +71,40 @@ export default function AccessPage() {
 
   return (
     <div className="grid gap-5">
-      <PageHead title="Access" sub="Switch Jollof Studio and the AI writer on or off for each writer. Every change goes in the audit log." />
+      <PageHead
+        title="Access"
+        sub="Everyone with a Jollof Pages or Jollof Studio account, matched by email. Switch Jollof Studio and the AI writer on or off for each one. Every change goes in the audit log."
+      />
       <div className="grid gap-3 md:grid-cols-2">
         {APPS.map((a) => (
           <Tile key={a.id} label={a.label} value={`${num(list.filter((w) => w.apps[a.id] && !w.suspended).length)} of ${num(list.length)}`} sub={a.about} />
         ))}
       </div>
+      {studioError && <Problem text={`Showing Jollof Pages accounts only. ${studioError}`} />}
       {error && <Problem text={error} />}
       {!manage && <p className="text-sm text-soft">Your role can see these switches but not change them.</p>}
       <div className="relative max-w-md">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-soft" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by email or name" aria-label="Search writers" className="pl-9" />
       </div>
-      <Table head={["Writer", "Jollof Studio", "AI writer", "Note"]} min={640} empty={!shown.length && "No writers match."}>
+      <Table head={["Person", "Has an account in", "Jollof Studio", "AI writer", "Note"]} min={760} empty={!shown.length && "No one matches."}>
         {shown.map((w) => (
-          <tr key={w.id} className="border-b border-border last:border-0">
+          <tr key={w.email} className="border-b border-border last:border-0">
             <Td>
               <p className="font-medium text-ink">{w.name || w.email.split("@")[0]}</p>
               <p className="text-[12.5px] text-soft">{w.email}</p>
             </Td>
+            <Td>
+              <span className="flex flex-wrap gap-1">
+                {w.writerId && <Pill cls={TONES.brand}>Jollof Pages</Pill>}
+                {w.inStudio && <Pill cls={TONES.info}>Jollof Studio</Pill>}
+                {!w.writerId && !w.inStudio && <Pill cls={TONES.quiet}>Neither yet</Pill>}
+              </span>
+            </Td>
             {APPS.map((a) => (
               <Td key={a.id}>
                 <span className="flex items-center gap-2">
-                  <Toggle on={w.apps[a.id]} busy={busy === `${w.id}-${a.id}`} disabled={!manage || w.suspended} label={`${a.label} for ${w.email}`} onChange={(on) => flip(w, a.id, on)} />
+                  <Toggle on={w.apps[a.id]} busy={busy === `${w.email}-${a.id}`} disabled={!manage || w.suspended} label={`${a.label} for ${w.email}`} onChange={(on) => flip(w, a.id, on)} />
                   <span className="text-[13px] text-ink-2">{w.apps[a.id] ? "On" : "Off"}</span>
                 </span>
               </Td>

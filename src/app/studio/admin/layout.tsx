@@ -16,6 +16,7 @@ import {
   Menu,
   Palette,
   ScrollText,
+  Shapes,
   ShieldCheck,
   Users,
   UsersRound,
@@ -97,6 +98,18 @@ const TREE: { heading: string; nodes: Node[] }[] = [
         ],
       },
       { id: "books", href: "/studio/admin/books", label: "Books", icon: BookCopy },
+      {
+        id: "studio",
+        href: "/studio/admin/studio",
+        label: "Jollof Studio",
+        icon: Shapes,
+        children: [
+          { label: "Overview", href: "/studio/admin/studio" },
+          { label: "People", href: "/studio/admin/studio?show=people" },
+          { label: "Designs", href: "/studio/admin/studio?show=designs" },
+          { label: "Access", href: "/studio/admin/writers/access" },
+        ],
+      },
     ],
   },
   {

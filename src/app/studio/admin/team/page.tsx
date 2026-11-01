@@ -28,6 +28,7 @@ const SECTION_LABEL: Record<Section, string> = {
   testers: "Testers",
   websites: "Websites",
   books: "Books",
+  studio: "Jollof Studio",
   money: "Money",
   support: "Support",
   team: "Team",

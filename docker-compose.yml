@@ -53,6 +53,7 @@ services:
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       SUPPORT_EMAILS: ${SUPPORT_EMAILS:-}
       APP_ACCESS_SECRET: ${APP_ACCESS_SECRET:-}
+      STUDIO_PB_URL: ${STUDIO_PB_URL:-}
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
       SUPPORT_ADDRESS: ${SUPPORT_ADDRESS:-}
       # writing assistant (docs/assistant.md): the publisher's own keys, for COVER_AI_FREE_EMAILS accounts only
