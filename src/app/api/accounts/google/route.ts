@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { brandOf } from "@/lib/server/brand";
 import { bearer } from "@/lib/server/load-book";
 import { adminPb, caller } from "@/lib/server/credits";
 import { allowSignup, signupMode, subdomainAvailability } from "@/lib/server/accounts";
@@ -47,7 +48,8 @@ export async function POST(req: Request) {
     const site = await pb.collection("site_settings").create({ owner: me.id, publisher_name: name, subdomain, email: "" });
     try {
       await pb.collection("authors").create({ owner: me.id, name, slug: slugify(name) || "author" });
-      await pb.collection("users").update(me.id, { name, ...(mode === "free" ? { access: "comp" } : {}) });
+      const brand = await brandOf(req);
+      await pb.collection("users").update(me.id, { name, ...(mode === "free" ? { access: "comp" } : {}), ...(brand ? { brand: brand.id } : {}) });
       if (invite) await admitTester(pb, invite, me.id);
     } catch (e) {
       await pb.collection("site_settings").delete(site.id).catch(() => undefined);
@@ -61,6 +63,7 @@ export async function POST(req: Request) {
       email: me.email,
       successUrl: `${origin}/studio?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/studio?studio=cancelled`,
+      brand: await brandOf(req),
     });
     return NextResponse.json({ ok: true, checkoutUrl: session.url });
   } catch (e) {

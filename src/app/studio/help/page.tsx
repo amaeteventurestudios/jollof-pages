@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BookOpenCheck, Check, ChevronDown, ClipboardCopy, FileText, Inbox, Lightbulb, LifeBuoy, Loader2, MessageSquare, Paperclip, Search, Send, X } from "lucide-react";
+import { replayWelcome } from "@/components/studio/welcome";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -80,6 +81,16 @@ export default function HelpPage() {
           <QuickLink href="#messages" icon={Inbox} title="Your tickets" text={requests ? `${mine.length} ${mine.length === 1 ? "ticket" : "tickets"}, ${mine.filter((r) => r.status === "answered").length} answered` : "Your tickets and our answers."} />
           <QuickLink href="/studio/ideas" icon={Lightbulb} title="Request a feature" text="Suggest what to build next and vote on ideas." />
         </div>
+        <p className="mt-3 text-sm text-soft">
+          New here?{" "}
+          <Link
+            href="/studio"
+            onClick={replayWelcome}
+            className="font-medium text-primary hover:underline"
+          >
+            Show the welcome tour again
+          </Link>
+        </p>
 
         <section aria-labelledby="faq" className="mt-12">
           <div className="flex items-baseline justify-between gap-4">

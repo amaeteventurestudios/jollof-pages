@@ -1,4 +1,5 @@
 import "server-only";
+import { roleOf } from "./admin";
 import { letterHtml, letterText, mailConfigured, sendMail } from "./mail";
 import { TICKET_FILES, ticketNo, topicLabel, type SupportRequest } from "../support";
 
@@ -13,8 +14,11 @@ export function supportTeam(): string[] {
     .filter(Boolean);
 }
 
-export function isSupport(email: string): boolean {
-  return supportTeam().includes(email.toLowerCase());
+/** The support team: SUPPORT_EMAILS, plus anyone on the admin Team as owner, admin or support. */
+export async function isSupport(email: string): Promise<boolean> {
+  if (supportTeam().includes(email.toLowerCase())) return true;
+  const role = await roleOf(email);
+  return role === "owner" || role === "admin" || role === "support";
 }
 
 /** The public address for support, used as the reply-to on every support email. */

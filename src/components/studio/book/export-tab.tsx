@@ -1,5 +1,6 @@
 "use client";
 
+import { trackUsage } from "@/lib/usage";
 import { useEffect, useState } from "react";
 import { BookOpen, BookMarked, Download, FileCode2, FileText, FileType2, Loader2, ShieldCheck, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
   const epub = () =>
     guard("epub", async () => {
       download(await buildEpubBytes(), `${name}.epub`, "application/epub+zip");
+      trackUsage("export", "epub");
       setMessage("EPUB downloaded. Upload it to KDP as your Kindle ebook manuscript.");
     });
 
@@ -82,6 +84,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
         ),
       );
       download(await buildDocx(input, sized), `${name}.docx`);
+      trackUsage("export", "docx");
       setMessage("Word file downloaded. Word will ask to update the contents field when you open it.");
     });
 
@@ -102,6 +105,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
       const pages = Number(res.headers.get("X-Page-Count") || 0);
       if (pages) ws.setBook((b) => (b ? (binding === "hardcover" ? { ...b, hardcover_page_count: pages } : { ...b, page_count: pages }) : b));
       const blob = await res.blob();
+      trackUsage("export", format === "typ" ? "typ" : `pdf-${binding}`);
       if (format === "typ") {
         download(blob, `${name}${binding === "hardcover" ? "-hardcover" : ""}.typ`);
         setMessage("Typst source downloaded. Compile it with: typst compile --font-path fonts book.typ");
@@ -126,6 +130,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
     guard("backup", async () => {
       const input = await exportInput(book.id);
       download(new Blob([JSON.stringify({ app: "jollof-pages", version: 1, exported: new Date().toISOString(), ...input }, null, 2)], { type: "application/json" }), `${name}-backup.json`);
+      trackUsage("export", "backup");
     });
 
   const spin = (id: string) => (busy === id ? <Loader2 className="animate-spin" /> : <Download />);
