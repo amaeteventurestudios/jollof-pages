@@ -8,7 +8,10 @@
  * EPUB and Word downloads. The print PDF reads WebP directly.
  */
 
-const CONVERT = new Set(["image/jpeg", "image/png"]);
+// GIFs become a still WebP of their first frame: print can't move, and Kindle and most ebook
+// readers don't play GIFs either. BMPs and TIFFs (where the browser reads them) are just large.
+const CONVERT = new Set(["image/jpeg", "image/png", "image/gif", "image/bmp", "image/tiff"]);
+const LOSSLESS = new Set(["image/png", "image/gif", "image/bmp"]);
 
 function canvasFor(w: number, h: number): OffscreenCanvas | HTMLCanvasElement {
   if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(w, h);
@@ -35,16 +38,16 @@ async function draw(blob: Blob): Promise<{ canvas: OffscreenCanvas | HTMLCanvasE
   return { canvas, ctx };
 }
 
-/** A JPEG or PNG as a WebP file with the same name. Anything else, or a browser that can't make WebP, gets the original back. */
+/** A JPEG, PNG, GIF, BMP or TIFF as a WebP file with the same name. Anything else, or a browser that can't make WebP, gets the original back. */
 export async function toWebp(file: File): Promise<File> {
   if (!CONVERT.has(file.type)) return file;
   try {
     const d = await draw(file);
     if (!d) return file;
-    const out = await encode(d.canvas, "image/webp", file.type === "image/png" ? 1 : 0.92);
+    const out = await encode(d.canvas, "image/webp", LOSSLESS.has(file.type) ? 1 : 0.92);
     // Safari before 17 quietly hands back a PNG instead of a WebP
     if (!out || out.type !== "image/webp") return file;
-    return new File([out], file.name.replace(/\.(jpe?g|png)$/i, "") + ".webp", { type: "image/webp", lastModified: file.lastModified });
+    return new File([out], file.name.replace(/\.(jpe?g|png|gif|bmp|tiff?)$/i, "") + ".webp", { type: "image/webp", lastModified: file.lastModified });
   } catch {
     return file;
   }

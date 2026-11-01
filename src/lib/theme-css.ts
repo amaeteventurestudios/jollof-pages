@@ -26,13 +26,14 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   if (o.scope) rules.push(`${o.scope} { font-family: ${theme.bodyCss}; line-height: ${lh}; }`);
   else rules.push(`body { font-family: ${theme.bodyCss}; line-height: ${lh}; margin: 0 5%; }`);
   const ts = textStyle(theme);
+  const widows = ts.widows === "off" ? "widows: 1; orphans: 1;" : `widows: ${ts.widows === "strict" ? 3 : 2}; orphans: ${ts.widows === "strict" ? 3 : 2};`;
   const justify = ts.justify ?? theme.indent;
   const hy = ts.hyphenate ? "auto" : "manual";
   add(
     "p",
     theme.indent
-      ? `margin: 0 0 ${ts.paraSpacing ?? 0}em; text-indent: ${ts.indentSize ?? 1.5}em; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`
-      : `margin: 0 0 ${ts.paraSpacing ?? 0.8}em; text-indent: 0; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`,
+      ? `margin: 0 0 ${ts.paraSpacing ?? 0}em; text-indent: ${ts.indentSize ?? 1.5}em; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy}; ${widows}`
+      : `margin: 0 0 ${ts.paraSpacing ?? 0.8}em; text-indent: 0; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy}; ${widows}`,
   );
   add("p.first, h2 + p, h3 + p, h4 + p, .scene-break + p, hr + p, blockquote + p, .callout + p, figure + p, ul + p, ol + p", "text-indent: 0;");
   add("p.blank", "text-indent: 0;");
@@ -112,10 +113,11 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   add(".scene-break.space", "margin: 0.6em 0;");
   add(".page-break", "page-break-after: always; break-after: page; height: 0;");
   add(".spacer", "display: block;");
+  // a picture's width comes from its own style (a share of the text column)
   add("figure.fig-left", "float: left; width: 42%; margin: 0.3em 1.2em 0.8em 0;");
   add("figure.fig-right", "float: right; width: 42%; margin: 0.3em 0 0.8em 1.2em;");
-  add("figure.fig-small", "width: 50%; margin-left: auto; margin-right: auto;");
-  add("figure.fig-full img", "width: 100%;");
+  add("figure.fig-center, figure.fig-small, figure.fig-full", "margin-left: auto; margin-right: auto;");
+  add("figure.fig-left img, figure.fig-right img, figure.fig-center img, figure.fig-small img, figure.fig-full img", "width: 100%;");
   add(".cols", "display: flex; gap: 1.4em; margin: 1.2em 0;");
   add(".cols > .col", "flex: 1 1 0; min-width: 0;");
   add(".cols p", "text-indent: 0;");
@@ -337,10 +339,14 @@ export function editorBlockCss(theme: InteriorTheme, scope = ".manuscript .Prose
   add(".page-break::after", "content: 'Page break'; position: absolute; top: -0.75em; left: 50%; transform: translateX(-50%); background: var(--background); padding: 0 0.6em; font-size: 0.75em; color: var(--soft); font-family: ui-sans-serif, sans-serif;");
   add(".spacer", "border: 1px dotted var(--paper-3); border-radius: 4px;");
   add(".ProseMirror-selectednode.page-break, .ProseMirror-selectednode.spacer", "outline: 2px solid var(--primary);");
-  add("img[data-layout='left']", "float: left; width: 42%; margin: 0.3em 1.2em 0.8em 0;");
-  add("img[data-layout='right']", "float: right; width: 42%; margin: 0.3em 0 0.8em 1.2em;");
-  add("img[data-layout='small']", "width: 50%;");
-  add("img[data-layout='full']", "width: 100%;");
+  add(".node-image", "margin: 1.2em auto; max-width: 100%; position: relative;");
+  add(".node-image[data-layout='left']", "float: left; margin: 0.3em 1.2em 0.8em 0;");
+  add(".node-image[data-layout='right']", "float: right; margin: 0.3em 0 0.8em 1.2em;");
+  add(".node-image.ProseMirror-selectednode", "outline: none;");
+  add("figure.jp-picture", "margin: 0; text-align: center; position: relative; max-width: none;");
+  add("figure.jp-picture img", "border-radius: 2px;");
+  add("figure.jp-picture.is-selected img", "outline: 2px solid var(--primary); outline-offset: 2px;");
+  add("figure.jp-picture figcaption", "font-size: 0.85em; font-style: italic; color: var(--soft); margin-top: 0.4em;");
   add(".endnote-ref::before", "content: '[endnote]';");
   add("hr[data-ornament]::after", "content: '✦ ' attr(data-ornament);");
   return r.join("\n");

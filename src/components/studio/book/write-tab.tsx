@@ -459,6 +459,7 @@ export function WriteTab({ ws }: { ws: Workspace }) {
   const headed = !!kind && !kind.smart && !kind.hideTitle && kind.id !== "part" && kind.layout !== "full_image";
   const [pickingImage, setPickingImage] = useState(false);
   const [bgOpen, setBgOpen] = useState(false);
+  const [headTitleOpen, setHeadTitleOpen] = useState(false);
   const [pickingBg, setPickingBg] = useState(false);
 
   return (
@@ -601,6 +602,9 @@ export function WriteTab({ ws }: { ws: Workspace }) {
                         <DropdownMenuCheckboxItem checked={!!opts.hideHeader} onCheckedChange={(v) => patchOptions({ hideHeader: !!v })}>
                           Hide running head
                         </DropdownMenuCheckboxItem>
+                        <DropdownMenuItem onSelect={() => setHeadTitleOpen(true)} disabled={!!opts.hideHeader}>
+                          {opts.runningTitle ? "Change running head title…" : "Shorter running head title…"}
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel>Contents and website</DropdownMenuLabel>
                         <DropdownMenuCheckboxItem checked={active.in_toc} onCheckedChange={(v) => patch({ in_toc: !!v })}>
@@ -839,6 +843,14 @@ export function WriteTab({ ws }: { ws: Workspace }) {
           <Preview book={book} chapters={chapters} chapterId={activeId} onSelect={select} />
         </aside>
       )}
+      <PromptDialog
+        open={headTitleOpen}
+        title="Running head title"
+        label="Shown at the top of this chapter's pages instead of its full title (leave empty to use the title)"
+        initial={opts.runningTitle ?? ""}
+        onClose={() => setHeadTitleOpen(false)}
+        onSubmit={(v) => patchOptions({ runningTitle: v.trim() || undefined })}
+      />
       <PromptDialog
         open={!!naming}
         title={naming?.field === "subtitle" ? "Chapter subtitle" : "Rename"}

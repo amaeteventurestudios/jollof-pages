@@ -1,4 +1,5 @@
 import { isSubhead, type DocMark, type DocNode } from "./types";
+import { pictureAlign, pictureWidth } from "../picture";
 import { boxDef, boxLabelColor, boxStyle, cleanLook, hasLook, presetOf } from "../blocks";
 import { boxCss, type BoxPalette } from "../theme-css";
 import { openingParagraph, paraCss, paraFormat } from "../paragraph";
@@ -208,8 +209,10 @@ export function docToHtml(doc: DocNode | null | undefined, opts: HtmlOptions): H
         const href = opts.imageHref ? opts.imageHref(src) : src;
         const alt = escapeHtml(String(n.attrs?.alt ?? ""));
         const caption = n.attrs?.title ? `<figcaption>${escapeHtml(String(n.attrs.title))}</figcaption>` : "";
-        const layout = ["left", "right", "full", "small"].includes(String(n.attrs?.layout)) ? ` class="fig-${n.attrs!.layout}"` : "";
-        return `<figure${layout}><img src="${escapeHtml(href)}" alt="${alt}"${epub ? "/" : ""}>${caption}</figure>`;
+        // left and right sit beside the text; centre and full stand on their own line
+        const align = pictureAlign(n.attrs?.layout);
+        const width = pictureWidth(n.attrs);
+        return `<figure class="fig-${align}" style="width: ${width}%"><img src="${escapeHtml(href)}" alt="${alt}"${epub ? "/" : ""}>${caption}</figure>`;
       }
       case "footnote": {
         if (n.attrs?.endnote) {

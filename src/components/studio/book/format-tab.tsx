@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/progress";
 import type { Workspace } from "./workspace";
 import { EditStyles } from "./edit-styles";
+import { HeadersFooters } from "./headers-footers";
 
 export function usePageCount(ws: Workspace, binding: Binding = "paperback"): { pages: number; estimated: boolean } {
   const f = bookFormat(ws.book);
@@ -341,6 +342,8 @@ export function FormatTab({ ws }: { ws: Workspace }) {
           </div>
         </section>
 
+        <HeadersFooters format={f} bookTitle={ws.book.title} author={ws.book.expand?.author?.name ?? ""} onChange={set} />
+
         <section className="grid gap-3 sm:grid-cols-2">
           <Toggle
             checked={f.chaptersOnRight}
@@ -368,7 +371,6 @@ export function FormatTab({ ws }: { ws: Workspace }) {
             label="Decorative chapter openings"
             hint={`Drop cap in the ebook${theme.leadIn ? " and small-caps lead-in in print" : ""}.`}
           />
-          <Toggle checked={f.runningHeads} onChange={(v) => set({ runningHeads: v })} label="Running heads" hint="Book title on left pages, chapter title on right pages." />
           <Toggle checked={f.printToc} onChange={(v) => set({ printToc: v })} label="Table of contents in print" hint="With page numbers. The ebook always has a linked contents." />
           <Toggle
             checked={f.tocSubheads}
