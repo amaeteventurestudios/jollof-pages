@@ -1,0 +1,336 @@
+/* Public site. Tokens and motion helpers; layout lives in Tailwind classes. */
+.site {
+  /* the pot: jollof red, the char at the bottom, scotch bonnet, plantain cream */
+  --jollof: #ad3a17;
+  --jollof-2: #c74a1d;
+  --pepper: #e0632a;
+  --char: #3a140a;
+  --char-2: #521d0e;
+  --bonnet: #f2b632;
+  --cream: #f7ecdf;
+  --cream-2: #efdcc6;
+  /* the page itself: cream by day, the char at the bottom of the pot by night */
+  --ground: var(--cream);
+  --ground-2: var(--cream-2);
+  --on-ground: var(--char);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --t-press: 140ms;
+  --t-hover: 220ms;
+  --t-reveal: 900ms;
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2.25rem, 1.2rem + 4vw, 5rem);
+  --step-display: clamp(2.5rem, 0.8rem + 5.3vw, 7rem);
+  background: var(--ground);
+  color: var(--on-ground);
+  font-size: var(--step-body);
+  line-height: 1.5;
+}
+[data-theme="dark"] .site {
+  --ground: #140805;
+  --ground-2: #1f0e08;
+  --on-ground: var(--cream);
+}
+.site .wide { font-stretch: 125%; font-variation-settings: "wdth" 125; }
+.site .t-small { font-size: var(--step-small); }
+.site .t-body { font-size: var(--step-body); }
+.site .t-lead { font-size: var(--step-lead); line-height: 1.35; }
+.site .t-head { font-size: var(--step-head); line-height: 1; letter-spacing: -0.02em; }
+.site .t-display { font-size: var(--step-display); line-height: 0.86; letter-spacing: -0.045em; font-weight: 700; }
+
+.site .btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.5rem;
+  padding: 0 1.75rem;
+  background: var(--bonnet);
+  color: var(--char);
+  font-weight: 600;
+  transition: transform var(--t-press) var(--ease-out), color var(--t-hover) ease;
+}
+/* the fill rises from below on hover, like sauce up the side of the pot */
+.site .btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--char);
+  transform: translateY(101%);
+  transition: transform 420ms var(--ease-out);
+}
+.site .btn .arrow { transition: transform 420ms var(--ease-out); }
+.site .btn:active { transform: scale(0.97); }
+.site .btn-ink { background: var(--on-ground); color: var(--ground); }
+.site .btn-ink::before { background: var(--jollof); }
+.site .btn-ghost { background: transparent; color: inherit; box-shadow: inset 0 0 0 2px currentColor; }
+.site .btn-ghost::before { background: var(--cream); }
+.site .link {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 0.07em;
+  transition: text-decoration-color var(--t-hover) ease, color var(--t-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .site .btn:hover { color: var(--cream); }
+  .site .btn:hover::before { transform: none; }
+  .site .btn:hover .arrow { transform: translateX(4px) rotate(-45deg); }
+  .site .btn-ghost:hover { color: var(--char); }
+  .site .link:hover { text-decoration-color: currentColor; }
+  .site .shelf-item:hover .shelf-cover { transform: translateY(-8px) rotate(-1.5deg); }
+}
+.site .shelf-cover { transition: transform 420ms var(--ease-out); }
+
+.site .leader {
+  flex: 1;
+  min-width: 1.5rem;
+  margin: 0 0.6rem 0.35em;
+  height: 4px;
+  background-image: radial-gradient(circle, currentColor 1.4px, transparent 1.6px);
+  opacity: 0.55;
+  background-size: 9px 4px;
+  background-position: 0 50%;
+  background-repeat: repeat-x;
+  align-self: flex-end;
+}
+
+/* the book as an object: front cover plus a spine whose depth is the real spine width */
+.site .book3d { perspective: 2200px; }
+.site .book3d-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateY(32deg) rotateX(3deg);
+  transition: transform 900ms var(--ease-out);
+}
+.site .book3d-face { position: absolute; inset: 0; backface-visibility: hidden; overflow: hidden; }
+.site .book3d-spine {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  transition: width 500ms var(--ease-out), left 500ms var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.site .book3d-spine { box-shadow: inset 4px 0 6px -3px rgba(255, 255, 255, 0.25), inset -6px 0 8px -4px rgba(0, 0, 0, 0.45); }
+/* page edges: fine lines of paper, slightly shaded towards the binding */
+.site .book3d-pages {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(60, 40, 20, 0.14) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 35%);
+  transition: width 500ms var(--ease-out), left 500ms var(--ease-out);
+}
+.site .book3d-top {
+  left: 0;
+  transform-origin: center bottom;
+  transform: rotateX(90deg);
+  background-image: repeating-linear-gradient(0deg, rgba(60, 40, 20, 0.14) 0 1px, transparent 1px 3px);
+}
+.site .book3d-back { position: absolute; inset: 0; backface-visibility: hidden; }
+.site .book3d-spine span {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* motion: content stays visible without scripting */
+@media (prefers-reduced-motion: no-preference) {
+  .js .site [data-rise] { opacity: 0; transform: translateY(20px); animation: jp-rise var(--t-reveal) var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+  .js .site [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); transition-delay: calc(var(--i, 0) * 75ms); }
+  .js .site [data-reveal].is-in { opacity: 1; transform: none; }
+  .js .site .book3d-enter { animation: jp-turn 1400ms var(--ease-soft) both; }
+}
+@keyframes jp-rise { to { opacity: 1; transform: none; } }
+@keyframes jp-turn { from { opacity: 0; transform: rotateY(62deg) rotateX(3deg) translateZ(-60px); } to { opacity: 1; transform: rotateY(32deg) rotateX(3deg); } }
+
+/* sample reader */
+.site .reader { font-size: 1.1875rem; }
+.site .reader .chapter-head { margin-top: 0; }
+
+/* ---------- patterns ---------- */
+.site .pattern-svg { inset: -240px 0 0 -240px; width: calc(100% + 240px); height: calc(100% + 240px); }
+@media (prefers-reduced-motion: no-preference) {
+  .site .pattern-drift { animation: jp-pattern 60s linear infinite; }
+}
+@keyframes jp-pattern { to { transform: translate(240px, 240px); } }
+
+/* ---------- header ---------- */
+.site .masthead { transition: background-color 400ms ease, color 400ms ease, transform 500ms var(--ease-out), backdrop-filter 400ms ease; }
+.site .masthead[data-solid="true"] { background: color-mix(in srgb, var(--ground) 82%, transparent); color: var(--on-ground); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.site .masthead[data-hidden="true"] { transform: translateY(-100%); }
+.site .menu-sheet { clip-path: circle(0% at calc(100% - 2.5rem) 2.5rem); transition: clip-path 700ms var(--ease-in-out); }
+.site .menu-sheet[data-open="true"] { clip-path: circle(150% at calc(100% - 2.5rem) 2.5rem); }
+.site .menu-sheet a { opacity: 0; transform: translateY(40px); transition: opacity 500ms var(--ease-out), transform 700ms var(--ease-out); transition-delay: calc(var(--i, 0) * 70ms + 200ms); }
+.site .menu-sheet[data-open="true"] a { opacity: 1; transform: none; }
+
+/* ---------- intro: the lid lifts ---------- */
+.site .intro { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .js .site .intro { display: grid; animation: jp-lid 1100ms var(--ease-in-out) 1500ms forwards; }
+  .js .site .intro .intro-word { animation: jp-word 900ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 110ms + 150ms); }
+  .js .site .intro .intro-bar { animation: jp-bar 1300ms var(--ease-in-out) 200ms both; }
+  .js.seen .site .intro { display: none; }
+}
+@keyframes jp-lid { to { clip-path: inset(0 0 100% 0); visibility: hidden; } }
+@keyframes jp-word { from { transform: translateY(110%) rotate(4deg); } to { transform: none; } }
+@keyframes jp-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- headline lines rise out of a mask ---------- */
+.site .line { display: block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; }
+.site .line > span { display: inline-block; }
+@media (prefers-reduced-motion: no-preference) {
+  .js .site .line > span { transform: translateY(105%); animation: jp-line 1100ms var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 120ms + var(--delay, 300ms)); }
+  .js.seen .site .line > span { --delay: 100ms; }
+}
+@keyframes jp-line { to { transform: none; } }
+
+/* ---------- marquee ---------- */
+.site .marquee-track { display: flex; width: max-content; }
+@media (prefers-reduced-motion: no-preference) {
+  .site .marquee-track { animation: jp-marquee var(--speed, 38s) linear infinite; }
+  .site .marquee:hover .marquee-track { animation-play-state: paused; }
+}
+@keyframes jp-marquee { to { transform: translateX(-50%); } }
+
+/* ---------- the list: rows fill with red, the cover follows the pointer ---------- */
+.site .row { position: relative; isolation: isolate; }
+.site .row::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--jollof); transform: scaleY(0); transform-origin: bottom; transition: transform 500ms var(--ease-out); }
+.site .row-arrow { transition: transform 500ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .site .row:hover { color: var(--cream); }
+  .site .row:hover::before { transform: none; }
+  .site .row:hover .row-arrow { transform: translateX(6px) rotate(-45deg); }
+  .site .row:hover .row-soft { color: color-mix(in srgb, var(--cream) 80%, transparent); }
+}
+.site .cover-follow { position: fixed; left: 0; top: 0; z-index: 40; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(0.6) rotate(-6deg); transition: opacity 260ms ease, transform 500ms var(--ease-out); }
+.site .cover-follow[data-on="true"] { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
+
+/* ---------- scroll-linked moves where the browser supports them ---------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site .scroll-turn { animation: jp-scroll-turn linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
+    .site .scroll-rise { animation: jp-scroll-rise linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
+    .site .scroll-grow { animation: jp-scroll-grow linear both; animation-timeline: view(); animation-range: entry 0% cover 45%; }
+  }
+}
+@keyframes jp-scroll-turn { from { transform: rotate(-8deg) translateY(8%); } to { transform: rotate(6deg) translateY(-8%); } }
+@keyframes jp-scroll-rise { from { transform: translateY(14%); } to { transform: translateY(-14%); } }
+@keyframes jp-scroll-grow { from { transform: scale(0.86); } to { transform: none; } }
+
+/* ---------- pointer tilt ---------- */
+.site .tilt { transition: transform 700ms var(--ease-out); transform: perspective(1200px) rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); }
+
+/* ---------- page change ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .js .site .page-enter { animation: jp-page 800ms var(--ease-out) both; }
+}
+@keyframes jp-page { from { opacity: 0; } to { opacity: 1; } }
+
+/* spin for the badge */
+@media (prefers-reduced-motion: no-preference) {
+  .site .spin-slow { animation: jp-spin 24s linear infinite; }
+}
+@keyframes jp-spin { to { transform: rotate(360deg); } }
+
+.site .book-turn .book3d-inner { transform: rotateY(56deg) rotateX(4deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .site .float { animation: jp-float 7s var(--ease-in-out) infinite alternate; }
+}
+@keyframes jp-float { from { transform: translateY(-10px) rotate(-1deg); } to { transform: translateY(10px) rotate(1deg); } }
+@media (max-width: 640px) {
+  .site .t-display.wide, .site .t-head.wide { font-stretch: 112%; font-variation-settings: "wdth" 112; }
+}
+
+/* ---------- the shelf ---------- */
+.site .shelf-slot { width: var(--s); height: var(--h); perspective: 1800px; transition: width 700ms var(--ease-out); }
+.site .shelf-book { position: relative; width: var(--s); height: var(--h); transform-style: preserve-3d; transform-origin: left center; transition: transform 700ms var(--ease-out); }
+.site .shelf-spine, .site .shelf-cover { position: absolute; top: 0; height: 100%; backface-visibility: hidden; }
+.site .shelf-spine {
+  left: 0; width: var(--s);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 14px 0; color: var(--cream);
+  box-shadow: inset -6px 0 10px -6px rgba(0, 0, 0, 0.45), inset 6px 0 10px -6px rgba(255, 255, 255, 0.18);
+}
+.site .shelf-title, .site .shelf-author { writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 70%; }
+.site .shelf-title { font-weight: 700; font-size: min(calc(var(--s) * 0.42), 1.35rem); letter-spacing: -0.02em; }
+.site .shelf-author { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; max-height: 26%; }
+.site .shelf-cover { left: var(--s); width: var(--w); transform-origin: left center; transform: rotateY(90deg); }
+@media (hover: hover) and (pointer: fine) {
+  .site .shelf-slot:hover, .site .shelf-slot:focus-within { width: var(--w); }
+  .site .shelf-slot:hover .shelf-book, .site .shelf-slot:focus-within .shelf-book { transform: translateY(-14px) translateZ(calc(var(--s) * -1)) rotateY(-90deg); }
+}
+.site .shelf-slot:focus-within .shelf-book { outline: none; }
+
+/* the hero line stays on one line from tablets up */
+.site .hero-line { font-size: clamp(2.5rem, 1rem + 6vw, 4rem); line-height: 0.92; letter-spacing: -0.045em; }
+/* sized to its own box, not the window, so it fits whole at every width up to the widest screen */
+.site .hero-box { container-type: inline-size; }
+@media (min-width: 768px) {
+  .site .hero-line { font-size: 5.5cqi; white-space: nowrap; }
+}
+
+/* ---------- book page: the book turns as the page scrolls ---------- */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site .book-spin .book3d-inner { animation: jp-spin linear both; animation-timeline: scroll(root); }
+  }
+}
+@keyframes jp-spin { from { transform: rotateY(34deg) rotateX(3deg); } to { transform: rotateY(-14deg) rotateX(-2deg); } }
+.site .buy-row { position: relative; isolation: isolate; overflow: hidden; }
+.site .buy-row::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--bonnet); transform: scaleX(0); transform-origin: left; transition: transform 420ms var(--ease-out); }
+.site .buy-row:hover::before, .site .buy-row:focus-visible::before { transform: scaleX(1); }
+.site .buy-row:hover, .site .buy-row:focus-visible { color: var(--char); border-color: var(--bonnet); }
+.site .buy-row .arrow { transition: transform 420ms var(--ease-out); }
+.site .buy-row:hover .arrow { transform: translateX(6px); }
+
+/* ---------- gloss laminate on the drawn books: a soft glare that follows the pointer, and a sheen ---------- */
+.site .book3d-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(60% 45% at var(--gx, 28%) var(--gy, 18%), rgba(255, 255, 255, 0.48), transparent 70%),
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.16) 46%, rgba(255, 255, 255, 0.04) 52%, transparent 60%);
+  background-size: 100% 100%, 260% 100%;
+  background-position: 0 0, 100% 0;
+  transition: background-position 1200ms var(--ease-out);
+}
+.site .book3d-face::before {
+  /* a thin hard edge of light along the spine fold, as on a laminated paperback */
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.14) 40%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .site .book3d-face::after { animation: jp-sheen 7s var(--ease-in-out) infinite; }
+}
+@keyframes jp-sheen { 0%, 55% { background-position: 0 0, 100% 0; } 100% { background-position: 0 0, -60% 0; } }
+
+/* ---------- hero display: a pool of light behind the books, the side books turned in ---------- */
+.site .hero-light { background: radial-gradient(46% 60% at 50% 70%, rgba(255, 190, 130, 0.30), rgba(224, 99, 42, 0.12) 50%, transparent 78%); }
+.site .book-turn-left .book3d-inner { transform: rotateY(30deg) rotateX(2deg); }
+.site .book-front .book3d-inner { transform: rotateY(16deg) rotateX(2deg); }
+.site .book-turn-right .book3d-inner { transform: rotateY(-22deg) rotateX(2deg); }

@@ -1,0 +1,33 @@
+# Jollof Pages behind a host Caddy: copy to /etc/caddy/sites/jollofpages.caddy, then
+# `systemctl reload caddy`. (The live server runs Caddy in the shared /opt/front-door container
+# instead; its block there needs the same /collab route, pointed at the collab container.) Ports match docker-compose.yml (localhost only).
+# Author sites (ada.jollofpages.com and authors' own domains) need the on_demand_tls global
+# option in the main Caddyfile; see docs/author-sites.md.
+jollofpages.com, www.jollofpages.com {
+	@www host www.jollofpages.com
+	redir @www https://jollofpages.com{uri} permanent
+	encode zstd gzip
+	# live collaboration (WebSocket), see docker-compose.yml
+	handle_path /collab* {
+		reverse_proxy 127.0.0.1:3102
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3100
+	}
+}
+
+pb.jollofpages.com {
+	request_body {
+		max_size 200MB
+	}
+	reverse_proxy 127.0.0.1:8096
+}
+
+# every author site: a certificate per name, made on the first visit once the app says the name is a real site
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3100
+}

@@ -1,18 +1,15 @@
-import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
+import { defineConfig } from "vitest/config";
+import path from "node:path";
 
 export default defineConfig({
-  test: {
-    environment: 'node',
-    globals: true,
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json'],
-    },
-  },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "src"),
+      "server-only": path.resolve(__dirname, "tests/server-only.ts"),
     },
+  },
+  test: {
+    include: ["tests/**/*.test.ts"],
+    testTimeout: 60_000,
   },
 });

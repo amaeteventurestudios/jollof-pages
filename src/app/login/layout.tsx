@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
+import { AppLayout, appViewport } from "@/components/app/app-layout";
 
-export const metadata: Metadata = {
-  title: "Admin Login",
-  description: "Secure access to the Jollof Pages continuity and production workspace.",
-  robots: { index: false, follow: false },
-};
+export const viewport = appViewport;
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
+export default AppLayout;

@@ -1,0 +1,189 @@
+/*
+ * The product site. Every scroll-linked move reads --p (0 to 1) written by <ScrollFx>, so the
+ * same motion runs on phones and desktops. Without script --p falls back to the resting state.
+ */
+
+/* ---------- one-line centred headings, sized from their own length ---------- */
+.site .head { container-type: inline-size; }
+.site .fit { white-space: nowrap; }
+.site .fit-title {
+  --k: 0.74;
+  font-size: min(var(--max, 4.75rem), calc(100cqi / (var(--n) * var(--k))));
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.site .fit-sub {
+  --k: 0.5;
+  font-size: min(1.5rem, calc(100cqi / (var(--n) * var(--k))));
+  line-height: 1.3;
+}
+@media (max-width: 640px) {
+  .site .fit-title { --k: 0.55; font-stretch: 100%; font-variation-settings: "wdth" 100; letter-spacing: -0.03em; }
+}
+
+/* ---------- hero ---------- */
+.site .hero-title {
+  white-space: nowrap;
+  font-size: min(8.4rem, calc(100cqi / 14.6));
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+.site .hero-title .line { display: inline-block; vertical-align: top; }
+.site .hero-sub { font-size: min(1.75rem, calc(100cqi / (var(--n) * 0.5))); }
+@media (max-width: 640px) {
+  .site .hero-title { font-size: min(7rem, 18.5cqi); line-height: 0.92; }
+  .site .hero-title .line { display: block; }
+}
+.site .hero-tilt {
+  transform-origin: 50% 100%;
+  transform: perspective(1800px) rotateX(calc((1 - min(1, var(--p, 1) * 3.2)) * 16deg)) scale(calc(0.94 + min(1, var(--p, 1) * 3.2) * 0.06));
+  will-change: transform;
+}
+.site .frame { background: var(--char); padding: 0.6%; box-shadow: clamp(8px, 1.2vw, 18px) clamp(8px, 1.2vw, 18px) 0 var(--char); }
+.site .float-a { transform: translateY(calc(var(--p, 0) * -260px)) rotate(-4deg); will-change: transform; }
+.site .float-b { transform: translateY(calc(var(--p, 0) * -420px)) rotate(3deg); will-change: transform; }
+
+/* ---------- pillars: full-screen panels that stack over one another ---------- */
+.site .pillar { position: sticky; top: 0; z-index: var(--z); min-height: 100svh; display: flex; align-items: center; }
+.site .pillar-inner { width: 100%; }
+.site .pillar-name { --max: 9.5rem; line-height: 0.85; letter-spacing: -0.06em; }
+@media (max-width: 640px) {
+  .site .pillar-name { --max: 4.75rem; }
+}
+.site .cut {
+  clip-path: inset(calc((1 - var(--p, 1)) * 16%) calc((1 - var(--p, 1)) * 9%));
+  transform: scale(calc(0.9 + var(--p, 1) * 0.1));
+  transform-origin: 50% 60%;
+  will-change: clip-path, transform;
+}
+
+/* ---------- editor: one sticky screenshot, crossfading as the steps pass ---------- */
+.site .stack { aspect-ratio: 16 / 10; overflow: hidden; }
+.site .stack-item { position: absolute; inset: 0; opacity: 0; transform: scale(1.04); transition: opacity 700ms var(--ease-out), transform 1100ms var(--ease-out); }
+.site .stack-item img { height: 100%; object-fit: cover; object-position: top left; }
+.site [data-steps]:not([data-active]) .stack-item[data-index="0"],
+.site [data-steps][data-active="0"] .stack-item[data-index="0"],
+.site [data-steps][data-active="1"] .stack-item[data-index="1"],
+.site [data-steps][data-active="2"] .stack-item[data-index="2"],
+.site [data-steps][data-active="3"] .stack-item[data-index="3"] { opacity: 1; transform: none; }
+.site .step { transition: opacity 500ms ease, transform 700ms var(--ease-out), background-color 500ms ease; }
+.site [data-steps][data-active] .step:not([data-on]) { opacity: 0.45; }
+.site .step[data-on] { transform: translateX(6px); }
+.site .step[data-on] h3 { color: var(--bonnet); }
+@media (max-width: 1023px) {
+  .site [data-steps][data-active] .step:not([data-on]) { opacity: 1; }
+  .site .step[data-on] { transform: none; }
+}
+
+/* ---------- three steps on a sideways track ---------- */
+.site .htrack { height: 320vh; }
+.site .htrack-rail { transform: translate3d(calc(var(--p, 0) * var(--travel, 0px) * -1), 0, 0); will-change: transform; }
+.site .panel { width: min(74vw, 980px); height: min(60svh, 620px); }
+.site .panel-art { min-height: 0; }
+.site .step-shot { transform: translateX(calc(var(--p, 0) * -8%)); }
+.site .htrack-bar > div { transform: scaleX(var(--p, 0)); }
+@media (max-width: 640px) {
+  .site .panel { width: 84vw; height: min(64svh, 560px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site .htrack { height: auto; }
+  .site .htrack-sticky { position: static; height: auto; padding: 5rem 0; }
+  .site .htrack-rail { transform: none; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .site .panel { scroll-snap-align: start; }
+}
+
+/* ---------- covers: the wrap opens out of a slit across its middle ---------- */
+.site .slit { clip-path: inset(calc((1 - var(--p, 1)) * 49%) 0); will-change: clip-path; }
+
+/* ---------- export: the screenshot lies down onto the page ---------- */
+.site .tilt-in {
+  transform-origin: 50% 100%;
+  transform: perspective(1400px) rotateX(calc((1 - var(--p, 1)) * 24deg)) translateY(calc((1 - var(--p, 1)) * 40px));
+  opacity: calc(0.3 + var(--p, 1) * 0.7);
+}
+
+/* ---------- a home for every book: two screens drifting at different speeds ---------- */
+.site .duo { padding-bottom: 14%; }
+.site .duo-back { width: 80%; transform: translateY(calc((0.5 - var(--p, 0.5)) * 50px)); }
+.site .duo-front {
+  position: absolute; right: 0; bottom: 0; width: 52%;
+  box-shadow: 12px 12px 0 var(--char);
+  transform: translateY(calc((0.5 - var(--p, 0.5)) * -160px)) rotate(calc((0.5 - var(--p, 0.5)) * -4deg));
+}
+
+/* ---------- three phones, each at its own pace ---------- */
+.site .phone { transform: translateY(calc((0.5 - var(--p, 0.5)) * var(--k, 1) * 140px)); will-change: transform; }
+
+/* ---------- tiles answer the pointer ---------- */
+.site .rule, .site .file, .site .store { transition: transform 420ms var(--ease-out), background-color 300ms ease, color 300ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .site .rule:hover { transform: translateY(-6px); background: var(--bonnet); }
+  .site .file:hover { transform: translateY(-4px); background: var(--jollof); }
+  .site .store:hover { background: var(--jollof); transform: translateY(-3px); }
+}
+
+/* ---------- the comparison ---------- */
+.site .compare { border-collapse: collapse; font-size: clamp(0.875rem, 0.8rem + 0.35vw, 1.0625rem); }
+.site .compare-row:nth-child(odd) { background: var(--ground-2); }
+.site .compare-us { background: color-mix(in srgb, var(--jollof) 12%, transparent); color: var(--jollof); }
+[data-theme="dark"] .site .compare-us { color: var(--pepper); }
+.site .compare-row { transition: background-color 250ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .site .compare-row:hover { background: color-mix(in srgb, var(--bonnet) 40%, transparent); }
+}
+
+/* ---------- kinds of book: centred rows, filled from the left on hover ---------- */
+.site .kind {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: clamp(1.1rem, 2vw, 1.75rem) 1rem;
+  text-align: center;
+  background: color-mix(in srgb, var(--char) 16%, transparent);
+  margin-top: 4px;
+  overflow: hidden;
+}
+.site .kind::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--char); transform: scaleX(0); transform-origin: left; transition: transform 600ms var(--ease-out); }
+.site .kind-name { font-size: clamp(1.75rem, 1rem + 3.2vw, 4rem); line-height: 1; letter-spacing: -0.045em; }
+.site .kind-body { color: color-mix(in srgb, var(--cream) 92%, transparent); }
+@media (hover: hover) and (pointer: fine) {
+  .site .kind:hover::before { transform: none; }
+  .site .kind:hover .kind-name { color: var(--bonnet); }
+}
+.site .kind-name { transition: color 300ms ease; }
+
+/* ---------- questions ---------- */
+.site .faq { transition: background-color 300ms ease, color 300ms ease; }
+.site .faq summary::-webkit-details-marker { display: none; }
+.site .faq[open] { background: var(--char); color: var(--cream); }
+.site .faq .plus-v { transition: transform 400ms var(--ease-out); }
+.site .faq[open] .plus-v { transform: translateX(-50%) rotate(90deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .site .faq[open] > div { animation: jp-open 500ms var(--ease-out); }
+}
+@keyframes jp-open { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (hover: hover) and (pointer: fine) {
+  .site .faq:not([open]):hover { background: var(--cream); }
+  [data-theme="dark"] .site .faq:not([open]):hover { background: var(--char-2); }
+}
+
+/* ---------- the close: a blank book turning behind the form ---------- */
+.site .cta-book { transform: translate(-50%, -50%); opacity: 0.5; }
+.site .cta-page { position: absolute; inset: 0; transform-origin: 50% 100%; transform: rotate(calc(var(--p, 0.5) * var(--r, 0deg))); }
+
+/* reduced motion: everything rests in place */
+@media (prefers-reduced-motion: reduce) {
+  .site .hero-tilt, .site .float-a, .site .float-b, .site .cut, .site .tilt-in, .site .duo-back, .site .duo-front, .site .phone, .site .step-shot { transform: none !important; clip-path: none !important; opacity: 1 !important; }
+  .site .slit { clip-path: none; }
+  .site .cta-book { transform: translate(-50%, -50%) !important; opacity: 0.5 !important; }
+  .site .cta-page { transform: rotate(calc(0.5 * var(--r, 0deg))) !important; }
+}
+
+/* ---------- legal pages ---------- */
+.site .legal h2 { font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.875rem); font-weight: 700; letter-spacing: -0.02em; margin-top: 2.5em; line-height: 1.15; }
+.site .legal h3 { font-size: 1.1875rem; font-weight: 700; margin-top: 1.6em; }
+.site .legal p, .site .legal li { margin-top: 0.9em; max-width: 68ch; }
+.site .legal ul { list-style: disc; padding-left: 1.3em; }
+.site .legal a { text-decoration: underline; text-underline-offset: 0.2em; }

@@ -1,0 +1,89 @@
+# Production stack: PocketBase, the web app and the collaboration server, bound to localhost only. HTTPS comes from the
+# host's Caddy, which the server shares with AuthorNX: copy deploy/jollofpages.caddy into
+# /etc/caddy/sites/ (the main Caddyfile has `import /etc/caddy/sites/*`) and reload Caddy.
+# Copy .env.example to .env and fill it in, then: docker compose up -d --build
+services:
+  pocketbase:
+    build:
+      context: .
+      dockerfile: deploy/pocketbase.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8096:8090"
+    volumes:
+      - pb_data:/pb/pb_data
+
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_POCKETBASE_URL: https://${PB_DOMAIN}
+    restart: unless-stopped
+    environment:
+      POCKETBASE_INTERNAL_URL: http://pocketbase:8090
+      NEXT_PUBLIC_POCKETBASE_URL: https://${PB_DOMAIN}
+      SITE_URL: https://${SITE_DOMAIN}
+      # AI cover art (docs/AI_COVERS.md). Left empty, the studio runs it in test mode.
+      PB_SUPERUSER_EMAIL: ${PB_SUPERUSER_EMAIL:-}
+      PB_SUPERUSER_PASSWORD: ${PB_SUPERUSER_PASSWORD:-}
+      FAL_KEY: ${FAL_KEY:-}
+      FAL_IMAGE_MODEL: ${FAL_IMAGE_MODEL:-}
+      FAL_IMAGE_EDIT_MODEL: ${FAL_IMAGE_EDIT_MODEL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      COVER_AI_FREE_EMAILS: ${COVER_AI_FREE_EMAILS:-}
+      # author accounts and sites (docs/author-sites.md)
+      STUDIO_SIGNUP: ${STUDIO_SIGNUP:-}
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-}
+      # Author Site Pro (docs/author-sites.md)
+      PRO_MONTH_CENTS: ${PRO_MONTH_CENTS:-}
+      PRO_YEAR_CENTS: ${PRO_YEAR_CENTS:-}
+      NAMECOM_USERNAME: ${NAMECOM_USERNAME:-}
+      NAMECOM_TOKEN: ${NAMECOM_TOKEN:-}
+      NAMECOM_API: ${NAMECOM_API:-}
+      FREE_DOMAIN_TLDS: ${FREE_DOMAIN_TLDS:-}
+      FREE_DOMAIN_MAX_CENTS: ${FREE_DOMAIN_MAX_CENTS:-}
+      SERVER_IP: ${SERVER_IP:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM_DOMAIN: ${MAIL_FROM_DOMAIN:-}
+      EBOOK_FEE_PERCENT: ${EBOOK_FEE_PERCENT:-}
+      EBOOK_FEE_FIXED_CENTS: ${EBOOK_FEE_FIXED_CENTS:-}
+      # support inbox and the owner's admin (both fall back to OWNER_EMAIL)
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      SUPPORT_EMAILS: ${SUPPORT_EMAILS:-}
+      SUPPORT_ADDRESS: ${SUPPORT_ADDRESS:-}
+      # writing assistant (docs/assistant.md): the publisher's own keys, for COVER_AI_FREE_EMAILS accounts only
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      AI_KEYS_SECRET: ${AI_KEYS_SECRET:-}
+      ASSISTANT_DIR: /data/assistant
+      MEM0_TELEMETRY: "false"
+    volumes:
+      - assistant_data:/data
+      - assistant_models:/app/local_cache
+    ports:
+      - "127.0.0.1:3100:3000"
+    depends_on:
+      - pocketbase
+
+  # live co-writing, tracked changes and cursors for shared books (collab/server.ts); Caddy serves it at /collab
+  collab:
+    build:
+      context: .
+      dockerfile: deploy/collab.Dockerfile
+    restart: unless-stopped
+    environment:
+      POCKETBASE_INTERNAL_URL: http://pocketbase:8090
+      PB_SUPERUSER_EMAIL: ${PB_SUPERUSER_EMAIL:-}
+      PB_SUPERUSER_PASSWORD: ${PB_SUPERUSER_PASSWORD:-}
+    ports:
+      - "127.0.0.1:3102:3102"
+    depends_on:
+      - pocketbase
+
+volumes:
+  pb_data:
+  assistant_data:
+  assistant_models:

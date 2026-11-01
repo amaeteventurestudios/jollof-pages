@@ -1,0 +1,9 @@
+node_modules
+.next
+tools
+fonts/*.ttf
+pocketbase/pocketbase
+pocketbase/pb_data
+.taste-skill
+.git
+.env*
