@@ -244,3 +244,20 @@ export function Table({ head, children, min = 760, empty }: { head: (string | { 
 export const Td = ({ children, right, className }: { children?: React.ReactNode; right?: boolean; className?: string }) => (
   <td className={cn("px-3 py-2.5 align-top", right && "text-right tabular-nums", className)}>{children}</td>
 );
+
+/** An on/off switch: square, like the rest of the admin. */
+export function Toggle({ on, busy, disabled, label, onChange }: { on: boolean; busy: boolean; disabled: boolean; label: string; onChange: (on: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      disabled={disabled || busy}
+      onClick={() => onChange(!on)}
+      className={cn("relative inline-flex h-6 w-11 shrink-0 items-center border transition-colors disabled:opacity-50", on ? "border-primary bg-primary" : "border-border bg-paper-3")}
+    >
+      <span className={cn("absolute size-4 bg-card shadow-sm transition-transform", on ? "translate-x-[22px]" : "translate-x-[3px]")} />
+    </button>
+  );
+}

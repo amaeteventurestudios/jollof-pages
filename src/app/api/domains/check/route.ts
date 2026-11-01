@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { freeDomainsOpen } from "@/lib/server/flags";
 import { bearer } from "@/lib/server/load-book";
 import { caller } from "@/lib/server/credits";
-import { checkAvailability, namecomConfigured } from "@/lib/server/namecom";
+import { checkAvailability } from "@/lib/server/namecom";
 import { asDomain, freeMaxCents, freeTlds } from "@/lib/server/domain-rules";
 import { DOMAIN_RE } from "@/lib/sites";
 
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-  if (!namecomConfigured()) return NextResponse.json({ error: "Domain search is not set up yet." }, { status: 503 });
+  if (!(await freeDomainsOpen())) return NextResponse.json({ error: "Free domains are coming soon." }, { status: 503 });
   const domain = asDomain(new URL(req.url).searchParams.get("name") || "");
   if (!DOMAIN_RE.test(domain)) return NextResponse.json({ domain, free: false, reason: "Type the name you want, such as adaokafor." });
   const tld = domain.split(".").slice(1).join(".");

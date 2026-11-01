@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { freeDomainsOpen } from "@/lib/server/flags";
 import { bearer } from "@/lib/server/load-book";
 import { adminPb, caller } from "@/lib/server/credits";
 import { getBilling, proAvailable, saveBilling, type DomainRow } from "@/lib/server/pro";
 import { getAccount, proPriceCents } from "@/lib/server/stripe";
-import { namecomConfigured } from "@/lib/server/namecom";
 import { mailConfigured } from "@/lib/server/mail";
 import { hasPro } from "@/lib/sites";
 import type { SiteSettings } from "@/lib/types";
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       interval: billing?.interval ?? "",
       status: billing?.status ?? "",
       canManage: Boolean(billing?.stripe_customer),
-      freeDomain: { configured: namecomConfigured(), used: Boolean(billing?.free_domain_used) },
+      freeDomain: { configured: await freeDomainsOpen(), used: Boolean(billing?.free_domain_used) },
       domains: domains.map((d) => ({ id: d.id, domain: d.domain, status: d.status, error: d.error, expires: d.expires })),
       payouts: { ready: Boolean(billing?.payouts_ready), started: Boolean(billing?.payout_account) },
       mail: mailConfigured(),

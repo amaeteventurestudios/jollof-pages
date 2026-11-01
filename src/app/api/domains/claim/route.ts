@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { freeDomainsOpen } from "@/lib/server/flags";
 import { bearer } from "@/lib/server/load-book";
 import { adminPb, caller } from "@/lib/server/credits";
-import { checkAvailability, namecomConfigured, type Registrant } from "@/lib/server/namecom";
+import { checkAvailability, type Registrant } from "@/lib/server/namecom";
 import { asDomain, freeMaxCents, freeTlds } from "@/lib/server/domain-rules";
 import { getBilling, proAvailable, registerWaitingDomain, type DomainRow } from "@/lib/server/pro";
 import { publicOrigin } from "@/lib/server/origin";
@@ -21,7 +22,7 @@ const REQUIRED: (keyof Registrant)[] = ["firstName", "lastName", "address1", "ci
 export async function POST(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-  if (!proAvailable() || !namecomConfigured()) return NextResponse.json({ error: "Free domains are not available yet." }, { status: 503 });
+  if (!proAvailable() || !(await freeDomainsOpen())) return NextResponse.json({ error: "Free domains are not available yet." }, { status: 503 });
   const body = (await req.json().catch(() => ({}))) as { domain?: string; registrant?: Partial<Registrant> };
   const domain = asDomain(body.domain || "");
   if (!DOMAIN_RE.test(domain) || !freeTlds().includes(domain.split(".").slice(1).join("."))) return NextResponse.json({ error: "Choose a .com name first." }, { status: 400 });

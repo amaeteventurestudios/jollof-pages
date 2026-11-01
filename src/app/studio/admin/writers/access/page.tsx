@@ -3,33 +3,15 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { call, Loading, num, PageHead, Problem, Table, Td, Tile, useAdmin } from "@/components/admin/kit";
+import { call, Loading, num, PageHead, Problem, Table, Td, Tile, Toggle, useAdmin } from "@/components/admin/kit";
 import { can } from "@/lib/admin-roles";
 import type { Writer } from "@/lib/admin";
-import { cn } from "@/lib/utils";
 
 type App = keyof Writer["apps"];
 const APPS: { id: App; label: string; about: string }[] = [
   { id: "studio", label: "Jollof Studio", about: "The design tool at studio.jollofpages.com. On for everyone unless you switch it off." },
   { id: "aiWriter", label: "AI writer", about: "The AI co-writing app. Off until you switch it on for someone." },
 ];
-
-/** An on/off switch: square, like the rest of the admin. */
-function Toggle({ on, busy, disabled, label, onChange }: { on: boolean; busy: boolean; disabled: boolean; label: string; onChange: (on: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      disabled={disabled || busy}
-      onClick={() => onChange(!on)}
-      className={cn("relative inline-flex h-6 w-11 shrink-0 items-center border transition-colors disabled:opacity-50", on ? "border-primary bg-primary" : "border-border bg-paper-3")}
-    >
-      <span className={cn("absolute size-4 bg-card shadow-sm transition-transform", on ? "translate-x-[22px]" : "translate-x-[3px]")} />
-    </button>
-  );
-}
 
 /** Writers > Access: which apps each writer may use, one switch per app. */
 export default function AccessPage() {

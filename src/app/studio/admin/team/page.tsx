@@ -32,6 +32,7 @@ const SECTION_LABEL: Record<Section, string> = {
   support: "Support",
   team: "Team",
   brands: "Brands",
+  switches: "Switches",
   audit: "Audit log",
 };
 

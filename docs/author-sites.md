@@ -107,6 +107,11 @@ home site always has Pro. Each part stays hidden or marked "coming soon" until i
 
 ### The free .com
 
+It is offered only when the Name.com login is set **and** the owner has switched it on in
+Admin > Switches (the `app_flags` row `free_domains`, off by default). While it is off, the front page,
+llms.txt and the Pro panel say the free .com is coming soon, and Admin > Overview > Needs you shows a
+reminder to add Name.com credit first.
+
 When the yearly plan is paid, the webhook registers the domain at Name.com in the author's name with
 WHOIS privacy and auto-renew on, adds `A @ → SERVER_IP` and `CNAME www → domain`, and connects it
 to the site; Caddy issues the certificate on the first visit. Only `FREE_DOMAIN_TLDS` under
