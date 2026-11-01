@@ -109,6 +109,10 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
     elements.findIndex((e) => e.chapter.id === chapterId),
   );
   const el = elements[index];
+  // plain strings, so the page-turning callbacks below never depend on the element list
+  const heads = headTitles(elements);
+  const headTitle = `${heads[index]?.title ?? ""}`;
+  const headPart = `${heads[index]?.part ?? ""}`;
   const html = el ? elementHtml(el, { book, author: book.expand?.author ?? null, alsoBy: [] }, elements, theme) : "";
   const css = themeCss(theme, { scope: ".jp-preview", dropCaps: format.dropCaps, lineHeight: format.lineHeight });
   // "print" is the paperback; "hardcover" its own trim and wider gutter
@@ -224,16 +228,17 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   const pageNo = print ? `${page + 1} / ${pages}` : `Page ${page + 1} of ${pages}`;
   const chrome =
     print && el
-      ? pageChrome(runningHeads(format), {
+      ? pageChrome(runningHeads(bookFormat(book)), {
           recto,
           opener: page === 0,
           front: el.section === "front",
-          hideHead: el.options.hideHeader,
-          hideFolio: el.options.hidePageNumber || (el.section === "front" && !el.inToc),
+          hideHead: !!el.options.hideHeader,
+          hideFolio: !!el.options.hidePageNumber || (el.section === "front" && !el.inToc),
           folio: String(page + 1),
           book: book.title,
           author: book.expand?.author?.name ?? "",
-          ...pickHead(headTitles(elements)[index]),
+          title: headTitle,
+          part: headPart,
         })
       : null;
   const runningHead = chrome?.head ?? "";
@@ -439,4 +444,3 @@ function IconButton({ label, onClick, children, active }: { label: string; onCli
   );
 }
 
-const pickHead = (h: { title: string; part: string } | undefined) => ({ title: h?.title ?? "", part: h?.part ?? "" });

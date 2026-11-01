@@ -430,7 +430,7 @@ function PageView({
       />
       {!page.blank && (
         <>
-          {(page.head || page.chrome?.folioTop) && <PageHead chrome={page.chrome} head={page.head} style={{ left, width: innerW, top: m.top * 0.42 }} />}
+          {(page.head || (page.chrome?.folioTop && page.chrome.folio)) && <PageHead chrome={page.chrome} head={page.head} style={{ left, width: innerW, top: m.top * 0.42 }} />}
           <div className="absolute overflow-hidden" style={{ top: m.top, left, width: innerW, height: innerH }}>
             <div
               className="jp-fbp-flow h-full"
