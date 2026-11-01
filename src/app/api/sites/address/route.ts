@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       const [ours, theirs] = await Promise.all([resolve4(rootDomain()).catch(() => [] as string[]), resolve4(domain).catch(() => [] as string[])]);
       if (!theirs.length || !theirs.some((ip) => ours.includes(ip)))
         return NextResponse.json(
-          { error: `${domain} does not point to us yet. Add an A record for it with the value ${ours[0] ?? "shown in the studio"}, wait a few minutes and try again.`, ip: ours[0] ?? "" },
+          { error: `${domain} does not point to us yet. Add an A record for it with the value ${ours[0] ?? "shown in the Desk"}, wait a few minutes and try again.`, ip: ours[0] ?? "" },
           { status: 400 },
         );
       return NextResponse.json({ site: await pb.collection("site_settings").update(site.id, { custom_domain: domain }) });

@@ -3,7 +3,7 @@ import { QUALITY, type Quality } from "../cover-ai";
 
 /**
  * Image generation on fal.ai (Nano Banana 2 by default), through fal's queue REST API.
- * Without FAL_KEY the studio runs in test mode and draws a labelled sample picture instead,
+ * Without FAL_KEY the Desk runs in test mode and draws a labelled sample picture instead,
  * so the whole flow can be tried without spending anything.
  */
 

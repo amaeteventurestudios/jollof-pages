@@ -1,7 +1,7 @@
 /**
  * A stand-in for the Anthropic API while recording the video guides, so the writing assistant
  * and the Suggest buttons have something to show without a real key or real spend. Answers are
- * written for the demo book "The Long Table". Start the studio with
+ * written for the demo book "The Long Table". Start the Desk with
  * ASSISTANT_ANTHROPIC_URL=http://127.0.0.1:3999 and save any key starting "sk-ant-" in the
  * assistant's settings.
  */

@@ -1,10 +1,10 @@
 /*
- * Jollof Pages service worker. Makes the studio installable and keeps its shell, fonts and
+ * Jollof Pages service worker. Makes the Desk installable and keeps its shell, fonts and
  * pictures on the device so it opens fast. Pages always try the network first; your books are
  * never cached here (PocketBase API calls go straight to the server).
  */
 const VERSION = "jp-v1";
-const SHELL = ["/studio", "/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
+const SHELL = ["/desk", "/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

@@ -31,7 +31,7 @@ export async function subdomainAvailability(name: string, exceptOwner?: string):
   return hit.totalItems ? "Someone already has that address. Try another." : "";
 }
 
-/** Marks an account paid after Stripe confirms the studio payment. Safe to call twice. */
+/** Marks an account paid after Stripe confirms the Desk payment. Safe to call twice. */
 export async function markStudioPaid(userId: string, cents: number): Promise<void> {
   const pb = await adminPb();
   const u = await pb.collection("users").getOne(userId);

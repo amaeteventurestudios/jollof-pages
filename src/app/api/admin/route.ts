@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   const sites = canSee(me.role, "websites") ? websites(data, await loadInsightData(sinceDate(30))) : null;
   // switches the owner has left off, with what to do before turning them on
   const flags = canSee(me.role, "switches") ? await getFlags() : null;
-  const reminders = flags ? (Object.keys(FLAGS) as FlagKey[]).filter((k) => !flags[k]).map((k) => ({ label: FLAGS[k].reminder, href: "/studio/admin/switches" })) : [];
+  const reminders = flags ? (Object.keys(FLAGS) as FlagKey[]).filter((k) => !flags[k]).map((k) => ({ label: FLAGS[k].reminder, href: "/desk/admin/switches" })) : [];
   return NextResponse.json({
     me: { email: me.email, role: me.role, sections: sectionsFor(me.role) },
     overview: canSee(me.role, "money") ? o : { ...o, money: null },

@@ -59,7 +59,7 @@ export function backgroundStyle(bg: ResolvedBackground, href?: (src: string) => 
   return `background-image: ${veil}url('${url.replace(/'/g, "%27")}'); background-size: ${veil ? `auto, ${size}` : size}; background-position: center top;`;
 }
 
-/** One element as web HTML, for the studio preview and the public sample reader. */
+/** One element as web HTML, for the Desk preview and the public sample reader. */
 export function elementHtml(e: BookElement, input: Pick<ExportInput, "book" | "author" | "alsoBy">, all: BookElement[], theme: InteriorTheme): string {
   const { book } = input;
   const format = bookFormat(book);

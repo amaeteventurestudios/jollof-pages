@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   const chapter = open && open.book === book.id ? plainText(withoutSuggestions(open.content ?? null), "\n\n").trim().slice(0, CHAPTER_CHARS) : "";
 
   const system = [
-    "You are a writing tool inside Jollof Pages, a studio where authors write and publish books. You do one job on the author's text and return the result.",
+    "You are a writing tool inside Jollof Pages, a writing desk where authors write and publish books. You do one job on the author's text and return the result.",
     "Match the author's voice, spelling (British or American) and style.",
     aiFormatRule(a),
     `Book: "${book.title}"${book.subtitle ? `: ${book.subtitle}` : ""}.`,

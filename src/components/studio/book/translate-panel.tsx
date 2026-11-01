@@ -169,7 +169,7 @@ export function TranslatePanel({ ws }: { ws: Workspace }) {
       {made && (
         <p className="border border-primary/40 bg-primary-soft p-3 text-sm" role="status">
           Done. <strong>{made.title}</strong> is your {languageName(lang)} edition.{" "}
-          <Link href={`/studio/books/${made.id}`} className="font-medium text-primary underline">
+          <Link href={`/desk/books/${made.id}`} className="font-medium text-primary underline">
             Open it
           </Link>{" "}
           to read it through, then make its cover on the Cover tab. If your cover art has the old title painted on, make new artwork with AI in the new language.
@@ -179,7 +179,7 @@ export function TranslatePanel({ ws }: { ws: Workspace }) {
         <p className="bg-danger-soft p-3 text-sm text-destructive" role="alert">
           {error.text}{" "}
           {error.setup && (
-            <Link href="/studio/assistant" className="font-medium underline">
+            <Link href="/desk/assistant" className="font-medium underline">
               Set up the AI assistant
             </Link>
           )}

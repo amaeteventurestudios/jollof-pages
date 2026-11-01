@@ -9,7 +9,7 @@ interface InstallPrompt extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-/** Registers the service worker in production so the studio can be installed as an app. */
+/** Registers the service worker in production so the Desk can be installed as an app. */
 export function RegisterServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;

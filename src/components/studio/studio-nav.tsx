@@ -27,9 +27,9 @@ import { LINKS, THEMES } from "./studio-links";
 export { LINKS, THEMES };
 
 /**
- * The studio's menu. Every section is always in view: one row on wide screens, and below that a
+ * The Desk's menu. Every section is always in view: one row on wide screens, and below that a
  * second row of evenly spaced tabs, so nothing ever has to be scrolled sideways. On phones and
- * tablets the studio runs as an app instead, with an app bar on top and tabs along the bottom.
+ * tablets the Desk runs as an app instead, with an app bar on top and tabs along the bottom.
  */
 export function StudioNav() {
   const path = usePathname();
@@ -40,13 +40,13 @@ export function StudioNav() {
     <>
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 app:hidden">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
-          <Link href="/studio" className="flex shrink-0 items-baseline gap-2 font-semibold tracking-tight whitespace-nowrap text-ink">
+          <Link href="/desk" className="flex shrink-0 items-baseline gap-2 font-semibold tracking-tight whitespace-nowrap text-ink">
             <span className="text-[17px]">
               <BrandName />
             </span>
-            <span className="text-[13px] font-normal text-soft">Studio</span>
+            <span className="text-[13px] font-normal text-soft">Desk</span>
           </Link>
-          <nav className="ml-2 hidden min-w-0 items-center gap-0.5 xl:flex" aria-label="Studio">
+          <nav className="ml-2 hidden min-w-0 items-center gap-0.5 xl:flex" aria-label="Desk">
             {links.map((l) => (
               <Link
                 key={l.href}
@@ -64,7 +64,7 @@ export function StudioNav() {
             <AccountMenu guest={guest} />
           </div>
         </div>
-        <nav className={cn("grid border-t border-border xl:hidden", links.length > 4 ? "grid-cols-4 sm:grid-cols-8" : "grid-cols-2")} aria-label="Studio sections">
+        <nav className={cn("grid border-t border-border xl:hidden", links.length > 4 ? "grid-cols-4 sm:grid-cols-8" : "grid-cols-2")} aria-label="Desk sections">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -150,25 +150,25 @@ export function AccountMenu({ guest = isCollaboratorOnly() }: { guest?: boolean 
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         {admin && (
-          <DropdownMenuItem onSelect={() => router.push("/studio/admin")}>
+          <DropdownMenuItem onSelect={() => router.push("/desk/admin")}>
             <ShieldCheck aria-hidden /> Admin
           </DropdownMenuItem>
         )}
         {!guest && (
-          <DropdownMenuItem onSelect={() => router.push("/studio/assistant")}>
+          <DropdownMenuItem onSelect={() => router.push("/desk/assistant")}>
             <Sparkles aria-hidden /> AI assistant
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => router.push("/studio/help")}>
+        <DropdownMenuItem onSelect={() => router.push("/desk/help")}>
           <LifeBuoy aria-hidden /> Help and support
         </DropdownMenuItem>
         {!guest && (
-          <DropdownMenuItem onSelect={() => router.push("/studio/ideas")}>
+          <DropdownMenuItem onSelect={() => router.push("/desk/ideas")}>
             <Lightbulb aria-hidden /> Request a feature
           </DropdownMenuItem>
         )}
         {!guest && (
-          <DropdownMenuItem onSelect={() => router.push("/studio/learn")}>
+          <DropdownMenuItem onSelect={() => router.push("/desk/learn")}>
             <GraduationCap aria-hidden /> Learn
           </DropdownMenuItem>
         )}

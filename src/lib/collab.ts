@@ -1,4 +1,4 @@
-/** Collaboration roles and the names live documents go by, shared by the studio and the collab server. */
+/** Collaboration roles and the names live documents go by, shared by the Desk and the collab server. */
 
 export type CollabRole = "owner" | "cowriter" | "editor" | "commenter";
 

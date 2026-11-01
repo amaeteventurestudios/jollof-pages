@@ -34,10 +34,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 /**
- * An author's home page at <subdomain>.jollofpages.com, filled in from their studio:
+ * An author's home page at <subdomain>.jollofpages.com, filled in from their Desk:
  * the lead book, every published book, the pen names behind them, their letter and their reader list.
  */
-/** ?preview=<base64url JSON> shows a design from the studio before it is saved. */
+/** ?preview=<base64url JSON> shows a design from the Desk before it is saved. */
 function previewDesign(raw: string | string[] | undefined): SiteDesign | null {
   if (typeof raw !== "string" || raw.length > 3000) return null;
   try {

@@ -2,7 +2,7 @@ import { PB_URL } from "./pb";
 import { normalizeDomain } from "./sites";
 
 /**
- * Brands (white label): the studio under another name on another domain. Shared by the proxy,
+ * Brands (white label): the Desk under another name on another domain. Shared by the proxy,
  * the server and the browser, so nothing here may import server code.
  */
 export interface Brand {

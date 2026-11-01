@@ -1,5 +1,5 @@
 /**
- * AI cover art: what pictures cost and how the studio writes the prompt.
+ * AI cover art: what pictures cost and how the Desk writes the prompt.
  *
  * Pricing is pay-as-you-go with no subscription. Of every $10 a writer tops up, about $4 is
  * spent on the image model and the rest is margin (Stripe's fee comes out of the margin).
@@ -141,7 +141,7 @@ function firstSentences(text: string, max = 320): string {
 /** Words only a prompt with lettering contains, so a result can tell whether it carries the title. */
 export const LETTERING_MARK = "on the cover, large, clear and spelled exactly as given";
 
-/** The starting prompt the studio writes for the writer, who can then edit it. */
+/** The starting prompt the Desk writes for the writer, who can then edit it. */
 export function buildCoverPrompt(p: PromptInput): string {
   const style = STYLES.find((s) => s.id === p.style)?.text ?? STYLES[0].text;
   const parts: string[] = [];

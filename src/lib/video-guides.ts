@@ -17,7 +17,7 @@ export const VIDEO_GROUPS = ["Getting started", "Writing", "Working together", "
 export type VideoGroup = (typeof VIDEO_GROUPS)[number];
 
 export const VIDEO_GUIDES: VideoGuide[] = [
-  { id: "tour", title: "A quick tour of the studio", summary: "Where everything lives, dark mode and your account menu.", group: "Getting started" },
+  { id: "tour", title: "A quick tour of the Desk", summary: "Where everything lives, dark mode and your account menu.", group: "Getting started" },
   { id: "new-book", title: "Start a new book", summary: "Create a book with a title, pen name and the usual front pages.", group: "Getting started", tutorial: "first-book" },
   { id: "import", title: "Import a manuscript", summary: "Bring in a Word or Markdown file; each heading becomes a chapter.", group: "Getting started", tutorial: "first-book" },
   { id: "isbn", title: "Add a book you already published", summary: "List an existing book on your site from its ISBN.", group: "Getting started", tutorial: "first-book" },

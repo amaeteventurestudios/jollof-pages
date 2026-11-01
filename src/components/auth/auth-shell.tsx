@@ -7,7 +7,7 @@ import "./auth.css";
 const fraunces = Fraunces({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-fraunces" });
 
 /**
- * The frame both account pages share: a warm, moving showcase of what the studio makes beside a
+ * The frame both account pages share: a warm, moving showcase of what the Desk makes beside a
  * soft card holding the form. On phones the showcase shrinks to a header band above the card.
  */
 export function AuthShell({
@@ -81,7 +81,7 @@ export function AuthShell({
   );
 }
 
-/** Four of the studio's own sample covers, fanned out and gently floating, with the e-reader preview. */
+/** Four of the Desk's own sample covers, fanned out and gently floating, with the e-reader preview. */
 function BookStage() {
   return (
     <div className="auth-rise d4 relative mt-12 hidden lg:block" aria-hidden>

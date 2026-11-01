@@ -22,7 +22,7 @@ export async function usableInvite(code: string): Promise<{ invite: TesterInvite
 }
 
 /**
- * Opens the studio for a tester: full free access, a note of which link brought them in, the
+ * Opens the Desk for a tester: full free access, a note of which link brought them in, the
  * link's starting AI credits, and one more use counted on the link. Paid accounts keep "paid".
  */
 export async function admitTester(pb: PocketBase, invite: TesterInvite, userId: string, current?: string): Promise<void> {

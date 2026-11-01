@@ -1,7 +1,7 @@
 /**
  * How an author site looks: five colours, a font pair and a pattern. Colours are made from the
  * author's own book covers, then nudged until every pairing the site uses stays readable
- * (cream type on the hero, dark type on the accent, and so on). Shared by the studio and the site.
+ * (cream type on the hero, dark type on the accent, and so on). Shared by the Desk and the site.
  */
 import type { PatternKind } from "@/components/site/patterns";
 
@@ -21,7 +21,7 @@ export interface SiteDesign {
   /** a FONT_PAIRS id */
   fonts?: string;
   pattern?: PatternKind | "none";
-  /** a short name for the chosen look, shown in the studio */
+  /** a short name for the chosen look, shown in the Desk */
   label?: string;
 }
 

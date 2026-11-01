@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/** The three things the studio does, each a panel that slides over the last. */
+/** The three things the Desk does, each a panel that slides over the last. */
 const PILLARS = [
   {
     id: "write",
@@ -67,13 +67,13 @@ const EDITOR_STEPS = [
   },
   {
     title: "Goals that keep you going",
-    body: "Set a target length and a finish date. The studio tells you the words you need each day, and a sprint timer helps you find them.",
+    body: "Set a target length and a finish date. The Desk tells you the words you need each day, and a sprint timer helps you find them.",
     shot: { src: "progress", w: 2000, h: 1403, alt: "Writing progress: streak, words this year, a year heatmap and the last 30 days" },
   },
   {
     title: "Every book at a glance",
     body: "Your shelf shows every book, its stage and its word count. Today, the last seven days and your streak sit right on top.",
-    shot: { src: "books", w: 2200, h: 1183, alt: "The studio shelf with four books, words today, last seven days and the writing streak" },
+    shot: { src: "books", w: 2200, h: 1183, alt: "The Desk shelf with four books, words today, last seven days and the writing streak" },
   },
 ];
 
@@ -216,7 +216,7 @@ const faqFor = (freeCom: string) => [
   },
   {
     q: "What is the free author website?",
-    a: `Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. To use your own domain, like yourname.com, upgrade to Author Site Pro from the studio for $10 a month, or $96 a year ${freeCom}. Pro also adds analytics, with newsletters and direct ebook sales coming soon.`,
+    a: `Every Desk comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. To use your own domain, like yourname.com, upgrade to Author Site Pro from the Desk for $10 a month, or $96 a year ${freeCom}. Pro also adds analytics, with newsletters and direct ebook sales coming soon.`,
   },
   {
     q: "Can I bring books I already published?",
@@ -232,7 +232,7 @@ const faqFor = (freeCom: string) => [
   },
   {
     q: "Can I use my own cover art?",
-    a: "Yes. Upload a finished cover, or drop in artwork you made in ChatGPT, Nano Banana or anywhere else. The studio sizes it, adds the spine and back, and checks it against KDP.",
+    a: "Yes. Upload a finished cover, or drop in artwork you made in ChatGPT, Nano Banana or anywhere else. The Desk sizes it, adds the spine and back, and checks it against KDP.",
   },
 ];
 
@@ -270,7 +270,7 @@ export default async function Home() {
       <SiteHeader name="Jollof Pages" overHero />
       <ScrollFx />
 
-      {/* ---------- hero: the headline, then the studio itself lying down flat out of the red ---------- */}
+      {/* ---------- hero: the headline, then the Desk itself lying down flat out of the red ---------- */}
       <section aria-labelledby="hero-title" className="hero relative overflow-hidden bg-jollof pt-[clamp(6.5rem,13vh,9rem)] text-cream" data-p="exit">
         <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.16} />
         <div className="relative mx-auto max-w-[1600px] px-4 sm:px-8">
@@ -303,11 +303,11 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* the studio, tilted back like a page on a desk, lying flat as the page scrolls */}
+          {/* the Desk, tilted back like a page on a desk, lying flat as the page scrolls */}
           <div className="hero-stage relative mx-auto mt-[clamp(2rem,5vh,3.5rem)] max-w-[1320px]" data-rise style={{ ["--i" as string]: 3 }}>
             <div className="hero-tilt relative">
               <div className="frame">
-                <Shot src="editor" w={2400} h={1500} alt="The Jollof Pages studio: chapter list, the editor and a live Kindle preview" eager />
+                <Shot src="editor" w={2400} h={1500} alt="The Jollof Pages Desk: chapter list, the editor and a live Kindle preview" eager />
               </div>
               {/* cut-outs that drift at their own speeds */}
               <div className="float-a absolute bottom-[-12%] -left-[4%] w-[17%] max-sm:hidden" aria-hidden>
@@ -479,7 +479,7 @@ export default async function Home() {
               </div>
               <ul className="grid content-start gap-5 bg-char-2 p-6 sm:p-8">
                 {[
-                  ["Bring your own art", "Made it in ChatGPT or Nano Banana? Drop it in. The studio gives you the exact sizes to ask for."],
+                  ["Bring your own art", "Made it in ChatGPT or Nano Banana? Drop it in. The Desk gives you the exact sizes to ask for."],
                   ["Spine and back added", "The spine is sized from your page count and the back carries your description."],
                   ["Checked before KDP", "Page count, PDF size, spine text and artwork are checked against KDP's rules."],
                 ].map(([k, v], i) => (
@@ -569,7 +569,7 @@ export default async function Home() {
         <section id="site" aria-labelledby="site-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char">
           <Pattern id="p-weave" kind="weave" color="var(--jollof)" opacity={0.14} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead id="site-title" title="A home for every book" sub="A free author website comes with every studio." />
+            <SectionHead id="site-title" title="A home for every book" sub="A free author website comes with every Desk." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             <div className="duo relative">
@@ -577,12 +577,12 @@ export default async function Home() {
                 <Shot src="bookpage" w={2200} h={1375} alt="A book page on the publisher site with the cover in 3D, the description and a free chapter link" />
               </div>
               <div className="duo-front bg-white" data-p="through">
-                <Shot src="authors" w={2000} h={1125} alt="Pen names in the studio: paste a list of names, each with a photo and biography" />
+                <Shot src="authors" w={2000} h={1125} alt="Pen names in the Desk: paste a list of names, each with a photo and biography" />
               </div>
             </div>
             <ul className="mt-[clamp(2rem,5vw,4rem)] grid gap-4 text-center sm:grid-cols-3">
               {[
-                ["Your own website", "Every studio comes with a free site at you.jollofpages.com, styled from your cover colours."],
+                ["Your own website", "Every Desk comes with a free site at you.jollofpages.com, styled from your cover colours."],
                 ["Pen names", "Publish under as many names as you like. Your own stays private."],
                 ["Reader list", "Readers sign up on your book pages. Export the list whenever you need it."],
               ].map(([k, v], i) => (
@@ -604,7 +604,7 @@ export default async function Home() {
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1400px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[1.2fr_1fr]">
             <div className="phones flex justify-center gap-[3%] py-[6%]" data-p="through">
               {[
-                { src: "m-books", alt: "The studio shelf on a phone" },
+                { src: "m-books", alt: "The Desk shelf on a phone" },
                 { src: "m-write", alt: "The chapter list on a phone" },
                 { src: "m-format", alt: "Interior themes on a phone" },
               ].map((m, i) => (
@@ -635,7 +635,7 @@ export default async function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icons/icon-512.png" alt="The Jollof Pages app icon" width={160} height={160} className="size-[clamp(7rem,12vw,10rem)] shadow-[12px_12px_0_var(--char)]" loading="lazy" />
               <p className="max-w-[30ch] text-[1.125rem]">It opens in its own window with its own icon, and your books stay safe in the cloud.</p>
-              <InstallButton className="btn" label="Install the studio" />
+              <InstallButton className="btn" label="Install the Desk" />
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {PLATFORMS.map((p, i) => (
@@ -718,7 +718,7 @@ export default async function Home() {
               <div className="relative overflow-hidden bg-jollof p-8 sm:p-12">
                 <Pattern id="p-plan" kind="adire" color="var(--char)" opacity={0.18} drift={false} />
                 <div className="relative">
-                  <p className="text-[1.25rem] font-semibold">Jollof Pages Studio</p>
+                  <p className="text-[1.25rem] font-semibold">Jollof Pages Desk</p>
                   <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">$129</p>
                   <p className="mt-4 text-[1.125rem] font-semibold">One-time payment. No monthly fees.</p>
                   <p className="mt-3 max-w-[34ch] text-cream/95">Buy it once and write as many books as you like, with every update we ship included.</p>
@@ -741,7 +741,7 @@ export default async function Home() {
               <div>
                 <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, pay as you go</p>
                 <p className="wide mt-1 text-[1.5rem] font-bold">AI cover credits</p>
-                <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. $10 buys 100 credits: about 50 drafts or 25 print-ready covers. Credits never expire.</p>
+                <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the Desk. $10 buys 100 credits: about 50 drafts or 25 print-ready covers. Credits never expire.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
@@ -807,7 +807,7 @@ export default async function Home() {
             <span className="cta-page bg-char" style={{ ["--r" as string]: "6deg" }} />
           </div>
           <div className="relative px-4 sm:px-8">
-            <SectionHead id="cta-title" title="Your book is ready to cook" sub="Pay once, get the studio and your author website." />
+            <SectionHead id="cta-title" title="Your book is ready to cook" sub="Pay once, get the Desk and your author website." />
             <div className="mx-auto mt-8 max-w-[560px]" data-reveal style={{ ["--i" as string]: 2 }}>
               <div className="flex justify-center">
                 <a href="/signup" className="btn">
@@ -864,7 +864,7 @@ function StepArt({ kind }: { kind: "import" | "look" | "devices" }) {
     return (
       <div className="absolute inset-0 bg-char">
         <div className="step-shot absolute top-[8%] left-[6%] w-[125%]">
-          <Shot src="books" w={2200} h={1183} alt="The studio shelf with the Import Word or Markdown button and four books" />
+          <Shot src="books" w={2200} h={1183} alt="The Desk shelf with the Import Word or Markdown button and four books" />
         </div>
       </div>
     );

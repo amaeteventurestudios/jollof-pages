@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       await addLedger({ owner: me.id, delta: pack.credits, reason: "grant", note: "Test mode top-up (no payment)" });
       return NextResponse.json({ test: true, credits: pack.credits });
     }
-    const back = `${publicOrigin(req)}${bookId ? `/studio/books/${encodeURIComponent(bookId)}?tab=cover` : "/studio"}`;
+    const back = `${publicOrigin(req)}${bookId ? `/desk/books/${encodeURIComponent(bookId)}?tab=cover` : "/desk"}`;
     const join = back.includes("?") ? "&" : "?";
     const session = await createCheckout({
       pack,

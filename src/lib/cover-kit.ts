@@ -18,7 +18,7 @@ export interface ArtSize {
   height: number;
   /** pixels at 300 dpi */
   px: { width: number; height: number };
-  /** the nearest ratio an image tool offers, and how much of the picture the studio crops to fit */
+  /** the nearest ratio an image tool offers, and how much of the picture the Desk crops to fit */
   ratio: string;
   cropPercent: number;
   /** how much of each edge to keep free of faces, text and key detail (bleed plus safe margin) */

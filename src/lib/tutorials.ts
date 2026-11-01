@@ -5,7 +5,7 @@ export interface Tutorial {
   title: string;
   summary: string;
   minutes: number;
-  /** where in the studio to try it; "book" means inside any book */
+  /** where in the Desk to try it; "book" means inside any book */
   where: string;
   steps: { title: string; text: string }[];
   tip?: string;

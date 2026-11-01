@@ -148,7 +148,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
       await pb().collection("books").update(book.id, fd);
       localStorage.removeItem(PENDING_BOOK);
       // no website yet: the book is on it, now pick its address and look
-      router.push(hasSite ? `/studio/books/${book.id}?tab=publish` : "/studio/site?new=1");
+      router.push(hasSite ? `/desk/books/${book.id}?tab=publish` : "/desk/site?new=1");
     } catch (err) {
       setError(errorMessage(err));
       setBusy(false);

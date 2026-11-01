@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const billing = await getBilling(me.id);
     if (billing?.stripe_subscription && ["active", "trialing", "past_due", "canceling"].includes(billing.status))
       return NextResponse.json({ error: "You already have Pro. Use Manage plan to change it." }, { status: 400 });
-    const back = `${publicOrigin(req)}/studio/site`;
+    const back = `${publicOrigin(req)}/desk/site`;
     const session = await createProCheckout({
       userId: me.id,
       email: me.email,

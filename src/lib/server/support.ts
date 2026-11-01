@@ -5,7 +5,7 @@ import { TICKET_FILES, ticketNo, topicLabel, type SupportRequest } from "../supp
 
 /**
  * Who answers help requests: the addresses in SUPPORT_EMAILS (comma separated), or OWNER_EMAIL.
- * They see every request in the studio's support inbox and get each new one by email.
+ * They see every request in the Desk's support inbox and get each new one by email.
  */
 export function supportTeam(): string[] {
   return (process.env.SUPPORT_EMAILS || process.env.OWNER_EMAIL || "")
@@ -61,7 +61,7 @@ export async function notifyTeam(r: SupportRequest, inboxUrl: string, followUp?:
       await sendMail({
         to,
         subject: `${followUp ? "Re: " : "[Help] "}${ticketNo(r)} ${r.subject}`,
-        html: letterHtml(body, { name: "Jollof Pages support", footer: "Sent from the Help page in the studio." }),
+        html: letterHtml(body, { name: "Jollof Pages support", footer: "Sent from the Help page in the Desk." }),
         text: letterText(body),
         fromName: "Jollof Pages Help",
         fromLocal: "help",
@@ -77,13 +77,13 @@ export async function notifyWriter(r: SupportRequest, text: string, helpUrl: str
   if (!mailConfigured() || !r.email) return false;
   const body =
     kind === "received"
-      ? `Thanks for writing in. Your ticket ${ticketNo(r)} about **${r.subject}** is open, and we will answer within one working day, usually sooner.\n\nFollow it, add details or screenshots on your ticket in the studio: ${helpUrl}`
-      : `${text}\n\nTo answer, open your ticket in the studio: ${helpUrl}`;
+      ? `Thanks for writing in. Your ticket ${ticketNo(r)} about **${r.subject}** is open, and we will answer within one working day, usually sooner.\n\nFollow it, add details or screenshots on your ticket in the Desk: ${helpUrl}`
+      : `${text}\n\nTo answer, open your ticket in the Desk: ${helpUrl}`;
   try {
     await sendMail({
       to: r.email,
       subject: kind === "received" ? `Ticket ${ticketNo(r)} opened: ${r.subject}` : `Re: ${ticketNo(r)} ${r.subject}`,
-      html: letterHtml(body, { name: "Jollof Pages", footer: "You are getting this because you asked for help in the Jollof Pages studio." }),
+      html: letterHtml(body, { name: "Jollof Pages", footer: "You are getting this because you asked for help in the Jollof Pages Desk." }),
       text: letterText(body),
       fromName: "Jollof Pages Help",
       fromLocal: "help",
@@ -103,7 +103,7 @@ export async function notifyTeamOfIdea(from: string, title: string, details: str
     await sendMail({
       to,
       subject: `[Idea] ${title}`,
-      html: letterHtml(body, { name: "Jollof Pages", footer: "Sent from Feature requests in the studio." }),
+      html: letterHtml(body, { name: "Jollof Pages", footer: "Sent from Feature requests in the Desk." }),
       text: letterText(body),
       fromName: "Jollof Pages Ideas",
       fromLocal: "help",

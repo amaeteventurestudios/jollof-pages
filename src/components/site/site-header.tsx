@@ -13,7 +13,7 @@ const STUDIO_LINKS = [
   { href: "/login", label: "Sign in" },
 ];
 
-// an author's own site: their books, their letter and their reader list, nothing about the studio
+// an author's own site: their books, their letter and their reader list, nothing about the Desk
 const AUTHOR_LINKS = [
   { href: "/#books", label: "Books" },
   { href: "/#about", label: "About" },

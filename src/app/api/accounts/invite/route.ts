@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const user = await pb.collection("users").getOne(me.id);
     if (user.tester_invite) return NextResponse.json({ ok: true });
     if (user.access === "collaborator")
-      return NextResponse.json({ error: "This email is set up as a collaborator on someone else's book. Sign up with a different email to test the full studio." }, { status: 400 });
+      return NextResponse.json({ error: "This email is set up as a collaborator on someone else's book. Sign up with a different email to test the full Desk." }, { status: 400 });
     await admitTester(pb, found.invite, me.id, String(user.access ?? ""));
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { IsbnBook } from "@/lib/isbn";
 import { LinkGuide } from "@/components/site/link-guide";
 
-/** Where the homepage leaves the book for the studio to add after sign-up. */
+/** Where the homepage leaves the book for the Desk to add after sign-up. */
 export const PENDING_BOOK = "jp-pending-book";
 export interface PendingBook {
   code: string;
@@ -167,7 +167,7 @@ export function SiteTryout() {
             <a href="/signup" onClick={keep} className="btn">
               Keep this website
             </a>
-            <p className="t-small text-cream/85">Comes free with the studio. Your book will be waiting on it when you sign in.</p>
+            <p className="t-small text-cream/85">Comes free with the Desk. Your book will be waiting on it when you sign in.</p>
           </div>
         </div>
       )}

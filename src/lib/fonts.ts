@@ -1,6 +1,6 @@
 /**
  * Interior typefaces. Every family is SIL OFL 1.1 from Google Fonts. The print PDF needs the TTF
- * files (scripts/fonts.txt lists the same families for scripts/setup-tools.sh); the studio preview
+ * files (scripts/fonts.txt lists the same families for scripts/setup-tools.sh); the Desk preview
  * and the public reader load them from Google Fonts; EPUBs name them with fallbacks.
  */
 

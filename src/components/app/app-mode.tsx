@@ -50,7 +50,7 @@ function subscribe(cb: () => void) {
   return () => mq.removeEventListener("change", cb);
 }
 
-/** Whether the screen is a phone or tablet, where the studio runs as an app. */
+/** Whether the screen is a phone or tablet, where the Desk runs as an app. */
 export function useAppMode(): boolean {
   return useSyncExternalStore(
     subscribe,

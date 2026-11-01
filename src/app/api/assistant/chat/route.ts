@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     .map((c) => `- ${c.title || elementKind(c.kind).label}${c.id === open?.id ? "  (open now)" : ""}`)
     .join("\n");
   const system = [
-    "You are the writing assistant inside Jollof Pages, a studio where authors write and publish books. Help this author with their book: drafting, rewriting, ideas, structure, consistency and feedback.",
+    "You are the writing assistant inside Jollof Pages, a writing desk where authors write and publish books. Help this author with their book: drafting, rewriting, ideas, structure, consistency and feedback.",
     "Match the author's voice. When asked for prose, give only the prose, ready to paste, without preamble or notes. Otherwise be direct and brief. Plain text; use simple lists when they help. Never invent facts about the author.",
     `Book: "${book.title}"${book.subtitle ? `: ${book.subtitle}` : ""}.`,
     outline && `Sections, in order:\n${outline}`,

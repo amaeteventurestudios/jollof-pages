@@ -16,7 +16,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const next = params.get("next");
-  const target = next && /^\/(studio|invite|join)(\/|$)/.test(next) ? next : "/studio";
+  const target = next && /^\/(desk|invite|join)(\/|$)/.test(next) ? next : "/desk";
 
   return (
     <div className="auth-card p-6 sm:p-9">
@@ -58,7 +58,7 @@ function LoginForm() {
           </p>
         )}
         <button type="submit" disabled={busy} className="auth-go auth-rise d4 mt-1">
-          {busy ? "Signing in…" : "Open the studio"}
+          {busy ? "Signing in…" : "Open the Desk"}
           {!busy && (
             <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M5 12h14M13 6l6 6-6 6" />
@@ -69,7 +69,7 @@ function LoginForm() {
       <p className="auth-rise d5 mt-7 text-center text-sm text-muted-foreground">
         New to <BrandName />?{" "}
         <Link href="/signup" className="font-semibold text-primary underline-offset-4 hover:underline">
-          Create your studio
+          Create your Desk
         </Link>
       </p>
     </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
     <AuthShell
       title="Write it here."
       accent="Publish it everywhere."
-      lead="Your private studio for drafting, formatting for print and ebook, and publishing to your own author site."
+      lead="Your private Desk for drafting, formatting for print and ebook, and publishing to your own author site."
       points={["Write", "Format for print and Kindle", "Publish your author site"]}
     >
       <Suspense>

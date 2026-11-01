@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     .collection("support_requests")
     .create<SupportRequest>({ owner: me.id, email: me.email, topic, subject, message, status: "open", replies: [], page: String(b.page ?? "").slice(0, 500), number, ...(files.length ? { attachments: files } : {}) });
   const origin = publicOrigin(req);
-  const emailed = await notifyTeam(r, `${origin}/studio/help#inbox`);
-  await notifyWriter(r, "", `${origin}/studio/help`, "received");
+  const emailed = await notifyTeam(r, `${origin}/desk/help#inbox`);
+  await notifyWriter(r, "", `${origin}/desk/help`, "received");
   return NextResponse.json({ ok: true, emailed, request: r });
 }
