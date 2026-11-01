@@ -16,7 +16,8 @@ function trusted(req: Request): boolean {
 /**
  * GET ?email=…&app=studio|ai-writer, for the other Jollof apps to ask whether a person may use
  * them, by the switches on Admin > Writers > Access. Someone with no Jollof Pages account keeps
- * Jollof Studio (it has its own free accounts) but not the AI writer. Suspended accounts get neither.
+ * Jollof Studio (it has its own free accounts) but not the AI writer, unless the owner switched
+ * that email on Access (kept in app_access). Suspended accounts get neither.
  */
 export async function GET(req: Request) {
   if (!trusted(req)) return NextResponse.json({ error: "Not allowed." }, { status: 401 });
@@ -30,7 +31,15 @@ export async function GET(req: Request) {
     .collection("users")
     .getFirstListItem<{ suspended?: boolean; studio_off?: boolean; ai_writer?: boolean }>(pb.filter("email = {:e}", { e: email }), { fields: "suspended,studio_off,ai_writer" })
     .catch(() => null);
-  if (!user) return NextResponse.json({ allowed: app === "studio", account: false });
+  if (!user) {
+    // a Studio-only account the owner may have switched off on the Access page
+    const sw = await pb
+      .collection("app_access")
+      .getFirstListItem<{ studio_off?: boolean; ai_writer?: boolean }>(pb.filter("email = {:e}", { e: email }))
+      .catch(() => null);
+    const allowed = app === "studio" ? !sw?.studio_off : Boolean(sw?.ai_writer);
+    return NextResponse.json({ allowed, account: false, ...(allowed ? {} : { reason: "switched off" }) });
+  }
   if (user.suspended) return NextResponse.json({ allowed: false, account: true, reason: "suspended" });
   const allowed = app === "studio" ? !user.studio_off : Boolean(user.ai_writer);
   return NextResponse.json({ allowed, account: true, ...(allowed ? {} : { reason: "switched off" }) });

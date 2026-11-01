@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { IsbnBook } from "@/lib/isbn";
+import { LinkGuide } from "@/components/site/link-guide";
 
 /** Where the homepage leaves the book for the Desk to add after sign-up. */
 export const PENDING_BOOK = "jp-pending-book";
@@ -33,12 +34,12 @@ export function SiteTryout() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function ask(url: string): Promise<(Found & { needsTitle?: boolean }) | null> {
+  async function ask(url: string): Promise<(Found & { needsTitle?: boolean; guess?: string }) | null> {
     setBusy(true);
     setError("");
     try {
       const res = await fetch(url);
-      const body = (await res.json()) as Found & { error?: string; needsTitle?: boolean };
+      const body = (await res.json()) as Found & { error?: string; needsTitle?: boolean; guess?: string };
       if (!res.ok) throw new Error(body.error || "Lookup failed.");
       return body;
     } catch (e) {
@@ -54,8 +55,15 @@ export function SiteTryout() {
     setFound(null);
     setAsin("");
     const body = await ask(`/api/books/isbn?isbn=${encodeURIComponent(code)}`);
-    if (body?.needsTitle && body.asin) setAsin(body.asin);
-    else if (body) setFound(body);
+    if (body?.needsTitle && body.asin) {
+      setAsin(body.asin);
+      // a pasted Amazon link carries most of the title: try it straight away
+      if (body.guess) {
+        setTitle(body.guess);
+        const hit = await ask(`/api/books/isbn?${new URLSearchParams({ title: body.guess, asin: body.asin })}`);
+        if (hit?.matched) setFound(hit);
+      }
+    } else if (body) setFound(body);
   }
 
   async function byTitle(e: React.FormEvent) {
@@ -84,9 +92,16 @@ export function SiteTryout() {
         </button>
       </form>
 
+      {!asin && !found && (
+        <div className="mx-auto mt-4 max-w-[720px] text-left">
+          <LinkGuide dark />
+        </div>
+      )}
       {asin && !found && (
         <form onSubmit={byTitle} className="mx-auto mt-4 grid max-w-[720px] gap-3">
-          <p className="text-cream/90">That&apos;s a Kindle ASIN. Amazon doesn&apos;t share Kindle book details, so type the title and author.</p>
+          <p className="text-cream/90">
+            That&apos;s a Kindle book. Amazon doesn&apos;t share Kindle book details, so {title ? "check the title we took from your link and add your author name." : "type the title and author."}
+          </p>
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
             <input required aria-label="Title" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className={field} />
             <input aria-label="Author" placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)} className={field} />

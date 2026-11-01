@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { bearer } from "@/lib/server/load-book";
 import { caller } from "@/lib/server/credits";
-import { parseBookCode, type IsbnBook } from "@/lib/isbn";
+import { amazonHost, parseBookCode, titleFromAmazonLink, type IsbnBook } from "@/lib/isbn";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ function limited(req: Request): boolean {
  * GET looks up a book an author published before Jollof Pages, in Open Library (free, no key):
  * - ?isbn=… takes an ISBN, an ASIN or an Amazon link. A print ASIN is its ISBN-10, so it is
  *   looked up. Amazon doesn't share Kindle (B0…) details, so those answer { asin, needsTitle }.
- * - ?title=…&author=… finds it by name instead, for Kindle books.
+ * - ?title=…&author=… finds it by name instead, for Kindle books, in Google Books then Open Library.
  * Works signed out too, for the homepage's "see your website", with a limit per visitor.
  */
 export async function GET(req: Request) {
@@ -61,13 +61,15 @@ export async function GET(req: Request) {
   const title = (q.get("title") || "").trim();
   if (title) return byTitle(title, (q.get("author") || "").trim(), (q.get("asin") || "").toUpperCase());
 
-  const code = parseBookCode(q.get("isbn") || "");
+  const raw = q.get("isbn") || "";
+  const code = parseBookCode(raw);
   if (!code)
     return NextResponse.json(
       { error: "That isn't an ISBN or an ASIN. Use the 10 or 13 digits from the copyright page, the ASIN from your book's Amazon page (under Product details), or paste the Amazon link." },
       { status: 400 },
     );
-  if ("asin" in code) return NextResponse.json({ asin: code.asin, needsTitle: true });
+  // the title Amazon puts in a pasted link, and the writer's Amazon store, for the buy button
+  if ("asin" in code) return NextResponse.json({ asin: code.asin, needsTitle: true, guess: titleFromAmazonLink(raw), host: amazonHost(raw) });
   const isbn = code.isbn;
 
   type Data = { title?: string; subtitle?: string; authors?: { name: string }[]; publish_date?: string; number_of_pages?: number; publishers?: { name: string }[]; cover?: { large?: string; medium?: string } };
@@ -95,23 +97,70 @@ export async function GET(req: Request) {
   return NextResponse.json(book);
 }
 
-/** A Kindle book: what Open Library knows by title and author, or just what the writer typed. */
-async function byTitle(title: string, author: string, asin: string) {
-  type Doc = { key: string; title: string; subtitle?: string; author_name?: string[]; cover_i?: number; first_publish_year?: number; number_of_pages_median?: number; publisher?: string[] };
-  const url = `https://openlibrary.org/search.json?${new URLSearchParams({ title, ...(author ? { author } : {}), limit: "1", fields: "key,title,subtitle,author_name,cover_i,first_publish_year,number_of_pages_median,publisher" })}`;
+type Volume = {
+  volumeInfo?: { title?: string; subtitle?: string; authors?: string[]; description?: string; publisher?: string; publishedDate?: string; pageCount?: number; imageLinks?: { thumbnail?: string; small?: string; medium?: string; large?: string } };
+};
+
+/**
+ * Google Books, which knows many self-published Kindle books Open Library doesn't. With
+ * GOOGLE_BOOKS_API_KEY it has a daily quota of its own; without one, shared limits may refuse it.
+ */
+async function googleBooks(title: string, author: string): Promise<Omit<IsbnBook, "isbn"> | null> {
+  const key = process.env.GOOGLE_BOOKS_API_KEY;
+  const query = `intitle:${title}${author ? ` inauthor:${author}` : ""}`;
+  const url = `https://www.googleapis.com/books/v1/volumes?${new URLSearchParams({ q: query, maxResults: "1", printType: "books", ...(key ? { key } : {}) })}`;
+  const v = (await json<{ items?: Volume[] }>(url))?.items?.[0]?.volumeInfo;
+  if (!v?.title) return null;
+  const img = v.imageLinks?.large || v.imageLinks?.medium || v.imageLinks?.small || v.imageLinks?.thumbnail || "";
+  return {
+    title: v.title,
+    subtitle: v.subtitle ?? "",
+    authors: v.authors ?? [],
+    // Google sends the blurb as simple HTML
+    description: (v.description ?? "")
+      .replace(/<br\s*\/?>|<\/p>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .trim(),
+    publishDate: /^\d{4}-\d{2}-\d{2}$/.test(v.publishedDate ?? "") ? (v.publishedDate as string) : "",
+    pages: v.pageCount ?? 0,
+    publisher: v.publisher ?? "",
+    cover: img ? await coverData(img.replace(/^http:/, "https:").replace(/&edge=curl/, "")) : "",
+  };
+}
+
+/** Open Library's best match for a title (and author), or null. */
+async function openLibrary(title: string, author: string): Promise<Omit<IsbnBook, "isbn"> | null> {
+  type Doc = { key: string; title: string; subtitle?: string; author_name?: string[]; cover_i?: number; number_of_pages_median?: number; publisher?: string[] };
+  const url = `https://openlibrary.org/search.json?${new URLSearchParams({ title, ...(author ? { author } : {}), limit: "1", fields: "key,title,subtitle,author_name,cover_i,number_of_pages_median,publisher" })}`;
   const hit = (await json<{ docs?: Doc[] }>(url))?.docs?.[0];
-  const work = hit ? await json<{ description?: Text }>(`https://openlibrary.org${hit.key}.json`) : null;
+  if (!hit) return null;
+  const work = await json<{ description?: Text }>(`https://openlibrary.org${hit.key}.json`);
+  return {
+    title: hit.title,
+    subtitle: hit.subtitle ?? "",
+    authors: hit.author_name ?? [],
+    description: text(work?.description),
+    publishDate: "", // Open Library knows only the year of the first edition here
+    pages: hit.number_of_pages_median ?? 0,
+    publisher: hit.publisher?.[0] ?? "",
+    cover: hit.cover_i ? await coverData(`https://covers.openlibrary.org/b/id/${hit.cover_i}-L.jpg`) : "",
+  };
+}
+
+/** A Kindle book: what Google Books or Open Library know by title and author, or just what the writer typed. */
+async function byTitle(title: string, author: string, asin: string) {
+  const hit = (await googleBooks(title, author)) ?? (await openLibrary(title, author));
   const book: IsbnBook = {
     isbn: "",
     ...(/^[A-Z0-9]{10}$/.test(asin) ? { asin } : {}),
     title: hit?.title || title,
     subtitle: hit?.subtitle ?? "",
-    authors: hit?.author_name?.length ? hit.author_name : author ? [author] : [],
-    description: text(work?.description),
-    publishDate: "", // Open Library knows only the year of the first edition here
-    pages: hit?.number_of_pages_median ?? 0,
-    publisher: hit?.publisher?.[0] ?? "",
-    cover: hit?.cover_i ? await coverData(`https://covers.openlibrary.org/b/id/${hit.cover_i}-L.jpg`) : "",
+    authors: hit?.authors.length ? hit.authors : author ? [author] : [],
+    description: hit?.description ?? "",
+    publishDate: hit?.publishDate ?? "",
+    pages: hit?.pages ?? 0,
+    publisher: hit?.publisher ?? "",
+    cover: hit?.cover ?? "",
   };
   return NextResponse.json({ ...book, matched: Boolean(hit) });
 }

@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { createBook, listAuthors, uniqueSlug, userId } from "@/lib/studio";
 import { errorMessage, pb } from "@/lib/pb";
 import { slugify } from "@/lib/slug";
-import { amazonLink, type IsbnBook } from "@/lib/isbn";
+import { amazonLink, tidyStoreLink, type IsbnBook } from "@/lib/isbn";
+import { useMySite } from "@/components/studio/use-my-site";
+import { LinkGuide } from "@/components/site/link-guide";
 import { PENDING_BOOK, type PendingBook } from "@/components/site/site-tryout";
 import type { Author } from "@/lib/types";
 
@@ -27,6 +29,12 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
   const [title, setTitle] = useState(initial?.title ?? "");
   const [author, setAuthor] = useState(initial?.author ?? "");
   const [store, setStore] = useState("");
+  // the Amazon store of a pasted link (amazon.co.uk…), for the buy button
+  const [host, setHost] = useState("");
+  // the title came from the Amazon link, which shortens long titles
+  const [guessed, setGuessed] = useState(false);
+  const { site } = useMySite();
+  const hasSite = Boolean(site && (site.subdomain || site.custom_domain || site.home));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,6 +45,8 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
     setTitle("");
     setAuthor("");
     setStore("");
+    setHost("");
+    setGuessed(false);
     setError("");
     setBusy(false);
   }
@@ -48,12 +58,22 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
     setAsin("");
     try {
       const res = await fetch(`/api/books/isbn?isbn=${encodeURIComponent(code)}`, { headers: { Authorization: pb().authStore.token } });
-      const body = (await res.json()) as IsbnBook & { error?: string; needsTitle?: boolean };
+      const body = (await res.json()) as IsbnBook & { error?: string; needsTitle?: boolean; guess?: string; host?: string };
       if (!res.ok) throw new Error(body.error || "Lookup failed.");
+      setHost(body.host || "");
       if (body.needsTitle && body.asin) {
         setAsin(body.asin);
         // the homepage already asked for the title and author
         if (then?.title) return await lookUpTitle(body.asin, then.title, then.author ?? "");
+        // the author can't come from Amazon: start from their own pen name, or their name
+        const me = author.trim() || (await listAuthors().catch(() => []))[0]?.name || String(pb().authStore.record?.name ?? "");
+        setAuthor(me);
+        // a pasted Amazon link carries most of the title: look it up straight away
+        if (body.guess) {
+          setTitle(body.guess);
+          setGuessed(true);
+          return await lookUpTitle(body.asin, body.guess, me);
+        }
       } else setFound(body);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -119,7 +139,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
       if (found.publisher) fd.append("imprint", found.publisher);
       fd.append("status", "published");
       fd.append("published", "true");
-      const link = store.trim() || (found.asin ? amazonLink(found.asin) : `https://www.amazon.com/s?k=${found.isbn || encodeURIComponent(found.title)}`);
+      const link = tidyStoreLink(store) || (found.asin ? amazonLink(found.asin, host || undefined) : `https://www.amazon.com/s?k=${found.isbn || encodeURIComponent(found.title)}`);
       fd.append("buy_links", JSON.stringify([{ label: /amazon\./i.test(link) ? "Amazon" : "Buy the book", url: link }]));
       if (found.cover) {
         const blob = await (await fetch(found.cover)).blob();
@@ -127,7 +147,8 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
       }
       await pb().collection("books").update(book.id, fd);
       localStorage.removeItem(PENDING_BOOK);
-      router.push(`/desk/books/${book.id}?tab=publish`);
+      // no website yet: the book is on it, now pick its address and look
+      router.push(hasSite ? `/desk/books/${book.id}?tab=publish` : "/desk/site?new=1");
     } catch (err) {
       setError(errorMessage(err));
       setBusy(false);
@@ -158,12 +179,15 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
               {busy && !found ? "Looking…" : "Look up"}
             </Button>
           </div>
+          {!found && !asin && <LinkGuide />}
         </form>
         {asin && (
           <form className="grid gap-3 border-t border-border pt-4" onSubmit={findByTitle}>
             <p className="text-sm text-ink-2">
-              <span className="font-medium text-ink">Kindle book {asin}.</span> Amazon doesn&apos;t share Kindle book details, so type the title and author. We&apos;ll look for its cover and description, and
-              the buy button will go straight to your Amazon page.
+              <span className="font-medium text-ink">Kindle book {asin}.</span>{" "}
+              {guessed
+                ? "Amazon doesn't share Kindle book details, so we took the title from your link and put your pen name as the author. Check both: Amazon shortens long titles in its links."
+                : "Amazon doesn't share Kindle book details, so type the title and author. We'll look for its cover and description, and the buy button will go straight to your Amazon page."}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
@@ -235,7 +259,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
             Cancel
           </Button>
           <Button type="button" disabled={busy || !found} onClick={add}>
-            {busy && found ? "Adding…" : "Add to my website"}
+            {busy && found ? "Adding…" : hasSite ? "Add to my website" : "Create my website"}
           </Button>
         </div>
       </DialogContent>

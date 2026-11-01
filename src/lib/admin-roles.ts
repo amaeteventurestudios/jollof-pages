@@ -15,12 +15,12 @@ export const ROLES: { id: Role; label: string; about: string }[] = [
 export const STAFF_ROLES = ROLES.filter((r) => r.id !== "owner").map((r) => r.id as StaffRole);
 export const roleLabel = (r: Role) => ROLES.find((x) => x.id === r)?.label ?? r;
 
-export type Section = "overview" | "insights" | "writers" | "testers" | "websites" | "books" | "money" | "support" | "team" | "brands" | "switches" | "audit";
+export type Section = "overview" | "insights" | "writers" | "testers" | "websites" | "books" | "studio" | "money" | "support" | "team" | "brands" | "switches" | "audit";
 
 const SEES: Record<Role, Section[]> = {
-  owner: ["overview", "insights", "writers", "testers", "websites", "books", "money", "support", "team", "brands", "switches", "audit"],
-  admin: ["overview", "insights", "writers", "testers", "websites", "books", "money", "support", "switches"],
-  support: ["overview", "writers", "websites", "support"],
+  owner: ["overview", "insights", "writers", "testers", "websites", "books", "studio", "money", "support", "team", "brands", "switches", "audit"],
+  admin: ["overview", "insights", "writers", "testers", "websites", "books", "studio", "money", "support", "switches"],
+  support: ["overview", "writers", "websites", "studio", "support"],
   finance: ["overview", "insights", "money"],
   viewer: ["overview", "insights"],
 };
