@@ -20,6 +20,17 @@ import type { Author } from "@/lib/types";
  * link, check what Open Library knows, and it goes on their website with its cover, blurb and a
  * store link. Amazon doesn't share Kindle details, so a B0… ASIN asks for the title and author.
  */
+/** The demo pen names the sample books came with: never a writer's real name. */
+const DEMO_NAMES = ["sample author", "tola ekanem"];
+
+/** The writer's own pen name for a book Amazon won't name: their first real pen name, or their account name. */
+async function defaultAuthor(): Promise<string> {
+  const pens = (await listAuthors().catch(() => [] as Author[])).filter((a) => !DEMO_NAMES.includes(a.name.trim().toLowerCase()));
+  if (pens[0]) return pens[0].name;
+  const name = String(pb().authStore.record?.name ?? "").trim();
+  return name && !["owner", "admin"].includes(name.toLowerCase()) ? name : "";
+}
+
 export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose: () => void; initial?: PendingBook | null }) {
   const router = useRouter();
   const [isbn, setIsbn] = useState(initial?.code ?? "");
@@ -28,6 +39,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
   const [asin, setAsin] = useState("");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [author, setAuthor] = useState(initial?.author ?? "");
+  const [subtitle, setSubtitle] = useState("");
   const [store, setStore] = useState("");
   // the Amazon store of a pasted link (amazon.co.uk…), for the buy button
   const [host, setHost] = useState("");
@@ -44,6 +56,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
     setAsin("");
     setTitle("");
     setAuthor("");
+    setSubtitle("");
     setStore("");
     setHost("");
     setGuessed(false);
@@ -66,7 +79,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
         // the homepage already asked for the title and author
         if (then?.title) return await lookUpTitle(body.asin, then.title, then.author ?? "");
         // the author can't come from Amazon: start from their own pen name, or their name
-        const me = author.trim() || (await listAuthors().catch(() => []))[0]?.name || String(pb().authStore.record?.name ?? "");
+        const me = author.trim() || (await defaultAuthor());
         setAuthor(me);
         // a pasted Amazon link carries most of the title: look it up straight away
         if (body.guess) {
@@ -91,7 +104,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
       const res = await fetch(`/api/books/isbn?${q}`, { headers: { Authorization: pb().authStore.token } });
       const body = (await res.json()) as IsbnBook & { error?: string; matched?: boolean };
       if (!res.ok) throw new Error(body.error || "Lookup failed.");
-      setFound(body);
+      setFound(body.matched ? body : { ...body, subtitle: subtitle.trim() });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -140,7 +153,11 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
       fd.append("status", "published");
       fd.append("published", "true");
       const link = tidyStoreLink(store) || (found.asin ? amazonLink(found.asin, host || undefined) : `https://www.amazon.com/s?k=${found.isbn || encodeURIComponent(found.title)}`);
-      fd.append("buy_links", JSON.stringify([{ label: /amazon\./i.test(link) ? "Amazon" : "Buy the book", url: link }]));
+      // every format Amazon told us about, each with its price; or the one link
+      const links = found.formats?.length
+        ? [...found.formats.map((f) => ({ label: `Amazon ${f.label}`, url: f.url, ...(f.price ? { price: f.price } : {}) })), ...(store.trim() && !/amazon\./i.test(store) ? [{ label: "Buy the book", url: store.trim() }] : [])]
+        : [{ label: /amazon\./i.test(link) ? "Amazon" : "Buy the book", url: link }];
+      fd.append("buy_links", JSON.stringify(links));
       if (found.cover) {
         const blob = await (await fetch(found.cover)).blob();
         fd.append("cover", new File([blob], `${slugify(found.title)}-cover.${blob.type.split("/")[1] || "jpg"}`, { type: blob.type }));
@@ -186,8 +203,8 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
             <p className="text-sm text-ink-2">
               <span className="font-medium text-ink">Kindle book {asin}.</span>{" "}
               {guessed
-                ? "Amazon doesn't share Kindle book details, so we took the title from your link and put your pen name as the author. Check both: Amazon shortens long titles in its links."
-                : "Amazon doesn't share Kindle book details, so type the title and author. We'll look for its cover and description, and the buy button will go straight to your Amazon page."}
+                ? "Amazon's link only carries the title, and often part of the subtitle too, so check it: keep just the title here and put the rest under Subtitle. Then check the author is your pen name."
+                : "An ASIN on its own is only a code, so type the title and author. We'll look for its cover and description, and the buy button will go straight to your Amazon page."}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
@@ -195,8 +212,12 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
                 <Input id="asin-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="grid gap-1.5">
+                <Label htmlFor="asin-subtitle">Subtitle</Label>
+                <Input id="asin-subtitle" placeholder="Optional" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+              <div className="grid gap-1.5 sm:col-span-2">
                 <Label htmlFor="asin-author">Author</Label>
-                <Input id="asin-author" value={author} onChange={(e) => setAuthor(e.target.value)} />
+                <Input id="asin-author" placeholder="Your pen name" value={author} onChange={(e) => setAuthor(e.target.value)} />
               </div>
             </div>
             <div>
@@ -210,12 +231,12 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
           <div className="grid gap-4">
             {found.asin && (
               <p className="text-[13px] text-soft">
-                {found.matched ? "Found on Open Library. Not your book? " : "No match on Open Library, so it goes on with what you typed. Add the cover and description after on the book's page. "}
+                {found.matched ? "We found these details. Not your book? " : "We couldn't find this book in the book databases, so it goes on with what you typed. Add the cover and description after, on the book's page. "}
                 {found.matched && (
                   <button
                     type="button"
                     className="font-medium text-primary hover:underline"
-                    onClick={() => setFound({ ...found, title: title.trim(), subtitle: "", authors: author.trim() ? [author.trim()] : [], description: "", pages: 0, publisher: "", cover: "", matched: false })}
+                    onClick={() => setFound({ ...found, title: title.trim(), subtitle: subtitle.trim(), formats: undefined, authors: author.trim() ? [author.trim()] : [], description: "", pages: 0, publisher: "", cover: "", matched: false })}
                   >
                     Use only what I typed
                   </button>
@@ -237,13 +258,28 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
                 {!found.description && <p className="mt-1 text-soft">No description on record; add one after.</p>}
               </div>
             </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="isbn-store">Where readers buy it</Label>
-              <Input id="isbn-store" type="url" placeholder="https://www.amazon.com/dp/…" value={store} onChange={(e) => setStore(e.target.value)} />
-              <p className="text-[13px] text-soft">
-                {found.asin ? `Left empty, it links to your Amazon page (amazon.com/dp/${found.asin}).` : "Paste the Amazon page (the one with your ASIN) or any store. Left empty, it links to an Amazon search for the ISBN."}
-              </p>
-            </div>
+            {found.formats?.length ? (
+              <div className="grid gap-1.5">
+                <p className="text-sm font-medium">Where readers buy it</p>
+                <ul className="grid gap-1 rounded-md border border-border p-2 text-sm">
+                  {found.formats.map((f) => (
+                    <li key={f.label} className="flex items-center justify-between gap-3 px-1 py-0.5">
+                      <span>Amazon {f.label}</span>
+                      <span className="text-soft tabular-nums">{f.price || "Price on Amazon"}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[13px] text-soft">Each format gets its own buy button on your website. Change them any time on the book&apos;s Publish tab.</p>
+              </div>
+            ) : (
+              <div className="grid gap-1.5">
+                <Label htmlFor="isbn-store">Where readers buy it</Label>
+                <Input id="isbn-store" type="url" placeholder="https://www.amazon.com/dp/…" value={store} onChange={(e) => setStore(e.target.value)} />
+                <p className="text-[13px] text-soft">
+                  {found.asin ? `Left empty, it links to your Amazon page (amazon.com/dp/${found.asin}). Add paperback, hardcover and other stores after, on the book's Publish tab.` : "Paste the Amazon page (the one with your ASIN) or any store. Left empty, it links to an Amazon search for the ISBN."}
+                </p>
+              </div>
+            )}
           </div>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}

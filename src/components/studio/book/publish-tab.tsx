@@ -14,9 +14,10 @@ import { bookFormat, printEdition, type BuyLink, type Quote } from "@/lib/types"
 import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
 import { useMySite } from "../use-my-site";
-import { SellDirect } from "./sell-direct";
 
 const STORES = ["Amazon", "Apple Books", "Kobo", "Barnes & Noble", "Google Play Books", "Bookshop.org", "Okadabooks", "Selar"];
+/** Stores we'll fill in by ourselves one day; for now the writer pastes the link. */
+const AUTO_SOON = ["Apple Books", "Barnes & Noble", "Kobo", "Google Play Books"];
 
 export function PublishTab({ ws }: { ws: Workspace }) {
   const { book } = ws;
@@ -24,6 +25,8 @@ export function PublishTab({ ws }: { ws: Workspace }) {
   const [slug, setSlug] = useState(book.slug);
   const [msg, setMsg] = useState("");
   const samples = ws.chapters.filter((c) => c.is_sample);
+  // a book added from Amazon or an ISBN: already published, nothing written here
+  const imported = ws.chapters.length === 0;
   const { url: siteBase } = useMySite();
 
   async function saveLinks(next: BuyLink[]) {
@@ -35,7 +38,12 @@ export function PublishTab({ ws }: { ws: Workspace }) {
     <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-8">
       <Panel title="On your website" description="Published books appear in the catalog on the public site with their cover, description and buy links.">
         <label className="flex items-center gap-3 rounded-md bg-card p-4">
-          <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={book.published} onChange={(e) => ws.saveBook({ published: e.target.checked, status: e.target.checked ? "published" : book.status })} />
+          <input
+            type="checkbox"
+            className="size-4 accent-[var(--primary)]"
+            checked={book.published}
+            onChange={(e) => ws.saveBook({ published: e.target.checked, status: e.target.checked ? "published" : book.status })}
+          />
           <span>
             <span className="block font-medium">Show this book on the website</span>
             <span className="block text-sm text-soft">{book.published ? "Live now." : "Hidden. Only you can see it."}</span>
@@ -73,7 +81,7 @@ export function PublishTab({ ws }: { ws: Workspace }) {
             </Button>
           </div>
         </Field>
-        <Field id="p-accent" label="Accent colour" hint="Used behind the book on its page when there is no cover yet.">
+        <Field id="p-accent" label="Page colour" hint="The colour of the book's page on your website, and of its cover until you add one. Changes show within a minute.">
           <input id="p-accent" type="color" value={book.accent || "#ad3a17"} onChange={(e) => ws.saveBook({ accent: e.target.value })} className="h-9 w-16 rounded border border-input bg-card" />
         </Field>
         <p className="text-sm text-soft" role="status">
@@ -81,58 +89,79 @@ export function PublishTab({ ws }: { ws: Workspace }) {
         </p>
       </Panel>
 
-      <Panel title="Free sample" description="Readers can read sample chapters on the book's page. Mark a chapter as a sample from its menu on the Write tab.">
-        {samples.length ? (
-          <ul className="grid gap-2">
-            {samples.map((c) => (
-              <li key={c.id} className="flex items-center justify-between rounded-md bg-card p-3 text-sm">
-                {c.title}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    ws.setChapters((all) => all.map((x) => (x.id === c.id ? { ...x, is_sample: false } : x)));
-                    await ws.track(pb().collection("chapters").update(c.id, { is_sample: false }));
-                  }}
-                >
-                  <X /> Remove
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              aria-label="Choose a sample chapter"
-              defaultValue=""
-              onChange={async (e) => {
-                const id = e.target.value;
-                if (!id) return;
-                ws.setChapters((all) => all.map((x) => (x.id === id ? { ...x, is_sample: true } : x)));
-                await ws.track(pb().collection("chapters").update(id, { is_sample: true }));
-              }}
-              className="h-9 rounded-md border border-input bg-card px-3 text-sm"
-            >
-              <option value="">Choose a chapter…</option>
-              {ws.chapters
-                .filter((c) => c.section !== "front" || c.kind === "introduction")
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-            </select>
-          </div>
-        )}
-      </Panel>
+      {!imported && (
+        <Panel title="Free sample" description="Readers can read sample chapters on the book's page. Mark a chapter as a sample from its menu on the Write tab.">
+          {samples.length ? (
+            <ul className="grid gap-2">
+              {samples.map((c) => (
+                <li key={c.id} className="flex items-center justify-between rounded-md bg-card p-3 text-sm">
+                  {c.title}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                      ws.setChapters((all) => all.map((x) => (x.id === c.id ? { ...x, is_sample: false } : x)));
+                      await ws.track(pb().collection("chapters").update(c.id, { is_sample: false }));
+                    }}
+                  >
+                    <X /> Remove
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                aria-label="Choose a sample chapter"
+                defaultValue=""
+                onChange={async (e) => {
+                  const id = e.target.value;
+                  if (!id) return;
+                  ws.setChapters((all) => all.map((x) => (x.id === id ? { ...x, is_sample: true } : x)));
+                  await ws.track(pb().collection("chapters").update(id, { is_sample: true }));
+                }}
+                className="h-9 rounded-md border border-input bg-card px-3 text-sm"
+              >
+                <option value="">Choose a chapter…</option>
+                {ws.chapters
+                  .filter((c) => c.section !== "front" || c.kind === "introduction")
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+        </Panel>
+      )}
 
       <Panel title="Where to buy" description="Buttons on the book's page, with the price if you add one. Add them once the book is live on each store.">
         <ul className="grid gap-2">
           {links.map((l, i) => (
             <li key={i} className="grid grid-cols-[9rem_5rem_1fr_auto] gap-2">
-              <Input aria-label="Store" list="stores" value={l.label} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} onBlur={() => saveLinks(links)} />
-              <Input aria-label="Price" placeholder="$18" value={l.price ?? ""} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))} onBlur={() => saveLinks(links)} />
-              <Input aria-label="Link" type="url" placeholder="https://" value={l.url} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))} onBlur={() => saveLinks(links)} />
+              <Input
+                aria-label="Store"
+                list="stores"
+                value={l.label}
+                onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                onBlur={() => saveLinks(links)}
+              />
+              <Input
+                aria-label="Price"
+                placeholder="Price"
+                value={l.price ?? ""}
+                onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))}
+                onBlur={() => saveLinks(links)}
+              />
+              <Input
+                aria-label="Link"
+                type="url"
+                placeholder="https://"
+                value={l.url}
+                onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
+                onBlur={() => saveLinks(links)}
+              />
               <Button variant="ghost" size="icon" aria-label="Remove link" onClick={() => saveLinks(links.filter((_, j) => j !== i))}>
                 <Trash2 />
               </Button>
@@ -144,24 +173,53 @@ export function PublishTab({ ws }: { ws: Workspace }) {
             <option key={s} value={s} />
           ))}
         </datalist>
-        <div>
-          <Button variant="outline" size="sm" onClick={() => setLinks([...links, { label: links.length ? "" : "Amazon", url: "" }])}>
-            <Plus /> Add a store
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Plus className="size-4 text-soft" />
+          <select
+            aria-label="Add a store"
+            value=""
+            onChange={(e) => e.target.value && setLinks([...links, { label: e.target.value === "Other" ? "" : e.target.value, url: "" }])}
+            className="h-8 rounded-md border border-input bg-card px-2 text-sm"
+          >
+            <option value="">Add a store…</option>
+            {STORES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+            <option value="Other">Another store</option>
+          </select>
         </div>
+        <p className="text-[13px] text-soft">Paste the link to your book on each store. Filling in {AUTO_SOON.join(", ").replace(/, ([^,]*)$/, " and $1")} by themselves is coming soon.</p>
       </Panel>
 
-      <SellDirect ws={ws} />
+      <Panel title="Sell the ebook yourself" description="Readers buy the ebook on your website and download it straight away, with the money paid to you.">
+        <p className="w-fit self-start bg-paper-2 px-2 py-1 text-sm font-medium text-ink-2">Coming soon</p>
+      </Panel>
 
       <QuotesPanel ws={ws} field="praise" title="Praise" description="Quotes from people about the book, shown under Praise on its page." sourceLabel="Name" roleLabel="Who they are" />
       <QuotesPanel ws={ws} field="reviews" title="Reviews" description="Excerpts from published reviews, shown under Reviews with a link to the full review." sourceLabel="Publication" />
 
-      <KdpChecklist ws={ws} />
+      {!imported && <KdpChecklist ws={ws} />}
     </div>
   );
 }
 
-function QuotesPanel({ ws, field, title, description, sourceLabel, roleLabel }: { ws: Workspace; field: "praise" | "reviews"; title: string; description: string; sourceLabel: string; roleLabel?: string }) {
+function QuotesPanel({
+  ws,
+  field,
+  title,
+  description,
+  sourceLabel,
+  roleLabel,
+}: {
+  ws: Workspace;
+  field: "praise" | "reviews";
+  title: string;
+  description: string;
+  sourceLabel: string;
+  roleLabel?: string;
+}) {
   const [items, setItems] = useState<Quote[]>(ws.book[field] ?? []);
   const save = (next: Quote[]) => {
     setItems(next);
@@ -207,7 +265,7 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
   const items: [boolean, string][] = [
     [!!book.title && !!book.expand?.author?.name, "Title and author name"],
     [!!book.description && book.description.length <= 4000, "Description under 4,000 characters"],
-    [(book.keywords ?? []).length > 0 && (book.keywords ?? []).length <= 7, "Up to seven keywords"],
+    [(book.keywords ?? []).length > 0 && (book.keywords ?? []).length <= 7, "Search keywords added (Amazon takes up to 7, on the Book details tab)"],
     [(book.categories ?? []).length > 0, "Categories chosen"],
     [ws.chapters.every((c) => c.status === "final"), "Every section marked final"],
     [!estimated && pages >= MIN_PAGES && pages <= max, `Print PDF built, ${MIN_PAGES}–${max} pages`],
@@ -221,7 +279,10 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
       : []),
   ];
   return (
-    <Panel title="Amazon KDP checklist" description="KDP uploads stay manual. When everything here is ticked, download the files from the Export tab and upload them at kdp.amazon.com.">
+    <Panel
+      title="Ready for Amazon KDP"
+      description="What Amazon asks for when you publish this book on KDP. When every line is ticked, download your files from the Export tab, open your KDP bookshelf, choose Create, and fill it in from here."
+    >
       <ul className="grid gap-1.5">
         {items.map(([ok, label]) => (
           <li key={label} className="flex items-center gap-2.5 text-sm">
@@ -233,7 +294,7 @@ function KdpChecklist({ ws }: { ws: Workspace }) {
         ))}
       </ul>
       <a href="https://kdp.amazon.com/en_US/bookshelf" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
-        Open your KDP bookshelf <ExternalLink className="size-3.5" />
+        Open your KDP bookshelf on Amazon <ExternalLink className="size-3.5" />
       </a>
     </Panel>
   );
