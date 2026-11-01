@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSiteByDomain, getSiteBySubdomain } from "@/lib/pb-server";
+import { getSiteByDomain, getSiteBySubdomain, pausedSiteName } from "@/lib/pb-server";
 import { DESK_SUBDOMAIN, normalizeDomain, rootDomain, subdomainOf } from "@/lib/sites";
 import { activeBrands, brandFor } from "@/lib/brands";
 
@@ -18,10 +18,11 @@ export async function GET(req: Request) {
   if (raw === root || raw === `www.${root}` || raw === `${DESK_SUBDOMAIN}.${root}`) ok = true;
   else if (raw.endsWith("." + root)) {
     const sub = subdomainOf(raw, root);
-    ok = !!sub && !!(await getSiteBySubdomain(sub));
+    // a site its author turned off still gets a certificate, so visitors see the resting note
+    ok = !!sub && !!((await getSiteBySubdomain(sub)) || (await pausedSiteName(sub)));
   } else {
     const domain = normalizeDomain(raw);
-    ok = !!domain && !!(await getSiteByDomain(domain));
+    ok = !!domain && !!((await getSiteByDomain(domain)) || (await pausedSiteName(domain)));
   }
   return new NextResponse(ok ? "ok" : "unknown", { status: ok ? 200 : 404 });
 }

@@ -17,7 +17,33 @@ export function userId(): string {
 export async function listBooks(): Promise<Book[]> {
   return pb()
     .collection("books")
-    .getFullList<Book>({ filter: pb().filter("owner = {:u}", { u: userId() }), sort: "-updated", expand: "author" });
+    .getFullList<Book>({ filter: pb().filter("owner = {:u} && trashed = ''", { u: userId() }), sort: "-updated", expand: "author" });
+}
+
+/** Days a deleted book waits in Trash before it is deleted for good. */
+export const TRASH_DAYS = 30;
+
+/** Books this account moved to Trash, newest first. */
+export async function listTrashedBooks(): Promise<Book[]> {
+  return pb()
+    .collection("books")
+    .getFullList<Book>({ filter: pb().filter("owner = {:u} && trashed != ''", { u: userId() }), sort: "-trashed" });
+}
+
+/** Moves books to Trash. They come off the author's website at once and can be restored for 30 days. */
+export async function trashBooks(ids: string[]): Promise<void> {
+  const now = new Date().toISOString();
+  for (const id of ids) await pb().collection("books").update(id, { trashed: now, published: false });
+}
+
+/** Brings books back from Trash. They stay off the website until the author publishes them again. */
+export async function restoreBooks(ids: string[]): Promise<void> {
+  for (const id of ids) await pb().collection("books").update(id, { trashed: "" });
+}
+
+/** Deletes books for good, with their chapters, notes and files. */
+export async function deleteBooksForever(ids: string[]): Promise<void> {
+  for (const id of ids) await pb().collection("books").delete(id);
 }
 
 /** Books other authors shared with the signed-in person. */
@@ -25,7 +51,7 @@ export async function listSharedBooks(): Promise<Book[]> {
   const u = userId();
   return pb()
     .collection("books")
-    .getFullList<Book>({ filter: pb().filter("owner != {:u} && members.id ?= {:u}", { u }), sort: "-updated", expand: "author" });
+    .getFullList<Book>({ filter: pb().filter("owner != {:u} && members.id ?= {:u} && trashed = ''", { u }), sort: "-updated", expand: "author" });
 }
 
 export async function listAuthors(): Promise<Author[]> {
