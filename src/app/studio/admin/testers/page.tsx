@@ -190,7 +190,7 @@ export default function TestersPage() {
                         <td className="px-3 py-2.5 whitespace-nowrap">{ago(t.lastActive)}</td>
                         <td className="px-3 py-2.5 text-right tabular-nums">
                           {t.tickets ? (
-                            <Link href="/studio/admin/support" className="text-primary hover:underline">
+                            <Link href="/studio/admin/tickets" className="text-primary hover:underline">
                               {t.tickets}
                             </Link>
                           ) : (
@@ -199,7 +199,7 @@ export default function TestersPage() {
                         </td>
                         <td className="px-3 py-2.5 text-right tabular-nums">
                           {t.ideas ? (
-                            <Link href="/studio/admin/support" className="text-primary hover:underline">
+                            <Link href="/studio/admin/ideas" className="text-primary hover:underline">
                               {t.ideas}
                             </Link>
                           ) : (

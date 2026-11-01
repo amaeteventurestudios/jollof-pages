@@ -23,7 +23,10 @@ const NEEDS: Record<string, Action> = {
   suspend: "writer.suspend",
   unsuspend: "writer.suspend",
   delete: "writer.delete",
+  apps: "writer.apps",
 };
+
+const APPS = { studio: "Jollof Studio", aiWriter: "AI writer" } as const;
 
 /** A password that reads out over the phone: three short words of letters and a number. */
 function tempPassword(): string {
@@ -39,9 +42,10 @@ function tempPassword(): string {
  * - "password" sets a temporary password and returns it once, to pass on to the writer
  * - "suspend" with { reason } stops them signing in and takes their site offline; "unsuspend" undoes it
  * - "delete" with { confirm: their email } removes the account and everything in it. Owner only.
+ * - "apps" with { app: "studio" | "aiWriter", on } switches Jollof Studio or the AI writer for them
  */
 export async function POST(req: Request) {
-  const b = (await req.json().catch(() => ({}))) as { id?: string; action?: string; credits?: number; note?: string; reason?: string; confirm?: string };
+  const b = (await req.json().catch(() => ({}))) as { id?: string; action?: string; credits?: number; note?: string; reason?: string; confirm?: string; app?: string; on?: boolean };
   const need = NEEDS[b.action ?? ""];
   if (!need) return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   const me = await requireAdmin(req, need);
@@ -86,6 +90,11 @@ export async function POST(req: Request) {
     const s = await site();
     if (s) await pb.collection("site_settings").update(s.id, { offline: false });
     await audit(me, "writer.unsuspend", target);
+  } else if (b.action === "apps") {
+    if (b.app !== "studio" && b.app !== "aiWriter") return NextResponse.json({ error: "Unknown app." }, { status: 400 });
+    const on = Boolean(b.on);
+    await pb.collection("users").update(user.id, b.app === "studio" ? { studio_off: !on } : { ai_writer: on });
+    await audit(me, on ? "writer.app_on" : "writer.app_off", target, APPS[b.app]);
   } else if (b.action === "delete") {
     if (
       String(b.confirm ?? "")

@@ -52,6 +52,7 @@ services:
       OWNER_EMAIL: ${OWNER_EMAIL:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       SUPPORT_EMAILS: ${SUPPORT_EMAILS:-}
+      APP_ACCESS_SECRET: ${APP_ACCESS_SECRET:-}
       SUPPORT_ADDRESS: ${SUPPORT_ADDRESS:-}
       # writing assistant (docs/assistant.md): the publisher's own keys, for COVER_AI_FREE_EMAILS accounts only
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

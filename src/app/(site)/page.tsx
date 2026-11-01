@@ -8,6 +8,7 @@ import { Pattern, Rim, type PatternKind } from "@/components/site/patterns";
 import { Marquee } from "@/components/site/marquee";
 import { Intro } from "@/components/site/intro";
 import { InstallButton } from "@/components/pwa";
+import { SiteTryout } from "@/components/site/site-tryout";
 import { ScrollFx } from "@/components/marketing/scroll-fx";
 import { Arrow, SectionHead, Shot, Star } from "@/components/marketing/parts";
 import "@/components/marketing/marketing.css";
@@ -214,6 +215,10 @@ const FAQ = [
     a: "Every studio comes with a website at yourname.jollofpages.com. It shows your books, a page for each one with a free sample and buy links, and a sign-up form for your reader list, designed from your cover colours. To use your own domain, like yourname.com, upgrade to Author Site Pro from the studio for $10 a month, or $96 a year with a free .com for the first year. Pro also adds analytics, with newsletters and direct ebook sales coming soon.",
   },
   {
+    q: "Can I bring books I already published?",
+    a: "Yes. Type the ISBN or the Amazon ASIN, or paste the book's Amazon link, and the book goes on your author website with its cover, description and a button to buy it. Amazon doesn't share details of Kindle books, so for those you type the title and author and we find the rest where we can.",
+  },
+  {
     q: "Is there a limit on books or pen names?",
     a: "No. Write as many books as you like under as many pen names as you need.",
   },
@@ -318,6 +323,31 @@ export default async function Home() {
       />
 
       <main>
+        {/* ---------- the free author website: try it with your own book before signing up ---------- */}
+        <section id="website" aria-labelledby="website-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-website" kind="adire" color="var(--char)" opacity={0.14} drift={false} />
+          <div className="relative px-4 sm:px-8">
+            <SectionHead id="website-title" title="Your author website in a minute" sub="Type your latest book and see it on a site of your own." />
+            <div className="mt-[clamp(2rem,5vw,3.5rem)]">
+              <SiteTryout />
+            </div>
+            <ol className="mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1100px] gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["Bring your books", "An ISBN, an ASIN or an Amazon link brings in the cover, the description and a buy button."],
+                ["Pick a look", "Colours and fonts come from your covers. Change them in a click."],
+                ["Choose your address", "yourname.jollofpages.com is free. Use your own domain with Author Site Pro."],
+                ["Go live", "Share it the same day. Readers can buy your books and join your list."],
+              ].map(([k, v], i) => (
+                <li key={k} className="bg-char/35 p-6" data-reveal style={{ ["--i" as string]: i }}>
+                  <span className="t-small font-semibold text-bonnet">Step {i + 1}</span>
+                  <span className="wide mt-1 block text-[1.375rem] font-bold tracking-[-0.03em]">{k}</span>
+                  <span className="mt-1 block text-cream/90">{v}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         {/* ---------- what it does: three panels that slide over one another ---------- */}
         <section aria-labelledby="pillars-title" className="relative bg-ground pt-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">

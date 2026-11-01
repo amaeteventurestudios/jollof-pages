@@ -23,7 +23,7 @@ export const TUTORIALS: Tutorial[] = [
       { title: "Or import a manuscript", text: "Choose Import Word or Markdown instead and pick your file. Each top-level heading becomes a chapter. Bold, italic, lists, footnotes and images come across." },
       { title: "Set a goal", text: "On the book's Goals tab, set a target word count and a deadline. Your daily words and streak then appear on the Books page and the Progress page." },
     ],
-    tip: "Already published elsewhere? Add a published book from its ISBN to list it on your website without retyping it.",
+    tip: "Already published elsewhere? Add a book you already published from its ISBN, ASIN or Amazon link to list it on your website without retyping it.",
   },
   {
     id: "write",

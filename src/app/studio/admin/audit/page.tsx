@@ -12,6 +12,8 @@ const ACTION: Record<string, string> = {
   "writer.password": "Set a temporary password",
   "writer.suspend": "Suspended an account",
   "writer.unsuspend": "Lifted a suspension",
+  "writer.app_on": "Switched an app on",
+  "writer.app_off": "Switched an app off",
   "writer.delete": "Deleted an account",
   "site.offline": "Took a website offline",
   "site.online": "Put a website back online",

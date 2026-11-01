@@ -101,7 +101,8 @@ export default function WritersPage() {
               <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-soft" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by email, name or site" aria-label="Search writers" className="pl-9" />
             </div>
-            <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Show">
+            {/* on a wide screen these views are in the left panel */}
+            <div className="flex flex-wrap gap-1 lg:hidden" role="radiogroup" aria-label="Show">
               {SHOWS.map((s) => {
                 const n = list.filter((w) => matches(w, s)).length;
                 if (!n && s !== "writers" && s !== show) return null;

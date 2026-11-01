@@ -57,6 +57,7 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
     isbn_ebook: book.isbn_ebook,
     isbn_paperback: book.isbn_paperback,
     isbn_hardcover: book.isbn_hardcover ?? "",
+    asin: book.asin ?? "",
     imprint: book.imprint,
     publication_date: book.publication_date?.slice(0, 10) ?? "",
     status: book.status || "drafting",
@@ -195,6 +196,9 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
             </Field>
             <Field id="d-isbn-e" label="Ebook ISBN">
               <Input id="d-isbn-e" value={d.isbn_ebook} onChange={(e) => set("isbn_ebook", e.target.value)} />
+            </Field>
+            <Field id="d-asin" label="Amazon ASIN">
+              <Input id="d-asin" value={d.asin} maxLength={10} placeholder="B0…" onChange={(e) => set("asin", e.target.value.trim().toUpperCase())} />
             </Field>
             <Field id="d-imprint" label="Imprint">
               <Input id="d-imprint" value={d.imprint} onChange={(e) => set("imprint", e.target.value)} />

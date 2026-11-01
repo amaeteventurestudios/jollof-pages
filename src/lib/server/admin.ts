@@ -91,7 +91,7 @@ const all = async <T>(name: string, fields: string, filter?: string): Promise<T[
 /** Every row the admin adds up. Fine for thousands of writers; past that, move the sums into the database. */
 export async function loadAdminData(): Promise<AdminData> {
   const [users, books, log, sites, ledger, orders, billing, tickets, ideas] = await Promise.all([
-    all<AdminData["users"][number]>("users", "id,email,name,access,paid_cents,paid_at,tester_invite,suspended,brand,created"),
+    all<AdminData["users"][number]>("users", "id,email,name,access,paid_cents,paid_at,tester_invite,suspended,studio_off,ai_writer,brand,created"),
     all<AdminData["books"][number]>("books", "owner,updated"),
     all<AdminData["log"][number]>("writing_log", "owner,date,words"),
     all<AdminData["sites"][number]>("site_settings", "id,owner,subdomain,home,custom_domain,pro_until,offline,publisher_name,updated"),
