@@ -379,8 +379,8 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
             Chapter <ChevronLast className="size-4" />
           </NavButton>
         </div>
-        <div className="flex items-center justify-between gap-2 text-[13px] text-soft">
-          <span className="tabular truncate">
+        <div className="flex items-center justify-between gap-2 text-[14px] text-ink">
+          <span className="tabular truncate font-medium">
             {el ? `${el.title} · ` : ""}
             {pageNo}
           </span>
@@ -388,7 +388,7 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
             <IconButton label="Zoom out" onClick={() => changeZoom(-0.1)}>
               <Minus className="size-3.5" />
             </IconButton>
-            <span className="tabular w-11 text-center">{Math.round(z * 100)}%</span>
+            <span className="tabular w-11 text-center font-semibold">{Math.round(z * 100)}%</span>
             <IconButton label="Zoom in" onClick={() => changeZoom(0.1)}>
               <Plus className="size-3.5" />
             </IconButton>
@@ -397,7 +397,7 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
             </IconButton>
           </div>
         </div>
-        <p className="text-[12px] text-soft">
+        <p className="text-[13px] font-medium text-ink/80">
           {print
             ? `${binding === "hardcover" ? "Hardcover" : "Paperback"} at ${trim.label}, ${theme.name} theme. Change the trim size on the Format tab.`
             : `${theme.name} theme. Readers can change the font and size on their own device.`}
