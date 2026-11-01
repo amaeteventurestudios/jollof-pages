@@ -57,6 +57,7 @@ export const VIDEO_GUIDES: VideoGuide[] = [
 
   { id: "website", title: "Set up your author website", summary: "Your address, about page, contact links and design.", group: "Website and readers", tutorial: "website" },
   { id: "readers", title: "Readers and newsletters", summary: "Your reader list and the newsletters you send it.", group: "Website and readers" },
+  { id: "own-email", title: "Send newsletters from your own free account", summary: "Sign up for Resend, make a key, paste it here and add your DNS records.", group: "Website and readers" },
   { id: "analytics", title: "Analytics", summary: "Visitors, popular pages, store clicks and sign-ups.", group: "Website and readers" },
   { id: "help", title: "Get help", summary: "Search common questions or open a ticket.", group: "Website and readers" },
 ];
