@@ -21,7 +21,7 @@ import { listAuthors } from "@/lib/studio";
 import { CheckCircle2, Circle } from "lucide-react";
 import type { Author } from "@/lib/types";
 
-const EMPTY = { publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", email: "", hero_book: "", socials: [] as { label: string; url: string }[] };
+const EMPTY = { publisher_name: "Jollof Pages", tagline: "", intro: "", about: "", email: "", hero_book: "", amazon_tag: "", socials: [] as { label: string; url: string }[] };
 
 export default function SiteSettingsPage() {
   const [rec, setRec] = useState<SiteSettings | null>(null);
@@ -43,7 +43,7 @@ export default function SiteSettingsPage() {
     getSiteSettings().then((s) => {
       setRec(s);
       setLoaded(true);
-      if (s) setForm({ publisher_name: s.publisher_name, tagline: s.tagline, intro: s.intro, about: s.about, email: s.email, hero_book: s.hero_book, socials: s.socials ?? [] });
+      if (s) setForm({ publisher_name: s.publisher_name, tagline: s.tagline, intro: s.intro, about: s.about, email: s.email, hero_book: s.hero_book, amazon_tag: s.amazon_tag ?? "", socials: s.socials ?? [] });
     });
     listBooks().then(setBooks);
     listAuthors().then(setAuthors).catch(() => undefined);
@@ -57,7 +57,7 @@ export default function SiteSettingsPage() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const data = { ...form, socials: form.socials.filter((s) => s.url) };
+      const data = { ...form, amazon_tag: form.amazon_tag.trim(), socials: form.socials.filter((s) => s.url) };
       const saved = rec ? await pb().collection("site_settings").update<SiteSettings>(rec.id, data) : await pb().collection("site_settings").create<SiteSettings>({ ...data, owner: userId() });
       setRec(saved);
       setMsg("Saved. The website updates within a minute.");
@@ -144,6 +144,15 @@ export default function SiteSettingsPage() {
                 <Plus /> Add a profile
               </Button>
             </div>
+          </Panel>
+          <Panel title="Amazon earnings" description="Earn a small commission when readers buy from your Amazon buttons. Optional.">
+            <Field
+              id="s-amazon-tag"
+              label="Your Amazon Associates store ID"
+              hint={rec?.home ? "Put on every Amazon buy button on this site and on writers' pages without their own. It looks like yourname-20." : "If you have an Amazon Associates account, paste your store ID (it looks like yourname-20, top right of Associates Central). Left empty, Jollof Pages' own is used. Your book royalties are the same either way."}
+            >
+              <Input id="s-amazon-tag" placeholder="yourname-20" maxLength={40} pattern="[A-Za-z0-9\-]{3,40}" value={form.amazon_tag} onChange={(e) => setForm({ ...form, amazon_tag: e.target.value })} />
+            </Field>
           </Panel>
           <div className="sticky bottom-0 flex items-center gap-3 bg-background/95 py-4 app:bottom-[calc(var(--app-tab-h)+env(safe-area-inset-bottom))]">
             <Button type="submit">Save site</Button>

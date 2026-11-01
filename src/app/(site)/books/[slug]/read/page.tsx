@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AMAZON_DISCLOSURE, amazonTag, tagBuyLinks } from "@/lib/affiliate";
 import { getSampleChapter, getSiteBook } from "@/lib/pb-server";
 import { rootDomain } from "@/lib/sites";
 import { SiteDesignStyle } from "@/components/site/site-design-style";
@@ -32,7 +33,7 @@ export default async function ReadSample({ params }: { params: Params }) {
   const name = site?.publisher_name || "Jollof Pages";
   const f = bookFormat(book);
   const theme = themeFor(f);
-  const links = (book.buy_links ?? []).filter((l) => l.url);
+  const { links, tagged } = tagBuyLinks((book.buy_links ?? []).filter((l) => l.url), amazonTag(site));
   let html = "";
   if (chapter) {
     const el = orderedElements([chapter], theme)[0];
@@ -63,7 +64,7 @@ export default async function ReadSample({ params }: { params: Params }) {
         )}
         <div className="mx-auto mt-12 flex max-w-[38rem] flex-wrap gap-3">
           {links[0] && (
-            <a href={links[0].url} target="_blank" rel="noreferrer" className="btn">
+            <a href={links[0].url} target="_blank" rel={tagged ? "noreferrer sponsored" : "noreferrer"} className="btn">
               Keep reading: buy on {links[0].label || "Amazon"}
             </a>
           )}
@@ -71,6 +72,7 @@ export default async function ReadSample({ params }: { params: Params }) {
             About the book
           </Link>
         </div>
+        {tagged && links[0] && <p className="mx-auto mt-4 max-w-[38rem] text-sm opacity-75">{AMAZON_DISCLOSURE}</p>}
         </div>
       </main>
       <SiteFooter name={name} email={site?.email} {...(sub ? { blurb: site?.intro || undefined, studioUrl: `https://${rootDomain()}` } : {})} />
