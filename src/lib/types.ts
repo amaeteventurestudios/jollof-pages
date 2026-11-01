@@ -125,6 +125,8 @@ export interface Book {
   isbn_ebook: string;
   isbn_paperback: string;
   isbn_hardcover?: string;
+  /** Amazon ASIN, mostly for Kindle editions */
+  asin?: string;
   imprint: string;
   publication_date: string;
   status: BookStatus;

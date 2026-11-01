@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { BookPlus, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -27,6 +28,7 @@ export default function SiteSettingsPage() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [subs, setSubs] = useState<{ email: string; created: string }[]>([]);
   const [msg, setMsg] = useState("");
+  const [isbnOpen, setIsbnOpen] = useState(false);
   const pro = useProStatus();
   // after buying Pro, pick up the site's new paid-up date
   const proOn = pro.status?.pro;
@@ -71,6 +73,14 @@ export default function SiteSettingsPage() {
           </Link>
         </div>
         {rec && !rec.home && <ReadyList site={rec} books={books} authors={authors} about={form.about} />}
+        {rec && !rec.home && (
+          <Panel title="Bring in your books" description="Books you published before Jollof Pages. Enter an ISBN, an ASIN or an Amazon link and the book appears on your site with its cover, description and a button to buy it.">
+            <Button type="button" variant="outline" onClick={() => setIsbnOpen(true)}>
+              <BookPlus /> Add a book you already published
+            </Button>
+          </Panel>
+        )}
+        <IsbnDialog open={isbnOpen} onClose={() => setIsbnOpen(false)} />
         {rec && <AddressPanel site={rec} onChange={(s) => setRec(s)} />}
         {rec && <ProPanel status={pro.status} reload={pro.reload} home={rec.home} />}
         {rec && !rec.home && <SiteDesignPanel site={rec} books={books.filter((b) => b.published)} onSaved={setRec} />}
@@ -274,7 +284,7 @@ function AddressPanel({ site, onChange }: { site: SiteSettings; onChange: (s: Si
 function ReadyList({ site, books, authors, about }: { site: SiteSettings; books: Book[]; authors: Author[]; about: string }) {
   const live = books.filter((b) => b.published);
   const steps: { done: boolean; label: string; href?: string }[] = [
-    { done: live.length > 0, label: "Publish a book to your site (Publish tab of any book, or Add a published book)", href: "/studio" },
+    { done: live.length > 0, label: "Put a book on your site (the Publish tab of any book, or add one you already published)", href: "/studio" },
     { done: live.length > 0 && live.every((b) => b.cover), label: "Give every published book a cover", href: "/studio" },
     { done: authors.some((a) => a.bio || a.photo), label: "Add a bio or photo to your pen name", href: "/studio/authors" },
     { done: about.trim().length > 0, label: "Write a few lines to readers in About, below" },

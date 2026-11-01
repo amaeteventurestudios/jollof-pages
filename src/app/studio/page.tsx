@@ -4,10 +4,12 @@ import { BrandName } from "@/components/brand";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowRight, ArrowUp, BookPlus, FileUp, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, BookPlus, ExternalLink, FileUp, Globe, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Welcome } from "@/components/studio/welcome";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
+import { useMySite } from "@/components/studio/use-my-site";
+import { PENDING_BOOK, type PendingBook } from "@/components/site/site-tryout";
 import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +32,15 @@ export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
   const [logs, setLogs] = useState<WritingLog[]>([]);
   const [error, setError] = useState("");
-  const [dialog, setDialog] = useState<null | "new" | "import" | "isbn" | "boxset">(null);
+  // a book they typed on the homepage before signing up opens straight away
+  const [pending] = useState<PendingBook | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(PENDING_BOOK) ?? "null") as PendingBook | null;
+    } catch {
+      return null;
+    }
+  });
+  const [dialog, setDialog] = useState<null | "new" | "import" | "isbn" | "boxset">(() => (pending && !isCollaboratorOnly() ? "isbn" : null));
   const [shared, setShared] = useState<Book[]>([]);
   const guest = isCollaboratorOnly();
 
@@ -84,7 +94,7 @@ export default function StudioHome() {
           </div>
           <div className="flex flex-wrap gap-2 app:grid app:w-full app:grid-cols-1 app:sm:flex">
             <Button variant="outline" onClick={() => setDialog("isbn")}>
-              <BookPlus /> Add a published book
+              <BookPlus /> Add a book you already published
             </Button>
             <Button variant="outline" onClick={() => setDialog("import")}>
               <FileUp /> Import Word or Markdown
@@ -114,8 +124,9 @@ export default function StudioHome() {
           ))}
         </dl>
 
-        <Welcome />
+        {!pending && <Welcome />}
         <TesterNote />
+        <WebsiteCard live={(books ?? []).filter((b) => b.published).length} onAddBook={() => setDialog("isbn")} />
         <LearnCard />
 
         {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load your books: {error}</p>}
@@ -184,7 +195,14 @@ export default function StudioHome() {
       <NewBookDialog open={dialog === "new"} onClose={() => setDialog(null)} />
       <ImportDialog open={dialog === "import"} onClose={() => setDialog(null)} />
       <BoxSetDialog open={dialog === "boxset"} books={(books ?? []).filter((b) => !b.box_set)} onClose={() => setDialog(null)} />
-      <IsbnDialog open={dialog === "isbn"} onClose={() => setDialog(null)} />
+      <IsbnDialog
+        open={dialog === "isbn"}
+        initial={pending}
+        onClose={() => {
+          localStorage.removeItem(PENDING_BOOK);
+          setDialog(null);
+        }}
+      />
     </>
   );
 }
@@ -216,6 +234,50 @@ function SharedGrid({ books }: { books: Book[] }) {
 }
 
 /** Tutorials: where to start, and how far along the author is. Kept quiet once every guide is done. */
+/** The writer's free author website: where it lives, what's on it, and the two things to do next. */
+function WebsiteCard({ live, onAddBook }: { live: number; onAddBook: () => void }) {
+  const { site, url } = useMySite();
+  const ready = Boolean(site && (site.subdomain || site.custom_domain || site.home));
+  return (
+    <section aria-labelledby="site-h" className="relative mt-4 grid overflow-hidden border border-border bg-card sm:grid-cols-[1fr_auto]">
+      <div className="relative flex gap-4 p-5 sm:p-6">
+        <span className="grid size-12 shrink-0 place-items-center bg-ink text-card">
+          <Globe className="size-6" />
+        </span>
+        <div className="min-w-0">
+          <h2 id="site-h" className="text-lg font-medium">
+            Your author website
+          </h2>
+          {ready ? (
+            <p className="mt-0.5 text-soft">
+              <a href={url} target="_blank" rel="noreferrer" className="font-medium text-primary underline-offset-4 hover:underline">
+                {url.replace(/^https?:\/\//, "")}
+              </a>{" "}
+              · {live === 1 ? "1 book" : `${live} books`} on it.{" "}
+              {live ? "Add the books you published before, so readers find them all in one place." : "Add a book you already published, or publish one from its Publish tab, and it shows here with a button to buy it."}
+            </p>
+          ) : (
+            <p className="mt-0.5 text-soft">Every studio comes with a free website for your books. Pick its address and look, and add the books you already published with their ISBN or ASIN.</p>
+          )}
+        </div>
+      </div>
+      <div className="relative flex flex-wrap items-center gap-2 px-5 pb-5 sm:p-6">
+        <Button variant="outline" onClick={onAddBook}>
+          <BookPlus /> Add a book you already published
+        </Button>
+        <Button asChild variant={ready ? "outline" : "default"}>
+          <Link href="/studio/site">{ready ? "Edit website" : "Set up your website"}</Link>
+        </Button>
+        {ready && (
+          <a href={url} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 px-3 text-sm text-ink-2 hover:bg-muted [&_svg]:size-4" aria-label="Open your website">
+            <ExternalLink /> View
+          </a>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function LearnCard() {
   const [done] = useState(loadDone);
   const next = TUTORIALS.find((t) => !done.has(t.id));

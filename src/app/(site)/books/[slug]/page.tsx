@@ -82,6 +82,7 @@ export default async function BookPage({ params }: { params: Params }) {
     ["Paperback ISBN", book.isbn_paperback],
     ["Hardcover ISBN", book.isbn_hardcover ?? ""],
     ["Ebook ISBN", book.isbn_ebook],
+    ["ASIN", book.asin ?? ""],
     ["Series", book.series ? `${book.series}${book.series_number ? `, book ${book.series_number}` : ""}` : ""],
     ["Imprint", book.imprint],
   ].filter(([, v]) => v) as [string, string][];
