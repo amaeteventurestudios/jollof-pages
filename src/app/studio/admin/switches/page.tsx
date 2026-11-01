@@ -54,9 +54,7 @@ export default function SwitchesPage() {
                 {!on && (
                   <p className="flex items-start gap-2 bg-muted/60 p-2.5 text-[13px] text-ink">
                     <AlertTriangle className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <span>
-                      {f.before} Until then the site shows &ldquo;coming soon&rdquo;.
-                    </span>
+                    <span>{f.before} Until then the site shows &ldquo;coming soon&rdquo;.</span>
                   </p>
                 )}
                 {on && !state.ready[key] && <p className="text-[13px] text-destructive">Switched on, but the Name.com login isn&apos;t set on the server, so it still shows as coming soon.</p>}

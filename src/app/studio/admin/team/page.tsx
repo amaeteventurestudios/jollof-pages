@@ -4,27 +4,8 @@ import { useEffect, useState } from "react";
 import { Loader2, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  call,
-  date,
-  Loading,
-  PageHead,
-  Panel,
-  Pill,
-  Problem,
-  Table,
-  Td,
-  TONES,
-} from "@/components/admin/kit";
-import {
-  canSee,
-  ROLES,
-  STAFF_ROLES,
-  roleLabel,
-  sectionsFor,
-  type Section,
-  type StaffRole,
-} from "@/lib/admin-roles";
+import { call, date, Loading, PageHead, Panel, Pill, Problem, Table, Td, TONES } from "@/components/admin/kit";
+import { canSee, ROLES, STAFF_ROLES, roleLabel, sectionsFor, type Section, type StaffRole } from "@/lib/admin-roles";
 
 interface Member {
   id: string;
@@ -85,10 +66,7 @@ export default function TeamPage() {
 
   return (
     <div className="grid gap-5">
-      <PageHead
-        title="Team and roles"
-        sub="Add the people who help you. They sign in with their own Jollof Pages account and see only what their role allows."
-      />
+      <PageHead title="Team and roles" sub="Add the people who help you. They sign in with their own Jollof Pages account and see only what their role allows." />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="grid content-start gap-4">
           <Panel title="Add someone">
@@ -104,21 +82,11 @@ export default function TeamPage() {
             >
               <label className="grid gap-1 text-sm">
                 <span className="font-medium">Their email</span>
-                <Input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                />
+                <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
               </label>
               <label className="grid gap-1 text-sm">
                 <span className="font-medium">Role</span>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as StaffRole)}
-                  className="h-10 border border-input bg-card px-2 text-sm"
-                >
+                <select value={role} onChange={(e) => setRole(e.target.value as StaffRole)} className="h-10 border border-input bg-card px-2 text-sm">
                   {STAFF_ROLES.map((r) => (
                     <option key={r} value={r}>
                       {roleLabel(r)}
@@ -128,22 +96,13 @@ export default function TeamPage() {
               </label>
               <label className="grid gap-1 text-sm">
                 <span className="font-medium">Note (optional)</span>
-                <Input
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  maxLength={200}
-                  placeholder="Weekend support"
-                />
+                <Input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Weekend support" />
               </label>
               <Button type="submit" disabled={busy}>
                 {busy ? <Loader2 className="animate-spin" /> : <UserPlus />} Add
               </Button>
             </form>
-            <p className="mt-3 text-[13px] text-soft">
-              If they don&apos;t have an account yet, they sign up at
-              jollofpages.com with this email. Then Admin appears in their
-              account menu.
-            </p>
+            <p className="mt-3 text-[13px] text-soft">If they don&apos;t have an account yet, they sign up at jollofpages.com with this email. Then Admin appears in their account menu.</p>
           </Panel>
           {error && <Problem text={error} />}
           {!data ? (
@@ -165,17 +124,13 @@ export default function TeamPage() {
                 <tr key={m.id} className="border-b border-border last:border-0">
                   <Td>
                     <p className="font-medium text-ink">{m.email}</p>
-                    {m.note && (
-                      <p className="text-[12.5px] text-soft">{m.note}</p>
-                    )}
+                    {m.note && <p className="text-[12.5px] text-soft">{m.note}</p>}
                   </Td>
                   <Td>
                     <select
                       value={m.role}
                       disabled={busy}
-                      onChange={(e) =>
-                        act({ action: "role", id: m.id, role: e.target.value })
-                      }
+                      onChange={(e) => act({ action: "role", id: m.id, role: e.target.value })}
                       aria-label={`Role for ${m.email}`}
                       className="h-8 border border-input bg-card px-2 text-sm"
                     >
@@ -186,30 +141,17 @@ export default function TeamPage() {
                       ))}
                     </select>
                   </Td>
-                  <Td>
-                    {m.hasAccount ? (
-                      <Pill cls={TONES.good}>Signed up</Pill>
-                    ) : (
-                      <Pill cls={TONES.warn}>No account yet</Pill>
-                    )}
-                  </Td>
+                  <Td>{m.hasAccount ? <Pill cls={TONES.good}>Signed up</Pill> : <Pill cls={TONES.warn}>No account yet</Pill>}</Td>
                   <Td className="whitespace-nowrap text-ink-2">
                     {date(m.created)}
-                    {m.added_by && (
-                      <span className="block text-[12px] text-soft">
-                        by {m.added_by}
-                      </span>
-                    )}
+                    {m.added_by && <span className="block text-[12px] text-soft">by {m.added_by}</span>}
                   </Td>
                   <Td>
                     <button
                       type="button"
                       title={`Remove ${m.email}`}
                       disabled={busy}
-                      onClick={() =>
-                        window.confirm(`Take ${m.email} off the team?`) &&
-                        act({ action: "remove", id: m.id })
-                      }
+                      onClick={() => window.confirm(`Take ${m.email} off the team?`) && act({ action: "remove", id: m.id })}
                       className="p-1.5 text-ink-2 hover:text-destructive"
                     >
                       <Trash2 className="size-4" />

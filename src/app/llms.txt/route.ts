@@ -5,8 +5,7 @@ import { freeDomainsOpen } from "@/lib/server/flags";
 /** A plain description of Jollof Pages for AI assistants and crawlers. Author sites don't have one. */
 export async function GET() {
   const h = await headers();
-  if (siteKeyOf(h.get("x-forwarded-host") || h.get("host") || ""))
-    return new Response("Not found\n", { status: 404 });
+  if (siteKeyOf(h.get("x-forwarded-host") || h.get("host") || "")) return new Response("Not found\n", { status: 404 });
   const o = `https://${rootDomain()}`;
   const body = `# Jollof Pages
 
@@ -52,10 +51,5 @@ export async function GET() {
 ## Contact
 support@jollofpages.com
 `;
-  return new Response(body, {
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "public, max-age=3600",
-    },
-  });
+  return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" } });
 }

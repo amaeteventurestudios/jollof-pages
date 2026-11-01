@@ -17,10 +17,7 @@ import "@/components/marketing/marketing.css";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: {
-    absolute:
-      "Jollof Pages: write, format and publish your book. An Atticus alternative",
-  },
+  title: { absolute: "Jollof Pages: write, format and publish your book. An Atticus alternative" },
   description:
     "Write your manuscript, format a KDP-ready paperback, hardcover and ebook, design the cover, and publish to your own author website. AI writing help, live co-writing and track changes. $129 once, no subscription.",
   alternates: { canonical: "/" },
@@ -33,12 +30,7 @@ const PILLARS = [
     name: "Write",
     line: "A calm editor that thinks in chapters.",
     body: "Front matter, chapters and back matter in one list you reorder by dragging. Goals, sprints and a streak keep the book moving.",
-    shot: {
-      src: "editor",
-      w: 2400,
-      h: 1500,
-      alt: "The Jollof Pages editor with the chapter list, a chapter open and a Kindle preview",
-    },
+    shot: { src: "editor", w: 2400, h: 1500, alt: "The Jollof Pages editor with the chapter list, a chapter open and a Kindle preview" },
     tone: "bg-jollof text-cream",
     pattern: { kind: "uli", color: "var(--char)", opacity: 0.17 },
   },
@@ -47,12 +39,7 @@ const PILLARS = [
     name: "Format",
     line: "A real paperback and ebook, not a Word file.",
     body: "Pick an interior theme and a KDP trim size. Margins, gutter and bleed are worked out for you from the page count.",
-    shot: {
-      src: "format-dark",
-      w: 2000,
-      h: 1526,
-      alt: "The Format tab in night mode: five interior themes, KDP trim sizes and the print specification",
-    },
+    shot: { src: "format-dark", w: 2000, h: 1526, alt: "The Format tab in night mode: five interior themes, KDP trim sizes and the print specification" },
     tone: "bg-char text-cream",
     pattern: { kind: "aso", color: "var(--jollof)", opacity: 0.16 },
   },
@@ -61,65 +48,32 @@ const PILLARS = [
     name: "Publish",
     line: "Files Amazon accepts, and a page for every book.",
     body: "Export the print PDF, EPUB and cover wrap, upload them to KDP, then put the book on your free author website with a sample chapter.",
-    shot: {
-      src: "bookpage",
-      w: 2200,
-      h: 1375,
-      alt: "A published book page with the 3D cover, description and buy links",
-    },
+    shot: { src: "bookpage", w: 2200, h: 1375, alt: "A published book page with the 3D cover, description and buy links" },
     tone: "bg-bonnet text-char",
     pattern: { kind: "animals", color: "var(--jollof)", opacity: 0.13 },
   },
-] satisfies {
-  id: string;
-  name: string;
-  line: string;
-  body: string;
-  shot: object;
-  tone: string;
-  pattern: { kind: PatternKind; color: string; opacity: number };
-}[];
+] satisfies { id: string; name: string; line: string; body: string; shot: object; tone: string; pattern: { kind: PatternKind; color: string; opacity: number } }[];
 
 const EDITOR_STEPS = [
   {
     title: "Chapters you can drag",
     body: "Title page, copyright, dedication, contents, parts, chapters, acknowledgments and about the author. Drag any of them into place and the contents update themselves.",
-    shot: {
-      src: "editor",
-      w: 2400,
-      h: 1500,
-      alt: "The editor with a chapter open and the chapter list on the left",
-    },
+    shot: { src: "editor", w: 2400, h: 1500, alt: "The editor with a chapter open and the chapter list on the left" },
   },
   {
     title: "Every tool a manuscript needs",
     body: "Headings, lists, quotes, callout boxes, footnotes, images, links and scene breaks. Find and replace across the whole book.",
-    shot: {
-      src: "editor-dark",
-      w: 2400,
-      h: 1500,
-      alt: "The editor in night mode showing a callout box and a footnote",
-    },
+    shot: { src: "editor-dark", w: 2400, h: 1500, alt: "The editor in night mode showing a callout box and a footnote" },
   },
   {
     title: "Goals that keep you going",
     body: "Set a target length and a finish date. The studio tells you the words you need each day, and a sprint timer helps you find them.",
-    shot: {
-      src: "progress",
-      w: 2000,
-      h: 1403,
-      alt: "Writing progress: streak, words this year, a year heatmap and the last 30 days",
-    },
+    shot: { src: "progress", w: 2000, h: 1403, alt: "Writing progress: streak, words this year, a year heatmap and the last 30 days" },
   },
   {
     title: "Every book at a glance",
     body: "Your shelf shows every book, its stage and its word count. Today, the last seven days and your streak sit right on top.",
-    shot: {
-      src: "books",
-      w: 2200,
-      h: 1183,
-      alt: "The studio shelf with four books, words today, last seven days and the writing streak",
-    },
+    shot: { src: "books", w: 2200, h: 1183, alt: "The studio shelf with four books, words today, last seven days and the writing streak" },
   },
 ];
 
@@ -149,76 +103,32 @@ const RULES = [
 ];
 
 const FILES = [
-  {
-    name: "Print PDF",
-    body: "Mirrored margins, running heads, page numbers in the contents, chapters on the right-hand page.",
-  },
-  {
-    name: "EPUB 3",
-    body: "Linked contents and pop-up footnotes. Checked with EPUBCheck, the validator the stores use.",
-  },
-  {
-    name: "Cover wrap PDF",
-    body: "Back, spine and front in one file at 300 dpi, with bleed and the barcode box in place.",
-  },
-  {
-    name: "Word",
-    body: "A clean DOCX at your trim size for editors and proofreaders.",
-  },
+  { name: "Print PDF", body: "Mirrored margins, running heads, page numbers in the contents, chapters on the right-hand page." },
+  { name: "EPUB 3", body: "Linked contents and pop-up footnotes. Checked with EPUBCheck, the validator the stores use." },
+  { name: "Cover wrap PDF", body: "Back, spine and front in one file at 300 dpi, with bleed and the barcode box in place." },
+  { name: "Word", body: "A clean DOCX at your trim size for editors and proofreaders." },
 ];
 
-const STORES = [
-  "Amazon KDP",
-  "Apple Books",
-  "Kobo",
-  "Google Play Books",
-  "Barnes & Noble Press",
-  "IngramSpark",
-];
+const STORES = ["Amazon KDP", "Apple Books", "Kobo", "Google Play Books", "Barnes & Noble Press", "IngramSpark"];
 
 const SAFE = [
-  {
-    k: "Saved as you type",
-    v: "Every keystroke is stored. You never press save.",
-  },
-  {
-    k: "Private by default",
-    v: "Nothing is public until you choose to publish it.",
-  },
+  { k: "Saved as you type", v: "Every keystroke is stored. You never press save." },
+  { k: "Private by default", v: "Nothing is public until you choose to publish it." },
   { k: "Yours to take", v: "Download a full backup or a Word file any time." },
-  {
-    k: "Any screen",
-    v: "Desktop, laptop, tablet or phone, installed like an app.",
-  },
+  { k: "Any screen", v: "Desktop, laptop, tablet or phone, installed like an app." },
 ];
 
 /** Atticus's column comes from its own published table and home page on atticus.io (October 2026). */
-const COMPARE: {
-  row: string;
-  us: string | boolean;
-  them: string | boolean | null;
-}[] = [
-  {
-    row: "Platforms",
-    us: "Windows, Mac, Linux, Chromebook",
-    them: "Windows, Mac, Linux, Chromebook",
-  },
-  {
-    row: "Importing",
-    us: "Word, EPUB, RTF, ODT, Markdown, HTML, text",
-    them: "Word",
-  },
+const COMPARE: { row: string; us: string | boolean; them: string | boolean | null }[] = [
+  { row: "Platforms", us: "Windows, Mac, Linux, Chromebook", them: "Windows, Mac, Linux, Chromebook" },
+  { row: "Importing", us: "Word, EPUB, RTF, ODT, Markdown, HTML, text", them: "Word" },
   { row: "Exporting", us: "EPUB, PDF, DOCX", them: "EPUB, PDF, DOCX" },
   { row: "Parts and chapters", us: true, them: true },
   { row: "Footnotes", us: true, them: true },
   { row: "Callout boxes", us: true, them: true },
   { row: "Large print", us: true, them: true },
   { row: "Cloud storage and backups", us: true, them: true },
-  {
-    row: "Writing assistant (Claude, ChatGPT or OpenRouter)",
-    us: true,
-    them: null,
-  },
+  { row: "Writing assistant (Claude, ChatGPT or OpenRouter)", us: true, them: null },
   { row: "Live co-writing with others", us: true, them: null },
   { row: "Track changes and comments", us: true, them: null },
   { row: "Hardcover (KDP case laminate)", us: true, them: null },
@@ -230,60 +140,32 @@ const COMPARE: {
   { row: "A page for every book, with a free sample", us: true, them: null },
   { row: "Reader list sign-ups", us: true, them: null },
   { row: "Site design from your cover colours", us: true, them: null },
-  {
-    row: "Newsletters, direct ebook sales and analytics",
-    us: "With Author Site Pro",
-    them: null,
-  },
+  { row: "Newsletters, direct ebook sales and analytics", us: "With Author Site Pro", them: null },
   { row: "Video guides", us: "One for every feature", them: "Tutorials" },
-  {
-    row: "Free design studio for social posts and ads",
-    us: "Jollof Studio",
-    them: null,
-  },
+  { row: "Free design studio for social posts and ads", us: "Jollof Studio", them: null },
   { row: "Price, one time", us: "$129", them: "$147" },
 ];
 
 const PLATFORMS = [
-  {
-    name: "Windows",
-    how: "In Chrome or Edge, press Install in the address bar.",
-  },
-  {
-    name: "Mac",
-    how: "In Safari choose File, then Add to Dock. Chrome works too.",
-  },
-  {
-    name: "Linux",
-    how: "In Chrome or Chromium, press Install in the address bar.",
-  },
-  {
-    name: "Chromebook",
-    how: "Press Install in the address bar and pin it to the shelf.",
-  },
+  { name: "Windows", how: "In Chrome or Edge, press Install in the address bar." },
+  { name: "Mac", how: "In Safari choose File, then Add to Dock. Chrome works too." },
+  { name: "Linux", how: "In Chrome or Chromium, press Install in the address bar." },
+  { name: "Chromebook", how: "Press Install in the address bar and pin it to the shelf." },
   { name: "iPad", how: "In Safari tap Share, then Add to Home Screen." },
   { name: "Android", how: "In Chrome open the menu and tap Install app." },
 ];
 
 /** Real words from real authors only. The section stays hidden until there are some. */
-const TESTIMONIALS: {
-  title: string;
-  quote: string;
-  name: string;
-  role: string;
-}[] = [];
+const TESTIMONIALS: { title: string; quote: string; name: string; role: string }[] = [];
 
 const KINDS = [
   { name: "Novels", body: "Parts, scene breaks and classic chapter openings." },
   { name: "Memoir and essays", body: "Quiet book faces and generous margins." },
   { name: "How-to guides", body: "Steps, lists and callouts for exercises." },
   { name: "Business books", body: "Frameworks, quotes and clean headings." },
-  {
-    name: "Workbooks",
-    body: "Room to write, large print and a clear contents.",
-  },
+  { name: "Workbooks", body: "Room to write, large print and a clear contents." },
   { name: "Poetry", body: "Every line break kept, on screen and in print." },
-];
+]
 
 const PLAN = [
   "Write, format and export unlimited books",
@@ -297,8 +179,7 @@ const PLAN = [
 ];
 
 /** The free .com line, which says "coming soon" while it is switched off in Admin > Switches. */
-const freeComText = (open: boolean) =>
-  open ? "with a free .com for the first year" : "with a free .com coming soon";
+const freeComText = (open: boolean) => (open ? "with a free .com for the first year" : "with a free .com coming soon");
 
 const faqFor = (freeCom: string) => [
   {
@@ -364,32 +245,16 @@ const structuredFor = (faq: ReturnType<typeof faqFor>) => [
     url: "https://jollofpages.com",
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Book writing and formatting",
-    operatingSystem:
-      "Windows, macOS, Linux, ChromeOS, iPadOS, Android (installs from the browser)",
-    description:
-      "Write, format and publish print books and ebooks ready for Amazon KDP, with a cover designer and a free author website.",
+    operatingSystem: "Windows, macOS, Linux, ChromeOS, iPadOS, Android (installs from the browser)",
+    description: "Write, format and publish print books and ebooks ready for Amazon KDP, with a cover designer and a free author website.",
     image: "https://jollofpages.com/og/jollof-pages.jpg",
-    offers: {
-      "@type": "Offer",
-      price: "129",
-      priceCurrency: "USD",
-      description:
-        "One payment, every future update included. No subscription.",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Amaete Venture Studios",
-      email: "support@jollofpages.com",
-    },
+    offers: { "@type": "Offer", price: "129", priceCurrency: "USD", description: "One payment, every future update included. No subscription." },
+    publisher: { "@type": "Organization", name: "Amaete Venture Studios", email: "support@jollofpages.com" },
   },
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faq.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
+    mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   },
 ];
 
@@ -400,22 +265,13 @@ export default async function Home() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredFor(FAQ)).replace(/</g, "\\u003c"),
-        }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredFor(FAQ)).replace(/</g, "\\u003c") }} />
       <Intro name="Jollof Pages" />
       <SiteHeader name="Jollof Pages" overHero />
       <ScrollFx />
 
       {/* ---------- hero: the headline, then the studio itself lying down flat out of the red ---------- */}
-      <section
-        aria-labelledby="hero-title"
-        className="hero relative overflow-hidden bg-jollof pt-[clamp(6.5rem,13vh,9rem)] text-cream"
-        data-p="exit"
-      >
+      <section aria-labelledby="hero-title" className="hero relative overflow-hidden bg-jollof pt-[clamp(6.5rem,13vh,9rem)] text-cream" data-p="exit">
         <Pattern id="p-hero" kind="adire" color="var(--char)" opacity={0.16} />
         <div className="relative mx-auto max-w-[1600px] px-4 sm:px-8">
           <div className="head mx-auto max-w-[1440px] text-center">
@@ -430,18 +286,10 @@ export default async function Home() {
                 <span style={{ ["--i" as string]: 2 }}>Publish.</span>
               </span>
             </h1>
-            <p
-              className="fit fit-sub hero-sub mt-[1.1em]"
-              style={{ ["--n" as string]: 44 }}
-              data-rise
-            >
+            <p className="fit fit-sub hero-sub mt-[1.1em]" style={{ ["--n" as string]: 44 }} data-rise>
               Create print books and ebooks in one studio.
             </p>
-            <div
-              className="mt-8 flex flex-wrap justify-center gap-3"
-              data-rise
-              style={{ ["--i" as string]: 2 }}
-            >
+            <div className="mt-8 flex flex-wrap justify-center gap-3" data-rise style={{ ["--i" as string]: 2 }}>
               <a href="/signup" className="btn">
                 Buy for $129
                 <Arrow />
@@ -450,42 +298,22 @@ export default async function Home() {
                 See how it works
               </a>
             </div>
-            <p
-              className="t-small mt-5 text-cream/85"
-              data-rise
-              style={{ ["--i" as string]: 3 }}
-            >
+            <p className="t-small mt-5 text-cream/85" data-rise style={{ ["--i" as string]: 3 }}>
               Works in any browser on Mac, Windows, Chromebook and tablet.
             </p>
           </div>
 
           {/* the studio, tilted back like a page on a desk, lying flat as the page scrolls */}
-          <div
-            className="hero-stage relative mx-auto mt-[clamp(2rem,5vh,3.5rem)] max-w-[1320px]"
-            data-rise
-            style={{ ["--i" as string]: 3 }}
-          >
+          <div className="hero-stage relative mx-auto mt-[clamp(2rem,5vh,3.5rem)] max-w-[1320px]" data-rise style={{ ["--i" as string]: 3 }}>
             <div className="hero-tilt relative">
               <div className="frame">
-                <Shot
-                  src="editor"
-                  w={2400}
-                  h={1500}
-                  alt="The Jollof Pages studio: chapter list, the editor and a live Kindle preview"
-                  eager
-                />
+                <Shot src="editor" w={2400} h={1500} alt="The Jollof Pages studio: chapter list, the editor and a live Kindle preview" eager />
               </div>
               {/* cut-outs that drift at their own speeds */}
-              <div
-                className="float-a absolute bottom-[-12%] -left-[4%] w-[17%] max-sm:hidden"
-                aria-hidden
-              >
+              <div className="float-a absolute bottom-[-12%] -left-[4%] w-[17%] max-sm:hidden" aria-hidden>
                 <Shot src="phone" w={592} h={1178} alt="" />
               </div>
-              <div
-                className="float-b absolute top-[16%] -right-[3%] w-[22%] max-sm:top-[40%] max-sm:-right-[2%] max-sm:w-[32%]"
-                aria-hidden
-              >
+              <div className="float-b absolute top-[16%] -right-[3%] w-[22%] max-sm:top-[40%] max-sm:-right-[2%] max-sm:w-[32%]" aria-hidden>
                 <Shot src="kindle" w={675} h={908} alt="" />
               </div>
             </div>
@@ -496,73 +324,29 @@ export default async function Home() {
       </section>
 
       <Marquee
-        items={[
-          "Word and Markdown import",
-          "Seven KDP trim sizes",
-          "Print PDF",
-          "EPUB 3",
-          "Paperback cover wrap",
-          "Kindle preview",
-          "Pen names",
-          "Writing streaks",
-        ]}
+        items={["Word and Markdown import", "Seven KDP trim sizes", "Print PDF", "EPUB 3", "Paperback cover wrap", "Kindle preview", "Pen names", "Writing streaks"]}
         className="bg-char py-5 text-[clamp(1.125rem,1rem+1vw,1.75rem)] font-bold text-bonnet"
       />
 
       <main>
         {/* ---------- the free author website: try it with your own book before signing up ---------- */}
-        <section
-          id="website"
-          aria-labelledby="website-title"
-          className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
-          <Pattern
-            id="p-website"
-            kind="adire"
-            color="var(--char)"
-            opacity={0.14}
-            drift={false}
-          />
+        <section id="website" aria-labelledby="website-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-website" kind="adire" color="var(--char)" opacity={0.14} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="website-title"
-              title="Your author website in a minute"
-              sub="Type your latest book and see it on a site of your own."
-            />
+            <SectionHead id="website-title" title="Your author website in a minute" sub="Type your latest book and see it on a site of your own." />
             <div className="mt-[clamp(2rem,5vw,3.5rem)]">
               <SiteTryout />
             </div>
             <ol className="mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1100px] gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                [
-                  "Bring your books",
-                  "An ISBN, an ASIN or an Amazon link brings in the cover, the description and a buy button.",
-                ],
-                [
-                  "Pick a look",
-                  "Colours and fonts come from your covers. Change them in a click.",
-                ],
-                [
-                  "Choose your address",
-                  "yourname.jollofpages.com is free. Use your own domain with Author Site Pro.",
-                ],
-                [
-                  "Go live",
-                  "Share it the same day. Readers can buy your books and join your list.",
-                ],
+                ["Bring your books", "An ISBN, an ASIN or an Amazon link brings in the cover, the description and a buy button."],
+                ["Pick a look", "Colours and fonts come from your covers. Change them in a click."],
+                ["Choose your address", "yourname.jollofpages.com is free. Use your own domain with Author Site Pro."],
+                ["Go live", "Share it the same day. Readers can buy your books and join your list."],
               ].map(([k, v], i) => (
-                <li
-                  key={k}
-                  className="bg-char/35 p-6"
-                  data-reveal
-                  style={{ ["--i" as string]: i }}
-                >
-                  <span className="t-small font-semibold text-bonnet">
-                    Step {i + 1}
-                  </span>
-                  <span className="wide mt-1 block text-[1.375rem] font-bold tracking-[-0.03em]">
-                    {k}
-                  </span>
+                <li key={k} className="bg-char/35 p-6" data-reveal style={{ ["--i" as string]: i }}>
+                  <span className="t-small font-semibold text-bonnet">Step {i + 1}</span>
+                  <span className="wide mt-1 block text-[1.375rem] font-bold tracking-[-0.03em]">{k}</span>
                   <span className="mt-1 block text-cream/90">{v}</span>
                 </li>
               ))}
@@ -571,55 +355,23 @@ export default async function Home() {
         </section>
 
         {/* ---------- what it does: three panels that slide over one another ---------- */}
-        <section
-          aria-labelledby="pillars-title"
-          className="relative bg-ground pt-[clamp(5rem,11vw,9rem)]"
-        >
+        <section aria-labelledby="pillars-title" className="relative bg-ground pt-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">
-            <SectionHead
-              id="pillars-title"
-              title="Everything a book needs"
-              sub="Write it, shape it and get it on the shelf."
-            />
+            <SectionHead id="pillars-title" title="Everything a book needs" sub="Write it, shape it and get it on the shelf." />
           </div>
           <div className="mt-[clamp(3rem,6vw,5rem)]">
             {PILLARS.map((p, i) => (
-              <article
-                key={p.id}
-                id={p.id}
-                className={`pillar ${p.tone}`}
-                style={{ ["--z" as string]: i + 1 }}
-                aria-labelledby={`${p.id}-name`}
-              >
-                <Pattern
-                  id={`p-${p.id}`}
-                  kind={p.pattern.kind}
-                  color={p.pattern.color}
-                  opacity={p.pattern.opacity}
-                  drift={false}
-                />
+              <article key={p.id} id={p.id} className={`pillar ${p.tone}`} style={{ ["--z" as string]: i + 1 }} aria-labelledby={`${p.id}-name`}>
+                <Pattern id={`p-${p.id}`} kind={p.pattern.kind} color={p.pattern.color} opacity={p.pattern.opacity} drift={false} />
                 <div className="pillar-inner relative mx-auto grid h-full max-w-[1600px] items-center gap-6 px-4 py-[clamp(3rem,8vh,6rem)] sm:gap-8 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
                   <div className="head text-center lg:text-left">
-                    <h3
-                      id={`${p.id}-name`}
-                      className="fit fit-title pillar-name wide font-bold"
-                      style={{ ["--n" as string]: p.name.length }}
-                      data-reveal
-                    >
+                    <h3 id={`${p.id}-name`} className="fit fit-title pillar-name wide font-bold" style={{ ["--n" as string]: p.name.length }} data-reveal>
                       {p.name}
                     </h3>
-                    <p
-                      className="t-lead mt-4 font-semibold"
-                      data-reveal
-                      style={{ ["--i" as string]: 1 }}
-                    >
+                    <p className="t-lead mt-4 font-semibold" data-reveal style={{ ["--i" as string]: 1 }}>
                       {p.line}
                     </p>
-                    <p
-                      className="mx-auto mt-4 max-w-[44ch] opacity-90 lg:mx-0"
-                      data-reveal
-                      style={{ ["--i" as string]: 2 }}
-                    >
+                    <p className="mx-auto mt-4 max-w-[44ch] opacity-90 lg:mx-0" data-reveal style={{ ["--i" as string]: 2 }}>
                       {p.body}
                     </p>
                   </div>
@@ -633,29 +385,12 @@ export default async function Home() {
         </section>
 
         {/* ---------- the editor: the screenshot stays, the features scroll past it ---------- */}
-        <section
-          id="editor"
-          aria-labelledby="editor-title"
-          className="relative scroll-mt-16 bg-char py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
-          <Pattern
-            id="p-editor"
-            kind="wax"
-            color="var(--char-2)"
-            opacity={0.7}
-            drift={false}
-          />
+        <section id="editor" aria-labelledby="editor-title" className="relative scroll-mt-16 bg-char py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-editor" kind="wax" color="var(--char-2)" opacity={0.7} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="editor-title"
-              title="An editor built for books"
-              sub="Chapters, goals and focus in one calm view."
-            />
+            <SectionHead id="editor-title" title="An editor built for books" sub="Chapters, goals and focus in one calm view." />
           </div>
-          <div
-            className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1600px] gap-6 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-14"
-            data-steps
-          >
+          <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1600px] gap-6 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-14" data-steps>
             <div className="sticky top-28 z-10 self-start max-lg:hidden">
               <div className="stack relative bg-char">
                 {EDITOR_STEPS.map((s, i) => (
@@ -667,18 +402,11 @@ export default async function Home() {
             </div>
             <ol className="relative grid gap-4 lg:gap-0 lg:py-[14vh]">
               {EDITOR_STEPS.map((s, i) => (
-                <li
-                  key={s.title}
-                  data-step
-                  className="step bg-char-2 p-4 pb-6 sm:p-6 lg:min-h-[50vh] lg:bg-transparent lg:p-0 lg:pt-6"
-                  style={{ ["--i" as string]: i }}
-                >
+                <li key={s.title} data-step className="step bg-char-2 p-4 pb-6 sm:p-6 lg:min-h-[50vh] lg:bg-transparent lg:p-0 lg:pt-6" style={{ ["--i" as string]: i }}>
                   <div className="cut mb-5 lg:hidden" data-p="enter">
                     <Shot {...s.shot} />
                   </div>
-                  <h3 className="wide text-[clamp(1.5rem,1.2rem+1.2vw,2.25rem)] leading-[1.05] font-bold tracking-[-0.03em]">
-                    {s.title}
-                  </h3>
+                  <h3 className="wide text-[clamp(1.5rem,1.2rem+1.2vw,2.25rem)] leading-[1.05] font-bold tracking-[-0.03em]">{s.title}</h3>
                   <p className="mt-3 max-w-[46ch] text-cream/90">{s.body}</p>
                 </li>
               ))}
@@ -687,41 +415,20 @@ export default async function Home() {
         </section>
 
         {/* ---------- formatting in three steps: a sideways track pinned while you scroll ---------- */}
-        <section
-          id="how"
-          aria-labelledby="how-title"
-          className="htrack relative scroll-mt-16 bg-ground"
-          data-p="pin"
-        >
+        <section id="how" aria-labelledby="how-title" className="htrack relative scroll-mt-16 bg-ground" data-p="pin">
           <div className="htrack-sticky sticky top-0 flex h-[100svh] flex-col justify-center overflow-hidden pt-16">
             <div className="px-4 sm:px-8">
-              <SectionHead
-                id="how-title"
-                title="Format in three steps"
-                sub="Import it, pick a look and preview it everywhere."
-              />
+              <SectionHead id="how-title" title="Format in three steps" sub="Import it, pick a look and preview it everywhere." />
             </div>
-            <div
-              className="htrack-rail mt-[clamp(1.5rem,4vh,3rem)] flex gap-4 px-4 sm:gap-6 sm:px-8"
-              data-track
-            >
+            <div className="htrack-rail mt-[clamp(1.5rem,4vh,3rem)] flex gap-4 px-4 sm:gap-6 sm:px-8" data-track>
               {STEPS.map((s, i) => (
-                <article
-                  key={s.name}
-                  className="panel flex shrink-0 flex-col overflow-hidden bg-cream-2 text-char"
-                  aria-labelledby={`step-${i}`}
-                >
+                <article key={s.name} className="panel flex shrink-0 flex-col overflow-hidden bg-cream-2 text-char" aria-labelledby={`step-${i}`}>
                   <div className="panel-art relative flex-1 overflow-hidden">
                     <StepArt kind={s.kind} />
                   </div>
                   <div className="p-5 sm:p-8">
-                    <p className="font-bold text-jollof">
-                      {["First", "Then", "Last"][i]}
-                    </p>
-                    <h3
-                      id={`step-${i}`}
-                      className="wide mt-1 text-[clamp(1.25rem,1rem+1vw,2rem)] leading-[1.05] font-bold tracking-[-0.03em]"
-                    >
+                    <p className="font-bold text-jollof">{["First", "Then", "Last"][i]}</p>
+                    <h3 id={`step-${i}`} className="wide mt-1 text-[clamp(1.25rem,1rem+1vw,2rem)] leading-[1.05] font-bold tracking-[-0.03em]">
                       {s.name}
                     </h3>
                     <p className="mt-2 max-w-[52ch]">{s.body}</p>
@@ -730,28 +437,17 @@ export default async function Home() {
               ))}
               <span className="w-px shrink-0 sm:w-2" aria-hidden />
             </div>
-            <div
-              className="htrack-bar mx-4 mt-6 h-1 bg-char/15 sm:mx-8"
-              aria-hidden
-            >
+            <div className="htrack-bar mx-4 mt-6 h-1 bg-char/15 sm:mx-8" aria-hidden>
               <div className="h-full origin-left bg-jollof" />
             </div>
           </div>
         </section>
 
         {/* ---------- the live thing: KDP's rules, worked out in front of you ---------- */}
-        <section
-          id="kdp"
-          aria-labelledby="kdp-title"
-          className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
+        <section id="kdp" aria-labelledby="kdp-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
           <Pattern id="p-kdp" kind="adire" color="var(--char)" opacity={0.14} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="kdp-title"
-              title="Amazon's rules, done for you"
-              sub="Slide the pages and watch the spine grow."
-            />
+            <SectionHead id="kdp-title" title="Amazon's rules, done for you" sub="Slide the pages and watch the spine grow." />
           </div>
           <div className="relative mx-auto mt-[clamp(2.5rem,5vw,4rem)] max-w-[1400px] px-4 sm:px-8">
             <div data-reveal style={{ ["--i" as string]: 2 }}>
@@ -759,15 +455,8 @@ export default async function Home() {
             </div>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {RULES.map((r, i) => (
-                <div
-                  key={r.k}
-                  className="rule bg-cream p-6 text-char"
-                  data-reveal
-                  style={{ ["--i" as string]: i }}
-                >
-                  <dt className="wide text-[1.5rem] font-bold tracking-[-0.03em]">
-                    {r.k}
-                  </dt>
+                <div key={r.k} className="rule bg-cream p-6 text-char" data-reveal style={{ ["--i" as string]: i }}>
+                  <dt className="wide text-[1.5rem] font-bold tracking-[-0.03em]">{r.k}</dt>
                   <dd className="mt-2">{r.v}</dd>
                 </div>
               ))}
@@ -776,62 +465,28 @@ export default async function Home() {
         </section>
 
         {/* ---------- covers: the wrap opens out of a slit ---------- */}
-        <section
-          id="covers"
-          aria-labelledby="covers-title"
-          className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
+        <section id="covers" aria-labelledby="covers-title" className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream">
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="covers-title"
-              title="Covers sized to the pixel"
-              sub="Ebook front and paperback wrap, at 300 dpi."
-            />
+            <SectionHead id="covers-title" title="Covers sized to the pixel" sub="Ebook front and paperback wrap, at 300 dpi." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             <div className="slit" data-p="enter">
-              <Shot
-                src="cover-wrap"
-                w={2200}
-                h={1499}
-                alt="The paperback wrap designer: back, spine and front with bleed, safe area and barcode guides"
-              />
+              <Shot src="cover-wrap" w={2200} h={1499} alt="The paperback wrap designer: back, spine and front with bleed, safe area and barcode guides" />
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
               <div className="bg-cream" data-reveal>
-                <Shot
-                  src="cover"
-                  w={2200}
-                  h={1095}
-                  alt="The ebook cover designer: layouts, colours, typeface and a live 1600 by 2560 cover"
-                />
+                <Shot src="cover" w={2200} h={1095} alt="The ebook cover designer: layouts, colours, typeface and a live 1600 by 2560 cover" />
               </div>
               <ul className="grid content-start gap-5 bg-char-2 p-6 sm:p-8">
                 {[
-                  [
-                    "Bring your own art",
-                    "Made it in ChatGPT or Nano Banana? Drop it in. The studio gives you the exact sizes to ask for.",
-                  ],
-                  [
-                    "Spine and back added",
-                    "The spine is sized from your page count and the back carries your description.",
-                  ],
-                  [
-                    "Checked before KDP",
-                    "Page count, PDF size, spine text and artwork are checked against KDP's rules.",
-                  ],
+                  ["Bring your own art", "Made it in ChatGPT or Nano Banana? Drop it in. The studio gives you the exact sizes to ask for."],
+                  ["Spine and back added", "The spine is sized from your page count and the back carries your description."],
+                  ["Checked before KDP", "Page count, PDF size, spine text and artwork are checked against KDP's rules."],
                 ].map(([k, v], i) => (
-                  <li
-                    key={k}
-                    className="flex gap-4"
-                    data-reveal
-                    style={{ ["--i" as string]: i }}
-                  >
+                  <li key={k} className="flex gap-4" data-reveal style={{ ["--i" as string]: i }}>
                     <Star className="mt-1.5 text-bonnet" />
                     <span>
-                      <span className="block text-[1.25rem] font-bold">
-                        {k}
-                      </span>
+                      <span className="block text-[1.25rem] font-bold">{k}</span>
                       <span className="text-cream/90">{v}</span>
                     </span>
                   </li>
@@ -842,79 +497,35 @@ export default async function Home() {
         </section>
 
         {/* ---------- Jollof Studio: the sister design studio, for launch posts and more covers ---------- */}
-        <section
-          id="studio"
-          aria-labelledby="studio-title"
-          className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
-          <Pattern
-            id="p-studio"
-            kind="adire"
-            color="var(--char)"
-            opacity={0.14}
-            drift={false}
-          />
+        <section id="studio" aria-labelledby="studio-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-studio" kind="adire" color="var(--char)" opacity={0.14} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="studio-title"
-              title="Then launch it with Jollof Studio"
-              sub="Our free design studio, for launch posts, ads, covers and slides."
-            />
+            <SectionHead id="studio-title" title="Then launch it with Jollof Studio" sub="Our free design studio, for launch posts, ads, covers and slides." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1400px] gap-4 px-4 sm:px-8 lg:grid-cols-[1.45fr_1fr]">
             <div className="tilt-in self-start bg-white" data-p="enter">
-              <Shot
-                src="studio-cover"
-                w={2000}
-                h={1250}
-                alt="Jollof Studio with a KDP book cover open and the templates panel beside it"
-              />
+              <Shot src="studio-cover" w={2000} h={1250} alt="Jollof Studio with a KDP book cover open and the templates panel beside it" />
             </div>
             <div className="grid content-start gap-4">
               <div className="bg-white" data-reveal>
-                <Shot
-                  src="studio-options"
-                  w={1136}
-                  h={900}
-                  alt="Studio AI offering six poster designs from one sentence"
-                />
+                <Shot src="studio-options" w={1136} h={900} alt="Studio AI offering six poster designs from one sentence" />
               </div>
               <ul className="grid gap-4 bg-char p-6 sm:p-8">
                 {[
-                  [
-                    "Every social size",
-                    "Launch posts, stories, ads and banners for Instagram, TikTok, Facebook, X and more.",
-                  ],
-                  [
-                    "Studio AI",
-                    "Describe it once and get six designs, or ask for changes and keep or undo each one.",
-                  ],
-                  [
-                    "Free, no subscription",
-                    "No watermark. Download PDF, PNG, video, PowerPoint and more.",
-                  ],
+                  ["Every social size", "Launch posts, stories, ads and banners for Instagram, TikTok, Facebook, X and more."],
+                  ["Studio AI", "Describe it once and get six designs, or ask for changes and keep or undo each one."],
+                  ["Free, no subscription", "No watermark. Download PDF, PNG, video, PowerPoint and more."],
                 ].map(([k, v], i) => (
-                  <li
-                    key={k}
-                    className="flex gap-4"
-                    data-reveal
-                    style={{ ["--i" as string]: i }}
-                  >
+                  <li key={k} className="flex gap-4" data-reveal style={{ ["--i" as string]: i }}>
                     <Star className="mt-1.5 text-bonnet" />
                     <span>
-                      <span className="block text-[1.25rem] font-bold">
-                        {k}
-                      </span>
+                      <span className="block text-[1.25rem] font-bold">{k}</span>
                       <span className="text-cream/90">{v}</span>
                     </span>
                   </li>
                 ))}
               </ul>
-              <a
-                href="https://studio.jollofpages.com"
-                className="btn justify-self-start"
-                data-reveal
-              >
+              <a href="https://studio.jollofpages.com" className="btn justify-self-start" data-reveal>
                 Open Jollof Studio <Arrow />
               </a>
             </div>
@@ -922,39 +533,19 @@ export default async function Home() {
         </section>
 
         {/* ---------- export: the files, then the shops they go to ---------- */}
-        <section
-          id="export"
-          aria-labelledby="export-title"
-          className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,11vw,9rem)]"
-        >
+        <section id="export" aria-labelledby="export-title" className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,11vw,9rem)]">
           <Pattern id="p-rice" kind="rice" color="var(--ground-2)" />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="export-title"
-              title="Files that pass first time"
-              sub="Print PDF, EPUB 3 and Word, ready to upload."
-            />
+            <SectionHead id="export-title" title="Files that pass first time" sub="Print PDF, EPUB 3 and Word, ready to upload." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1400px] gap-4 px-4 sm:px-8 lg:grid-cols-[1.3fr_1fr]">
             <div className="tilt-in self-start bg-white" data-p="enter">
-              <Shot
-                src="export"
-                w={2000}
-                h={968}
-                alt="The Export tab: print interior PDF, EPUB 3, Word, Typst source and backup"
-              />
+              <Shot src="export" w={2000} h={968} alt="The Export tab: print interior PDF, EPUB 3, Word, Typst source and backup" />
             </div>
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               {FILES.map((f, i) => (
-                <li
-                  key={f.name}
-                  className="file bg-char p-6 text-cream"
-                  data-reveal
-                  style={{ ["--i" as string]: i }}
-                >
-                  <span className="wide block text-[1.375rem] font-bold tracking-[-0.03em] text-bonnet">
-                    {f.name}
-                  </span>
+                <li key={f.name} className="file bg-char p-6 text-cream" data-reveal style={{ ["--i" as string]: i }}>
+                  <span className="wide block text-[1.375rem] font-bold tracking-[-0.03em] text-bonnet">{f.name}</span>
                   <span className="mt-1 block text-cream/90">{f.body}</span>
                 </li>
               ))}
@@ -964,16 +555,9 @@ export default async function Home() {
             <p className="text-[1.125rem] font-semibold" data-reveal>
               Upload the files to the stores you already sell in
             </p>
-            <ul
-              className="mt-5 flex flex-wrap justify-center gap-2"
-              data-reveal
-              style={{ ["--i" as string]: 1 }}
-            >
+            <ul className="mt-5 flex flex-wrap justify-center gap-2" data-reveal style={{ ["--i" as string]: 1 }}>
               {STORES.map((s) => (
-                <li
-                  key={s}
-                  className="store bg-char px-5 py-3 font-semibold text-cream"
-                >
+                <li key={s} className="store bg-char px-5 py-3 font-semibold text-cream">
                   {s}
                 </li>
               ))}
@@ -982,67 +566,28 @@ export default async function Home() {
         </section>
 
         {/* ---------- the book's home: a page per book, pen names ---------- */}
-        <section
-          id="site"
-          aria-labelledby="site-title"
-          className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char"
-        >
-          <Pattern
-            id="p-weave"
-            kind="weave"
-            color="var(--jollof)"
-            opacity={0.14}
-          />
+        <section id="site" aria-labelledby="site-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char">
+          <Pattern id="p-weave" kind="weave" color="var(--jollof)" opacity={0.14} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="site-title"
-              title="A home for every book"
-              sub="A free author website comes with every studio."
-            />
+            <SectionHead id="site-title" title="A home for every book" sub="A free author website comes with every studio." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             <div className="duo relative">
               <div className="duo-back" data-p="through">
-                <Shot
-                  src="bookpage"
-                  w={2200}
-                  h={1375}
-                  alt="A book page on the publisher site with the cover in 3D, the description and a free chapter link"
-                />
+                <Shot src="bookpage" w={2200} h={1375} alt="A book page on the publisher site with the cover in 3D, the description and a free chapter link" />
               </div>
               <div className="duo-front bg-white" data-p="through">
-                <Shot
-                  src="authors"
-                  w={2000}
-                  h={1125}
-                  alt="Pen names in the studio: paste a list of names, each with a photo and biography"
-                />
+                <Shot src="authors" w={2000} h={1125} alt="Pen names in the studio: paste a list of names, each with a photo and biography" />
               </div>
             </div>
             <ul className="mt-[clamp(2rem,5vw,4rem)] grid gap-4 text-center sm:grid-cols-3">
               {[
-                [
-                  "Your own website",
-                  "Every studio comes with a free site at you.jollofpages.com, styled from your cover colours.",
-                ],
-                [
-                  "Pen names",
-                  "Publish under as many names as you like. Your own stays private.",
-                ],
-                [
-                  "Reader list",
-                  "Readers sign up on your book pages. Export the list whenever you need it.",
-                ],
+                ["Your own website", "Every studio comes with a free site at you.jollofpages.com, styled from your cover colours."],
+                ["Pen names", "Publish under as many names as you like. Your own stays private."],
+                ["Reader list", "Readers sign up on your book pages. Export the list whenever you need it."],
               ].map(([k, v], i) => (
-                <li
-                  key={k}
-                  className="bg-cream p-6"
-                  data-reveal
-                  style={{ ["--i" as string]: i }}
-                >
-                  <span className="wide block text-[1.375rem] font-bold tracking-[-0.03em]">
-                    {k}
-                  </span>
+                <li key={k} className="bg-cream p-6" data-reveal style={{ ["--i" as string]: i }}>
+                  <span className="wide block text-[1.375rem] font-bold tracking-[-0.03em]">{k}</span>
                   <span className="mt-1 block">{v}</span>
                 </li>
               ))}
@@ -1051,55 +596,27 @@ export default async function Home() {
         </section>
 
         {/* ---------- safe and anywhere: three phones rising at their own pace ---------- */}
-        <section
-          id="safe"
-          aria-labelledby="safe-title"
-          className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
-          <Pattern
-            id="p-safe"
-            kind="pepper"
-            color="var(--char-2)"
-            opacity={0.9}
-            drift={false}
-          />
+        <section id="safe" aria-labelledby="safe-title" className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-safe" kind="pepper" color="var(--char-2)" opacity={0.9} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="safe-title"
-              title="Your words stay yours"
-              sub="Saved as you type, and yours to take anywhere."
-            />
+            <SectionHead id="safe-title" title="Your words stay yours" sub="Saved as you type, and yours to take anywhere." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1400px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[1.2fr_1fr]">
-            <div
-              className="phones flex justify-center gap-[3%] py-[6%]"
-              data-p="through"
-            >
+            <div className="phones flex justify-center gap-[3%] py-[6%]" data-p="through">
               {[
                 { src: "m-books", alt: "The studio shelf on a phone" },
                 { src: "m-write", alt: "The chapter list on a phone" },
                 { src: "m-format", alt: "Interior themes on a phone" },
               ].map((m, i) => (
-                <div
-                  key={m.src}
-                  className="phone w-[31%] max-w-[260px] bg-cream p-[1.2%]"
-                  style={{ ["--k" as string]: [1, -0.6, 1.4][i] }}
-                >
+                <div key={m.src} className="phone w-[31%] max-w-[260px] bg-cream p-[1.2%]" style={{ ["--k" as string]: [1, -0.6, 1.4][i] }}>
                   <Shot src={m.src} w={780} h={1688} alt={m.alt} />
                 </div>
               ))}
             </div>
             <dl className="grid gap-4 sm:grid-cols-2">
               {SAFE.map((s, i) => (
-                <div
-                  key={s.k}
-                  className="bg-char-2 p-6"
-                  data-reveal
-                  style={{ ["--i" as string]: i }}
-                >
-                  <dt className="text-[1.25rem] font-bold text-bonnet">
-                    {s.k}
-                  </dt>
+                <div key={s.k} className="bg-char-2 p-6" data-reveal style={{ ["--i" as string]: i }}>
+                  <dt className="text-[1.25rem] font-bold text-bonnet">{s.k}</dt>
                   <dd className="mt-1 text-cream/90">{s.v}</dd>
                 </div>
               ))}
@@ -1108,56 +625,22 @@ export default async function Home() {
         </section>
 
         {/* ---------- anywhere: install it like an app ---------- */}
-        <section
-          id="anywhere"
-          aria-labelledby="anywhere-title"
-          className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char"
-        >
-          <Pattern
-            id="p-anywhere"
-            kind="nsibidi"
-            color="var(--jollof)"
-            opacity={0.16}
-            drift={false}
-          />
+        <section id="anywhere" aria-labelledby="anywhere-title" className="relative scroll-mt-16 overflow-hidden bg-bonnet py-[clamp(5rem,11vw,9rem)] text-char">
+          <Pattern id="p-anywhere" kind="nsibidi" color="var(--jollof)" opacity={0.16} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="anywhere-title"
-              title="Works on any computer"
-              sub="Install it like an app on desktop or tablet."
-            />
+            <SectionHead id="anywhere-title" title="Works on any computer" sub="Install it like an app on desktop or tablet." />
           </div>
           <div className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1200px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.6fr]">
-            <div
-              className="flex flex-col items-center gap-6 text-center"
-              data-reveal
-            >
+            <div className="flex flex-col items-center gap-6 text-center" data-reveal>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/icons/icon-512.png"
-                alt="The Jollof Pages app icon"
-                width={160}
-                height={160}
-                className="size-[clamp(7rem,12vw,10rem)] shadow-[12px_12px_0_var(--char)]"
-                loading="lazy"
-              />
-              <p className="max-w-[30ch] text-[1.125rem]">
-                It opens in its own window with its own icon, and your books
-                stay safe in the cloud.
-              </p>
+              <img src="/icons/icon-512.png" alt="The Jollof Pages app icon" width={160} height={160} className="size-[clamp(7rem,12vw,10rem)] shadow-[12px_12px_0_var(--char)]" loading="lazy" />
+              <p className="max-w-[30ch] text-[1.125rem]">It opens in its own window with its own icon, and your books stay safe in the cloud.</p>
               <InstallButton className="btn" label="Install the studio" />
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {PLATFORMS.map((p, i) => (
-                <li
-                  key={p.name}
-                  className="bg-char p-6 text-cream"
-                  data-reveal
-                  style={{ ["--i" as string]: i % 3 }}
-                >
-                  <p className="wide text-[1.5rem] font-bold text-bonnet">
-                    {p.name}
-                  </p>
+                <li key={p.name} className="bg-char p-6 text-cream" data-reveal style={{ ["--i" as string]: i % 3 }}>
+                  <p className="wide text-[1.5rem] font-bold text-bonnet">{p.name}</p>
                   <p className="mt-2 text-cream/90">{p.how}</p>
                 </li>
               ))}
@@ -1166,43 +649,24 @@ export default async function Home() {
         </section>
 
         {/* ---------- why: side by side with Atticus ---------- */}
-        <section
-          id="why"
-          aria-labelledby="why-title"
-          className="relative scroll-mt-16 bg-ground py-[clamp(5rem,11vw,9rem)]"
-        >
+        <section id="why" aria-labelledby="why-title" className="relative scroll-mt-16 bg-ground py-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">
-            <SectionHead
-              id="why-title"
-              title="Why choose Jollof Pages"
-              sub="Side by side with Atticus, row by row."
-            />
+            <SectionHead id="why-title" title="Why choose Jollof Pages" sub="Side by side with Atticus, row by row." />
           </div>
-          <div
-            className="mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1100px] px-4 sm:px-8"
-            data-reveal
-          >
+          <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1100px] px-4 sm:px-8" data-reveal>
             {/* on a narrow phone the table scrolls inside its box instead of widening the page */}
             <div className="overflow-x-auto">
               <table className="compare w-full text-left">
-                <caption className="sr-only">
-                  Jollof Pages compared with Atticus
-                </caption>
+                <caption className="sr-only">Jollof Pages compared with Atticus</caption>
                 <thead>
                   <tr className="bg-char text-cream">
                     <th scope="col" className="p-3 sm:p-5">
                       <span className="sr-only">Feature</span>
                     </th>
-                    <th
-                      scope="col"
-                      className="bg-jollof p-3 text-center font-bold sm:p-5"
-                    >
+                    <th scope="col" className="bg-jollof p-3 text-center font-bold sm:p-5">
                       Jollof Pages
                     </th>
-                    <th
-                      scope="col"
-                      className="p-3 text-center font-semibold sm:p-5"
-                    >
+                    <th scope="col" className="p-3 text-center font-semibold sm:p-5">
                       Atticus
                     </th>
                   </tr>
@@ -1224,41 +688,19 @@ export default async function Home() {
                 </tbody>
               </table>
             </div>
-            <p className="t-small mt-4 text-center text-char/75">
-              Atticus details are taken from atticus.io in October 2026. A dash
-              means the feature is not listed there.
-            </p>
+            <p className="t-small mt-4 text-center text-char/75">Atticus details are taken from atticus.io in October 2026. A dash means the feature is not listed there.</p>
           </div>
         </section>
 
         {/* ---------- every kind of book: rows that fill as the pointer passes ---------- */}
-        <section
-          id="made-for"
-          aria-labelledby="kinds-title"
-          className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream"
-        >
-          <Pattern
-            id="p-kinds"
-            kind="adire"
-            color="var(--char)"
-            opacity={0.12}
-            drift={false}
-          />
+        <section id="made-for" aria-labelledby="kinds-title" className="relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(5rem,11vw,9rem)] text-cream">
+          <Pattern id="p-kinds" kind="adire" color="var(--char)" opacity={0.12} drift={false} />
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="kinds-title"
-              title="Made for every kind of book"
-              sub="Novels, memoir, guides, workbooks and poetry."
-            />
+            <SectionHead id="kinds-title" title="Made for every kind of book" sub="Novels, memoir, guides, workbooks and poetry." />
           </div>
           <ul className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] max-w-[1400px] px-4 sm:px-8">
             {KINDS.map((k, i) => (
-              <li
-                key={k.name}
-                className="kind"
-                data-reveal
-                style={{ ["--i" as string]: i % 3 }}
-              >
+              <li key={k.name} className="kind" data-reveal style={{ ["--i" as string]: i % 3 }}>
                 <span className="wide kind-name font-bold">{k.name}</span>
                 <span className="kind-body">{k.body}</span>
               </li>
@@ -1267,45 +709,19 @@ export default async function Home() {
         </section>
 
         {/* ---------- price ---------- */}
-        <section
-          id="pricing"
-          aria-labelledby="pricing-title"
-          className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,11vw,9rem)]"
-        >
+        <section id="pricing" aria-labelledby="pricing-title" className="relative scroll-mt-16 overflow-hidden bg-ground py-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">
-            <SectionHead
-              id="pricing-title"
-              title="Pay once, own it"
-              sub="One price, every book, every update."
-            />
+            <SectionHead id="pricing-title" title="Pay once, own it" sub="One price, every book, every update." />
           </div>
           <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1100px] gap-4 px-4 sm:px-8">
-            <div
-              className="plan grid overflow-hidden bg-char text-cream lg:grid-cols-[1fr_1.1fr]"
-              data-reveal
-            >
+            <div className="plan grid overflow-hidden bg-char text-cream lg:grid-cols-[1fr_1.1fr]" data-reveal>
               <div className="relative overflow-hidden bg-jollof p-8 sm:p-12">
-                <Pattern
-                  id="p-plan"
-                  kind="adire"
-                  color="var(--char)"
-                  opacity={0.18}
-                  drift={false}
-                />
+                <Pattern id="p-plan" kind="adire" color="var(--char)" opacity={0.18} drift={false} />
                 <div className="relative">
-                  <p className="text-[1.25rem] font-semibold">
-                    Jollof Pages Studio
-                  </p>
-                  <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">
-                    $129
-                  </p>
-                  <p className="mt-4 text-[1.125rem] font-semibold">
-                    One-time payment. No monthly fees.
-                  </p>
-                  <p className="mt-3 max-w-[34ch] text-cream/95">
-                    Buy it once and write as many books as you like, with every
-                    update we ship included.
-                  </p>
+                  <p className="text-[1.25rem] font-semibold">Jollof Pages Studio</p>
+                  <p className="wide mt-3 text-[clamp(4.5rem,3rem+6vw,8rem)] leading-[0.85] font-bold tracking-[-0.05em]">$129</p>
+                  <p className="mt-4 text-[1.125rem] font-semibold">One-time payment. No monthly fees.</p>
+                  <p className="mt-3 max-w-[34ch] text-cream/95">Buy it once and write as many books as you like, with every update we ship included.</p>
                   <a href="/signup" className="btn mt-8">
                     Buy Jollof Pages
                     <Arrow />
@@ -1314,53 +730,26 @@ export default async function Home() {
               </div>
               <ul className="grid content-center gap-4 p-8 sm:p-12">
                 {PLAN.map((p, i) => (
-                  <li
-                    key={p}
-                    className="flex items-start gap-3 text-[1.125rem]"
-                    data-reveal
-                    style={{ ["--i" as string]: i }}
-                  >
+                  <li key={p} className="flex items-start gap-3 text-[1.125rem]" data-reveal style={{ ["--i" as string]: i }}>
                     <Check className="mt-1 text-bonnet" />
                     {p}
                   </li>
                 ))}
               </ul>
             </div>
-            <div
-              className="flex flex-col items-start justify-between gap-4 bg-bonnet p-6 text-char sm:flex-row sm:items-center sm:p-8"
-              data-reveal
-            >
+            <div className="flex flex-col items-start justify-between gap-4 bg-bonnet p-6 text-char sm:flex-row sm:items-center sm:p-8" data-reveal>
               <div>
-                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">
-                  Add-on, pay as you go
-                </p>
-                <p className="wide mt-1 text-[1.5rem] font-bold">
-                  AI cover credits
-                </p>
-                <p className="mt-1 max-w-[52ch]">
-                  Make cover art in your book&apos;s own colours, right inside
-                  the studio. $10 buys 100 credits: about 50 drafts or 25
-                  print-ready covers. Credits never expire.
-                </p>
+                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Add-on, pay as you go</p>
+                <p className="wide mt-1 text-[1.5rem] font-bold">AI cover credits</p>
+                <p className="mt-1 max-w-[52ch]">Make cover art in your book&apos;s own colours, right inside the studio. $10 buys 100 credits: about 50 drafts or 25 print-ready covers. Credits never expire.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
-            <div
-              className="flex flex-col items-start justify-between gap-4 border-2 border-char/15 bg-cream p-6 text-char sm:flex-row sm:items-center sm:p-8"
-              data-reveal
-            >
+            <div className="flex flex-col items-start justify-between gap-4 border-2 border-char/15 bg-cream p-6 text-char sm:flex-row sm:items-center sm:p-8" data-reveal>
               <div>
-                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">
-                  Optional upgrade
-                </p>
-                <p className="wide mt-1 text-[1.5rem] font-bold">
-                  Author Site Pro
-                </p>
-                <p className="mt-1 max-w-[52ch]">
-                  Your author website on your own domain, like yourname.com,
-                  with analytics. Newsletters and direct ebook sales are coming
-                  soon. $10 a month, or $96 a year {freeCom}.
-                </p>
+                <p className="text-[0.875rem] font-bold tracking-[0.12em] uppercase">Optional upgrade</p>
+                <p className="wide mt-1 text-[1.5rem] font-bold">Author Site Pro</p>
+                <p className="mt-1 max-w-[52ch]">Your author website on your own domain, like yourname.com, with analytics. Newsletters and direct ebook sales are coming soon. $10 a month, or $96 a year {freeCom}.</p>
               </div>
               <Star className="size-12 shrink-0 text-jollof" />
             </div>
@@ -1368,32 +757,15 @@ export default async function Home() {
         </section>
 
         {TESTIMONIALS.length > 0 && (
-          <section
-            id="authors"
-            aria-labelledby="authors-title"
-            className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream"
-          >
+          <section id="authors" aria-labelledby="authors-title" className="relative scroll-mt-16 overflow-hidden bg-char py-[clamp(5rem,11vw,9rem)] text-cream">
             <div className="relative px-4 sm:px-8">
-              <SectionHead
-                id="authors-title"
-                title="Authors love it"
-                sub="In their own words."
-              />
+              <SectionHead id="authors-title" title="Authors love it" sub="In their own words." />
             </div>
             <ul className="relative mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[1200px] gap-4 px-4 sm:grid-cols-2 sm:px-8 lg:grid-cols-3">
               {TESTIMONIALS.map((t, i) => (
-                <li
-                  key={t.name}
-                  className="flex flex-col bg-char-2 p-7"
-                  data-reveal
-                  style={{ ["--i" as string]: i % 3 }}
-                >
-                  <p className="text-[1.25rem] font-bold text-bonnet">
-                    {t.title}
-                  </p>
-                  <blockquote className="mt-3 flex-1 text-cream/90">
-                    &ldquo;{t.quote}&rdquo;
-                  </blockquote>
+                <li key={t.name} className="flex flex-col bg-char-2 p-7" data-reveal style={{ ["--i" as string]: i % 3 }}>
+                  <p className="text-[1.25rem] font-bold text-bonnet">{t.title}</p>
+                  <blockquote className="mt-3 flex-1 text-cream/90">&ldquo;{t.quote}&rdquo;</blockquote>
                   <p className="mt-6 font-semibold">{t.name}</p>
                   <p className="t-small text-cream/70">{t.role}</p>
                 </li>
@@ -1403,27 +775,13 @@ export default async function Home() {
         )}
 
         {/* ---------- questions ---------- */}
-        <section
-          id="faq"
-          aria-labelledby="faq-title"
-          className="relative scroll-mt-16 bg-ground-2 py-[clamp(5rem,11vw,9rem)]"
-        >
+        <section id="faq" aria-labelledby="faq-title" className="relative scroll-mt-16 bg-ground-2 py-[clamp(5rem,11vw,9rem)]">
           <div className="px-4 sm:px-8">
-            <SectionHead
-              id="faq-title"
-              title="Questions, answered"
-              sub="What authors ask before they start a book."
-            />
+            <SectionHead id="faq-title" title="Questions, answered" sub="What authors ask before they start a book." />
           </div>
           <div className="mx-auto mt-[clamp(3rem,6vw,5rem)] grid max-w-[900px] gap-2 px-4 sm:px-8">
             {FAQ.map((f, i) => (
-              <details
-                key={f.q}
-                name="faq"
-                className="faq bg-ground"
-                data-reveal
-                style={{ ["--i" as string]: i % 4 }}
-              >
+              <details key={f.q} name="faq" className="faq bg-ground" data-reveal style={{ ["--i" as string]: i % 4 }}>
                 <summary className="flex min-h-[4.5rem] cursor-pointer list-none items-center justify-between gap-6 px-5 py-4 text-[1.125rem] font-semibold sm:px-7 sm:text-[1.25rem]">
                   {f.q}
                   <span className="plus relative size-4 shrink-0" aria-hidden>
@@ -1440,42 +798,17 @@ export default async function Home() {
         </section>
 
         {/* ---------- the close: a blank book opens behind the sign-up ---------- */}
-        <section
-          id="early-access"
-          aria-labelledby="cta-title"
-          className="cta relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(6rem,13vw,11rem)] text-cream"
-          data-p="through"
-        >
+        <section id="early-access" aria-labelledby="cta-title" className="cta relative scroll-mt-16 overflow-hidden bg-jollof py-[clamp(6rem,13vw,11rem)] text-cream" data-p="through">
           <Pattern id="p-cta" kind="adire" color="var(--char)" opacity={0.2} />
           {/* a blank book whose pages fan open as the section passes */}
-          <div
-            className="cta-book absolute top-1/2 left-1/2 aspect-[2/3] w-[min(72vw,480px)]"
-            aria-hidden
-          >
-            <span
-              className="cta-page bg-cream-2"
-              style={{ ["--r" as string]: "-26deg" }}
-            />
-            <span
-              className="cta-page bg-bonnet"
-              style={{ ["--r" as string]: "-14deg" }}
-            />
-            <span
-              className="cta-page bg-char"
-              style={{ ["--r" as string]: "6deg" }}
-            />
+          <div className="cta-book absolute top-1/2 left-1/2 aspect-[2/3] w-[min(72vw,480px)]" aria-hidden>
+            <span className="cta-page bg-cream-2" style={{ ["--r" as string]: "-26deg" }} />
+            <span className="cta-page bg-bonnet" style={{ ["--r" as string]: "-14deg" }} />
+            <span className="cta-page bg-char" style={{ ["--r" as string]: "6deg" }} />
           </div>
           <div className="relative px-4 sm:px-8">
-            <SectionHead
-              id="cta-title"
-              title="Your book is ready to cook"
-              sub="Pay once, get the studio and your author website."
-            />
-            <div
-              className="mx-auto mt-8 max-w-[560px]"
-              data-reveal
-              style={{ ["--i" as string]: 2 }}
-            >
+            <SectionHead id="cta-title" title="Your book is ready to cook" sub="Pay once, get the studio and your author website." />
+            <div className="mx-auto mt-8 max-w-[560px]" data-reveal style={{ ["--i" as string]: 2 }}>
               <div className="flex justify-center">
                 <a href="/signup" className="btn">
                   Buy Jollof Pages for $129
@@ -1519,17 +852,8 @@ function Cell({ v }: { v: string | boolean | null }) {
 
 function Check({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      className={`size-5 shrink-0 ${className ?? ""}`}
-      aria-hidden
-    >
-      <path
-        d="M4 12.5l5 5L20 6.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-      />
+    <svg viewBox="0 0 24 24" className={`size-5 shrink-0 ${className ?? ""}`} aria-hidden>
+      <path d="M4 12.5l5 5L20 6.5" fill="none" stroke="currentColor" strokeWidth="3" />
     </svg>
   );
 }
@@ -1540,12 +864,7 @@ function StepArt({ kind }: { kind: "import" | "look" | "devices" }) {
     return (
       <div className="absolute inset-0 bg-char">
         <div className="step-shot absolute top-[8%] left-[6%] w-[125%]">
-          <Shot
-            src="books"
-            w={2200}
-            h={1183}
-            alt="The studio shelf with the Import Word or Markdown button and four books"
-          />
+          <Shot src="books" w={2200} h={1183} alt="The studio shelf with the Import Word or Markdown button and four books" />
         </div>
       </div>
     );
@@ -1553,12 +872,7 @@ function StepArt({ kind }: { kind: "import" | "look" | "devices" }) {
     return (
       <div className="absolute inset-0 bg-jollof">
         <div className="step-shot absolute top-[8%] left-[6%] w-[112%]">
-          <Shot
-            src="format"
-            w={2000}
-            h={1526}
-            alt="Five interior themes, Accra, Lagos, Uyo, Dakar and Nairobi, with KDP trim sizes"
-          />
+          <Shot src="format" w={2000} h={1526} alt="Five interior themes, Accra, Lagos, Uyo, Dakar and Nairobi, with KDP trim sizes" />
         </div>
       </div>
     );
