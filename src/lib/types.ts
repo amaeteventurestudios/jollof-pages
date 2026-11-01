@@ -1,6 +1,7 @@
 import { hardcoverPaper, hardcoverTrim, type Binding, type PaperType } from "./kdp";
 import type { DocNode } from "./doc/types";
 import type { ThemeCustom } from "./themes";
+import type { RunningHeads } from "./running-heads";
 
 export type BookStatus = "idea" | "drafting" | "revising" | "editing" | "ready" | "published";
 
@@ -43,6 +44,8 @@ export interface BookFormat {
   hardcoverTrim: string;
   /** the author's changes on top of the theme: fonts, colour, headings, ornament, drop cap */
   custom?: ThemeCustom;
+  /** headers and footers in print (src/lib/running-heads.ts); missing parts use the defaults */
+  heads?: Partial<RunningHeads>;
   /** the author's own print margins in inches from the trim; KDP's minimums still apply. Missing = automatic */
   margins?: CustomMargins;
   /** how lengths are shown in the studio */
@@ -169,6 +172,8 @@ export interface ChapterOptions {
   hidePageNumber?: boolean;
   /** no running head on this chapter's pages */
   hideHeader?: boolean;
+  /** a shorter title for this section's running head */
+  runningTitle?: string;
   smallTitle?: boolean;
   /** white title set over the chapter image */
   invert?: boolean;

@@ -26,13 +26,14 @@ export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   if (o.scope) rules.push(`${o.scope} { font-family: ${theme.bodyCss}; line-height: ${lh}; }`);
   else rules.push(`body { font-family: ${theme.bodyCss}; line-height: ${lh}; margin: 0 5%; }`);
   const ts = textStyle(theme);
+  const widows = ts.widows === "off" ? "widows: 1; orphans: 1;" : `widows: ${ts.widows === "strict" ? 3 : 2}; orphans: ${ts.widows === "strict" ? 3 : 2};`;
   const justify = ts.justify ?? theme.indent;
   const hy = ts.hyphenate ? "auto" : "manual";
   add(
     "p",
     theme.indent
-      ? `margin: 0 0 ${ts.paraSpacing ?? 0}em; text-indent: ${ts.indentSize ?? 1.5}em; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`
-      : `margin: 0 0 ${ts.paraSpacing ?? 0.8}em; text-indent: 0; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy};`,
+      ? `margin: 0 0 ${ts.paraSpacing ?? 0}em; text-indent: ${ts.indentSize ?? 1.5}em; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy}; ${widows}`
+      : `margin: 0 0 ${ts.paraSpacing ?? 0.8}em; text-indent: 0; text-align: ${justify ? "justify" : "left"}; hyphens: ${hy}; ${widows}`,
   );
   add("p.first, h2 + p, h3 + p, h4 + p, .scene-break + p, hr + p, blockquote + p, .callout + p, figure + p, ul + p, ol + p", "text-indent: 0;");
   add("p.blank", "text-indent: 0;");

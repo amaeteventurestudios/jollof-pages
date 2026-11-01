@@ -4,12 +4,17 @@ import {
   ExternalHyperlink,
   FootnoteReferenceRun,
   Footer,
+  Header,
   HeadingLevel,
   ImageRun,
   LevelFormat,
   Packer,
   PageBreak,
   PageNumber,
+  BorderStyle,
+  SimpleField,
+  Tab,
+  TabStopType,
   Paragraph,
   TableOfContents,
   TextRun,
@@ -22,6 +27,7 @@ import { pageGeometry } from "../kdp";
 import { themeFor, sceneBreakGlyph } from "../themes";
 import { boxDef } from "../blocks";
 import { bookFormat } from "../types";
+import { runningHeads, type HeadContent, type RunningHeads } from "../running-heads";
 
 export interface DocxImage {
   bytes: Uint8Array;
@@ -193,6 +199,7 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
 
   const font = theme.bodyFont;
   const doc = new Document({
+    evenAndOddHeaderAndFooters: true,
     creator: authorName(input),
     title: book.title,
     description: book.description?.slice(0, 500),
@@ -225,6 +232,7 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
     sections: [
       {
         properties: {
+          titlePage: true,
           page: {
             size: { width: Math.round(g.pageWidth * TWIP), height: Math.round(g.pageHeight * TWIP) },
             margin: {
@@ -235,10 +243,54 @@ export async function buildDocx(input: ExportInput, images: Map<string, DocxImag
             },
           },
         },
-        footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: [PageNumber.CURRENT], size: 18 })] })] }) },
+        ...wordChrome(runningHeads(format), { book: book.title, author: authorName(input), width: Math.round((g.pageWidth - g.margins.inside - g.margins.outside) * TWIP) }),
         children,
       },
     ],
   });
   return Packer.toBlob(doc);
+}
+
+/**
+ * Word's headers and footers from the book's settings. A Word file is one long section, so the
+ * chapter title comes from a STYLEREF field (Word fills in the latest chapter heading on each
+ * page); part heads use the same field. The title page carries neither.
+ */
+function wordChrome(h: RunningHeads, o: { book: string; author: string; width: number }) {
+  const size = 18;
+  const runOpts = { size, smallCaps: h.style === "smallcaps", italics: h.style === "italic" };
+  const head = (what: HeadContent): ParagraphChild[] => {
+    if (what === "none") return [];
+    if (what === "book") return [new TextRun({ text: o.book, ...runOpts })];
+    if (what === "author") return [new TextRun({ text: o.author, ...runOpts })];
+    return [new SimpleField('STYLEREF "Heading 1"')];
+  };
+  const folio = (): ParagraphChild[] => {
+    if (h.folio === "none") return [];
+    const pre = h.folioStyle === "dashes" ? "– " : h.folioStyle === "word" ? "Page " : "";
+    const post = h.folioStyle === "dashes" ? " –" : "";
+    return [new TextRun({ children: [pre, PageNumber.CURRENT, post], size })];
+  };
+  const rule = h.rule ? { border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "8C8C8C", space: 2 } } } : {};
+  const headPara = (recto: boolean) => {
+    const text = head(recto ? h.right : h.left);
+    if (h.folio === "top-outside") {
+      const n = folio();
+      // the number sits on the outside edge, the head across from it
+      const children = recto ? [...text, new TextRun({ children: [new Tab()], size }), ...n] : [...n, new TextRun({ children: [new Tab()], size }), ...text];
+      return new Paragraph({ tabStops: [{ type: TabStopType.RIGHT, position: o.width }], children, ...rule });
+    }
+    const alignment = h.align === "center" ? AlignmentType.CENTER : recto ? AlignmentType.RIGHT : AlignmentType.LEFT;
+    return new Paragraph({ alignment, children: text, ...(text.length ? rule : {}) });
+  };
+  const footPara = (recto: boolean) => {
+    if (h.folio === "top-outside" || h.folio === "none") return new Paragraph({ children: [] });
+    const alignment = h.folio === "bottom-center" ? AlignmentType.CENTER : recto ? AlignmentType.RIGHT : AlignmentType.LEFT;
+    return new Paragraph({ alignment, children: folio() });
+  };
+  const blank = () => new Paragraph({ children: [] });
+  return {
+    headers: { default: new Header({ children: [headPara(true)] }), even: new Header({ children: [headPara(false)] }), first: new Header({ children: [blank()] }) },
+    footers: { default: new Footer({ children: [footPara(true)] }), even: new Footer({ children: [footPara(false)] }), first: new Footer({ children: [blank()] }) },
+  };
 }

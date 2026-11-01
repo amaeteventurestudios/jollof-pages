@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { elementHtml } from "@/lib/render-element";
 import { orderedElements } from "@/lib/book-model";
+import { headTitles, pageChrome, runningHeads, type PageChrome } from "@/lib/running-heads";
+import { PageHead } from "./page-head";
 import { themeCss } from "@/lib/theme-css";
 import { themeFor, THEME_FONTS_HREFS } from "@/lib/themes";
 import { getTrim, hardcoverTrim, pageGeometry, type Binding } from "@/lib/kdp";
@@ -25,6 +27,7 @@ interface Page {
   /** printed folio, empty when the page shows none */
   folio: string;
   head: string;
+  chrome?: PageChrome;
 }
 
 /** A short fingerprint of the text, so the layout is redone only when the book changes. */
@@ -130,18 +133,33 @@ export function FullBookPreview({ book, chapters, startChapterId, onClose }: { b
     const list: Page[] = [];
     let bodyFrom = -1;
     elements.forEach((e, i) => {
-      const right = format.chaptersOnRight && e.kind.id !== "copyright";
+      const firstBody = bodyFrom < 0 && e.section !== "front";
+      const right = (format.chaptersOnRight || (firstBody && format.firstChapterOnRight !== false)) && e.kind.id !== "copyright";
       if (i > 0 && right && list.length % 2 === 1) list.push({ el: i - 1, k: -1, blank: true, folio: "", head: "" });
-      if (bodyFrom < 0 && e.section !== "front") bodyFrom = list.length;
+      if (firstBody) bodyFrom = list.length;
       for (let k = 0; k < counts[i]; k++) list.push({ el: i, k, blank: false, folio: "", head: "" });
     });
+    const rh = runningHeads(format);
+    const titles = headTitles(elements);
+    const author = book.expand?.author?.name ?? "";
     return list.map((p, idx) => {
       if (p.blank) return p;
       const e = elements[p.el];
       const body = bodyFrom >= 0 && idx >= bodyFrom;
-      const folio = e.options.hidePageNumber ? "" : body ? String(idx - bodyFrom + 1) : roman(idx + 1);
-      const head = format.runningHeads && p.k > 0 && e.section !== "front" && !e.options.hideHeader ? (idx % 2 === 1 ? book.title : e.title) : "";
-      return { ...p, folio, head };
+      const n = format.countFrontMatter ? String(idx + 1) : body ? String(idx - bodyFrom + 1) : roman(idx + 1);
+      const chrome = pageChrome(rh, {
+        recto: idx % 2 === 0,
+        opener: p.k === 0,
+        front: e.section === "front",
+        hideHead: e.options.hideHeader,
+        hideFolio: e.options.hidePageNumber || (e.section === "front" && !e.inToc),
+        folio: n,
+        book: book.title,
+        author,
+        title: titles[p.el].title,
+        part: titles[p.el].part,
+      });
+      return { ...p, folio: chrome.folio, head: chrome.head, chrome };
     });
   })();
 
@@ -412,11 +430,7 @@ function PageView({
       />
       {!page.blank && (
         <>
-          {page.head && (
-            <div className="absolute truncate text-[0.72em] tracking-[0.08em] uppercase opacity-75" style={{ left, width: innerW, top: m.top * 0.45, textAlign: side === "left" ? "left" : "right" }}>
-              {page.head}
-            </div>
-          )}
+          {(page.head || page.chrome?.folioTop) && <PageHead chrome={page.chrome} head={page.head} style={{ left, width: innerW, top: m.top * 0.42 }} />}
           <div className="absolute overflow-hidden" style={{ top: m.top, left, width: innerW, height: innerH }}>
             <div
               className="jp-fbp-flow h-full"
@@ -424,8 +438,8 @@ function PageView({
               dangerouslySetInnerHTML={{ __html: html }}
             />
           </div>
-          {page.folio && (
-            <div className="absolute right-0 left-0 text-center text-[0.8em] opacity-70" style={{ bottom: m.bottom * 0.4 }}>
+          {page.folio && !page.chrome?.folioTop && (
+            <div className="absolute text-[0.8em] opacity-70" style={{ left, width: innerW, bottom: m.bottom * 0.4, textAlign: page.chrome?.folioAlign ?? "center" }}>
               {page.folio}
             </div>
           )}
