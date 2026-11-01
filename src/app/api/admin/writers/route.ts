@@ -37,7 +37,7 @@ function tempPassword(): string {
 
 /**
  * POST { id, action }:
- * - "comp" opens the studio for free, "pending" closes it again (paid accounts stay paid)
+ * - "comp" opens the Desk for free, "pending" closes it again (paid accounts stay paid)
  * - "grant" with { credits, note } adds AI cover credits (support: up to 100 at a time)
  * - "password" sets a temporary password and returns it once, to pass on to the writer
  * - "suspend" with { reason } stops them signing in and takes their site offline; "unsuspend" undoes it
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
   let extra: Record<string, unknown> = {};
 
   if (b.action === "comp" || b.action === "pending") {
-    if (user.access === "paid") return NextResponse.json({ error: "This writer paid for the studio, so their access stays open." }, { status: 400 });
+    if (user.access === "paid") return NextResponse.json({ error: "This writer paid for the Desk, so their access stays open." }, { status: 400 });
     await pb.collection("users").update(user.id, { access: b.action });
     await audit(me, b.action === "comp" ? "writer.comp" : "writer.uncomp", target);
   } else if (b.action === "grant") {

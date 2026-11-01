@@ -127,7 +127,7 @@ export function IsbnDialog({ open, onClose, initial }: { open: boolean; onClose:
       }
       await pb().collection("books").update(book.id, fd);
       localStorage.removeItem(PENDING_BOOK);
-      router.push(`/studio/books/${book.id}?tab=publish`);
+      router.push(`/desk/books/${book.id}?tab=publish`);
     } catch (err) {
       setError(errorMessage(err));
       setBusy(false);

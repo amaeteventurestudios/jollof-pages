@@ -75,7 +75,7 @@ export interface AiCoverPanelProps {
   onUse: (target: Target, url: string, lettered: boolean) => void;
 }
 
-/** "Make artwork with AI": the studio writes the prompt from the book and its colours, the writer edits and pays per picture. */
+/** "Make artwork with AI": the Desk writes the prompt from the book and its colours, the writer edits and pays per picture. */
 export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse }: AiCoverPanelProps) {
   const [account, setAccount] = useState<Account | null>(null);
   const [target, setTarget] = useState<Target>("front");
@@ -363,7 +363,7 @@ export function AiCoverPanel({ bookId, book, design, aspect, edgePercent, onUse 
             {own && account && !account.openrouter && (
               <p className="rounded bg-paper-2 p-3 text-[13px]">
                 Add your OpenRouter key first: open{" "}
-                <Link href="/studio/assistant" className="font-medium text-primary underline">
+                <Link href="/desk/assistant" className="font-medium text-primary underline">
                   AI assistant
                 </Link>
                 , choose OpenRouter and paste a key from openrouter.ai/settings/keys. Then come back here.

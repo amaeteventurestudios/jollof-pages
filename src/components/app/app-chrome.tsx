@@ -19,23 +19,23 @@ type Item = { href: string; label: string; icon: React.ComponentType<{ className
 type Link_ = (typeof LINKS)[number];
 
 /** The four sections that get their own tab; everything else sits under More. */
-const TAB_HREFS = ["/studio", "/studio/progress", "/studio/site", "/studio/stats"];
-const GUEST_TAB_HREFS = ["/studio", "/studio/collaboration"];
+const TAB_HREFS = ["/desk", "/desk/progress", "/desk/site", "/desk/stats"];
+const GUEST_TAB_HREFS = ["/desk", "/desk/collaboration"];
 
 const HELP: Item[] = [
-  { href: "/studio/learn", label: "Learn", icon: GraduationCap },
-  { href: "/studio/help", label: "Help and support", icon: LifeBuoy },
-  { href: "/studio/ideas", label: "Request a feature", icon: Lightbulb },
+  { href: "/desk/learn", label: "Learn", icon: GraduationCap },
+  { href: "/desk/help", label: "Help and support", icon: LifeBuoy },
+  { href: "/desk/ideas", label: "Request a feature", icon: Lightbulb },
 ];
 const ACCOUNT: Item[] = [
-  { href: "/studio/assistant", label: "AI assistant", icon: Sparkles },
-  { href: "/studio/admin", label: "Admin", icon: ShieldCheck },
+  { href: "/desk/assistant", label: "AI assistant", icon: Sparkles },
+  { href: "/desk/admin", label: "Admin", icon: ShieldCheck },
 ];
 
 const TITLES: Record<string, string> = {
   ...Object.fromEntries(LINKS.map((l) => [l.href, l.label])),
   ...Object.fromEntries([...HELP, ...ACCOUNT].map((l) => [l.href, l.label])),
-  "/studio": "Your books",
+  "/desk": "Your books",
 };
 
 function titleFor(path: string): string {
@@ -46,7 +46,7 @@ function titleFor(path: string): string {
 }
 
 /**
- * The studio as a phone and tablet app: an app bar under the status bar, a tab bar above the home
+ * The Desk as a phone and tablet app: an app bar under the status bar, a tab bar above the home
  * indicator, and a full-screen More page for the rest. Desktop never shows any of it.
  */
 export function AppChrome({ guest }: { guest: boolean }) {
@@ -67,8 +67,8 @@ export function AppChrome({ guest }: { guest: boolean }) {
   return (
     <div className="hidden app:contents">
       <AppBar title={titleFor(path)} onAccount={() => setMore(true)} />
-      {path === "/studio" && <InstallCard />}
-      <nav aria-label="Studio" className="app-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md supports-[backdrop-filter]:bg-card/85">
+      {path === "/desk" && <InstallCard />}
+      <nav aria-label="Desk" className="app-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md supports-[backdrop-filter]:bg-card/85">
         <div className="mx-auto flex h-[var(--app-tab-h)] max-w-2xl">
           {tabs.map((t) => {
             const on = isActive(t.href, "exact" in t && t.exact);
@@ -109,10 +109,10 @@ function isIosBrowser(): boolean {
 
 const INSTALL_KEY = "jp-install-card";
 
-/** A one-time nudge, in the browser only, to put the studio on the home screen like a store app. */
+/** A one-time nudge, in the browser only, to put the Desk on the home screen like a store app. */
 function InstallCard() {
   const install = useInstallPrompt();
-  // the studio only renders in the browser (behind the sign-in check), so these read the device directly
+  // the Desk only renders in the browser (behind the sign-in check), so these read the device directly
   const [ios] = useState(isIosBrowser);
   const [hidden, setHidden] = useState(() => {
     try {
@@ -138,7 +138,7 @@ function InstallCard() {
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-semibold text-ink">Get the Jollof Pages app</p>
         {install ? (
-          <p className="text-[13.5px] text-soft">Install it to open the studio full screen from your home screen.</p>
+          <p className="text-[13.5px] text-soft">Install it to open the Desk full screen from your home screen.</p>
         ) : (
           <p className="text-[13.5px] text-soft">
             Tap <Share className="inline size-4 align-[-3px] text-primary" aria-label="Share" /> in Safari, then Add to Home Screen.
@@ -230,14 +230,14 @@ export function MorePage({
   const [theme, setTheme] = useThemeChoice();
   const admin = useIsAdmin(guest);
   // Safari on iPhone and iPad has no install prompt; people add the app from the Share menu.
-  // The studio only renders in the browser (behind the sign-in check), so this can read it directly.
+  // The Desk only renders in the browser (behind the sign-in check), so this can read it directly.
   const [ios] = useState(isIosBrowser);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const me = pb().authStore.record;
   const email = String(me?.email ?? "");
   const name = String(me?.name ?? "").trim() || email.split("@")[0] || "Account";
-  const help = guest ? HELP.filter((h) => h.href !== "/studio/ideas") : HELP;
-  const account = ACCOUNT.filter((a) => (a.href === "/studio/admin" ? admin : !guest));
+  const help = guest ? HELP.filter((h) => h.href !== "/desk/ideas") : HELP;
+  const account = ACCOUNT.filter((a) => (a.href === "/desk/admin" ? admin : !guest));
 
   return (
     <DP.Root open={open} onOpenChange={onOpenChange}>
@@ -265,7 +265,7 @@ export function MorePage({
               </div>
 
               {links.length > 0 && (
-                <Group title="Studio">
+                <Group title="Desk">
                   {links.map((l) => (
                     <Row key={l.href} href={l.href} icon={l.icon} label={l.label} current={isActive(l.href)} />
                   ))}

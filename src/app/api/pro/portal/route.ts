@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const billing = await getBilling(me.id).catch(() => null);
   if (!billing?.stripe_customer) return NextResponse.json({ error: "No plan to manage yet." }, { status: 404 });
   try {
-    const { url } = await createPortal(billing.stripe_customer, `${publicOrigin(req)}/studio/site`);
+    const { url } = await createPortal(billing.stripe_customer, `${publicOrigin(req)}/desk/site`);
     return NextResponse.json({ url });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 502 });

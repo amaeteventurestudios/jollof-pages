@@ -1,6 +1,6 @@
 # AI cover art
 
-Writers make cover artwork from the **Cover** tab ("Make artwork with AI"). The studio writes
+Writers make cover artwork from the **Cover** tab ("Make artwork with AI"). The Desk writes
 the prompt from the book (title, description, the writer's idea, a style) and the cover
 colours picked in the designer. The writer can edit it, and the result drops onto the front or
 back of the cover designer.
@@ -25,7 +25,7 @@ A draft (about 1000 px) is for trying ideas. "Make 4K" remakes a draft at print 
 
 ## Test mode
 
-With no `FAL_KEY` the studio draws labelled sample pictures. With no `STRIPE_SECRET_KEY` the
+With no `FAL_KEY` the Desk draws labelled sample pictures. With no `STRIPE_SECRET_KEY` the
 top-up buttons add free test credits, but only while pictures are also samples, so nothing real
 is ever free.
 
@@ -50,7 +50,7 @@ Stripe webhook: Stripe → Developers → Webhooks → Add endpoint.
 | Endpoint URL | `https://jollofpages.com/api/credits/webhook` |
 | Events | `checkout.session.completed`, `checkout.session.async_payment_succeeded` |
 
-The webhook is a backstop: the studio also confirms the payment when the writer returns from
+The webhook is a backstop: the Desk also confirms the payment when the writer returns from
 Stripe. A payment is credited once, whichever arrives first.
 
 ## How it is built

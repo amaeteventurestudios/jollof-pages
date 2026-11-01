@@ -12,7 +12,7 @@ export interface ThemeCssOptions {
   epub?: boolean;
 }
 
-/** One stylesheet for the EPUB, the studio preview and the public sample reader. */
+/** One stylesheet for the EPUB, the Desk preview and the public sample reader. */
 export function themeCss(theme: InteriorTheme, o: ThemeCssOptions): string {
   const s = (sel: string) =>
     sel

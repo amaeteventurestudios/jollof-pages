@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 /**
  * POST { name, subdomain } finishes a studio account that started with "Sign up with Google". The
  * PocketBase hook made the user (access "pending"); this adds the author site and first pen name,
- * then opens the studio (free mode, or a tester invite) or hands back the Stripe Checkout address.
+ * then opens the Desk (free mode, or a tester invite) or hands back the Stripe Checkout address.
  */
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { name?: string; subdomain?: string; invite?: string };
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const pb = await adminPb();
     const user = await pb.collection("users").getOne(me.id);
     const existing = await pb.collection("site_settings").getList(1, 1, { filter: pb.filter("owner = {:id}", { id: me.id }) });
-    // only a fresh Google account is finished here; anything else already has its studio
+    // only a fresh Google account is finished here; anything else already has its Desk
     if (user.access !== "pending" || existing.totalItems) return NextResponse.json({ ok: true });
 
     const taken = await subdomainAvailability(subdomain);
@@ -61,8 +61,8 @@ export async function POST(req: Request) {
     const session = await createStudioCheckout({
       userId: me.id,
       email: me.email,
-      successUrl: `${origin}/studio?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/studio?studio=cancelled`,
+      successUrl: `${origin}/desk?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origin}/desk?studio=cancelled`,
       brand: await brandOf(req),
     });
     return NextResponse.json({ ok: true, checkoutUrl: session.url });

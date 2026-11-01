@@ -72,7 +72,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       }
       if (!res.ok || !body.bookId) throw new Error(body.error || "Could not accept the invitation.");
       if (!withAccount) await pb().collection("users").authWithPassword(info.email, password);
-      router.replace(`/studio/books/${body.bookId}`);
+      router.replace(`/desk/books/${body.bookId}`);
     } catch (e) {
       setError(errorMessage(e));
       setBusy(false);

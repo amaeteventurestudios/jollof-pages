@@ -84,7 +84,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * App mode: on phones and tablets the studio and its sign-in pages run as an app. The media
+ * App mode: on phones and tablets the Desk and its sign-in pages run as an app. The media
  * query matches APP_QUERY in src/lib/app-mode.ts; <html> carries .studio-app only on those pages,
  * so the public website keeps its own phone layout.
  */

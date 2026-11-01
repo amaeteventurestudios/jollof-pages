@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (process.env.NEWSLETTER_SELL_EMAILS !== "1") return NextResponse.json({ error: "Extra emails are not on sale yet." }, { status: 403 });
   if (!stripeConfigured()) return NextResponse.json({ error: "Payments are not set up yet." }, { status: 503 });
   try {
-    const back = `${publicOrigin(req)}/studio/readers`;
+    const back = `${publicOrigin(req)}/desk/readers`;
     const session = await createEmailCheckout({
       pack,
       userId: me.id,

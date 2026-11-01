@@ -1,6 +1,6 @@
 /**
  * Interior themes. One definition drives the print PDF (Typst), the EPUB stylesheet and the live
- * preview, so what you see in the studio is what the exports produce. All fonts are SIL OFL
+ * preview, so what you see in the Desk is what the exports produce. All fonts are SIL OFL
  * (src/lib/fonts.ts). 93 themes, each named after an African city, built from a handful of
  * heading "looks" crossed with type pairings, colours, ornaments and drop caps. An author can
  * then change any part of a theme for their book (BookFormat.custom).
@@ -360,7 +360,7 @@ export function themeFor(format: Pick<BookFormat, "theme"> & { custom?: ThemeCus
   return t;
 }
 
-/** Google Fonts stylesheets for the studio preview of every theme. */
+/** Google Fonts stylesheets for the Desk preview of every theme. */
 export const THEME_FONTS_HREFS = FONT_HREFS;
 /** @deprecated one stylesheet is not enough for every family; use THEME_FONTS_HREFS */
 export const THEME_FONTS_HREF = FONT_HREFS[0];

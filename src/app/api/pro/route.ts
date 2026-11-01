@@ -11,7 +11,7 @@ import type { SiteSettings } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET → everything the studio needs to show Pro: plan, prices, domain, payouts, and what the server has set up. */
+/** GET → everything the Desk needs to show Pro: plan, prices, domain, payouts, and what the server has set up. */
 export async function GET(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });

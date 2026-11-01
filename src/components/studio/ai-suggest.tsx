@@ -112,7 +112,7 @@ export function AiSuggest({
             <div className="grid gap-2 py-1">
               <p className={state.setup ? "text-ink-2" : "text-destructive"}>{state.error}</p>
               {state.setup && (
-                <Link href="/studio/assistant" className="font-medium text-primary hover:underline">
+                <Link href="/desk/assistant" className="font-medium text-primary hover:underline">
                   Set up the AI assistant
                 </Link>
               )}

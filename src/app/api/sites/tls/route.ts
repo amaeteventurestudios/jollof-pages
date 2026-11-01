@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSiteByDomain, getSiteBySubdomain } from "@/lib/pb-server";
-import { normalizeDomain, rootDomain, subdomainOf } from "@/lib/sites";
+import { DESK_SUBDOMAIN, normalizeDomain, rootDomain, subdomainOf } from "@/lib/sites";
 import { activeBrands, brandFor } from "@/lib/brands";
 
 export const runtime = "nodejs";
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   const brand = brandFor(raw, await activeBrands());
   const root = brand?.domain ?? rootDomain();
   let ok = false;
-  if (raw === root || raw === `www.${root}`) ok = true;
+  if (raw === root || raw === `www.${root}` || raw === `${DESK_SUBDOMAIN}.${root}`) ok = true;
   else if (raw.endsWith("." + root)) {
     const sub = subdomainOf(raw, root);
     ok = !!sub && !!(await getSiteBySubdomain(sub));

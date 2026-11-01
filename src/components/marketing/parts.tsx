@@ -35,7 +35,7 @@ export function SectionHead({
   );
 }
 
-/** A real screenshot of the studio. Square, flat, no device chrome. */
+/** A real screenshot of the Desk. Square, flat, no device chrome. */
 export function Shot({ src, alt, w, h, className, eager }: { src: string; alt: string; w: number; h: number; className?: string; eager?: boolean }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element

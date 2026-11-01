@@ -65,7 +65,7 @@ export function SignupForm({ root, paid, price, invite }: { root: string; paid: 
           return;
         }
       }
-      return router.replace("/studio");
+      return router.replace("/desk");
     }
     const me = pb().authStore.record;
     setGoogle(String(me?.email ?? ""));
@@ -104,14 +104,14 @@ export function SignupForm({ root, paid, price, invite }: { root: string; paid: 
               setError("");
               try {
                 await claim();
-                router.replace("/studio");
+                router.replace("/desk");
               } catch (err) {
                 setError(err instanceof Error ? err.message : String(err));
                 setBusy(false);
               }
             }}
           >
-            {busy ? "Opening your studio…" : "Open my studio"}
+            {busy ? "Opening your Desk…" : "Open my Desk"}
           </button>
           <button
             type="button"
@@ -130,7 +130,7 @@ export function SignupForm({ root, paid, price, invite }: { root: string; paid: 
   return (
     <>
       <AuthHeading
-        title={google ? "Almost there" : invite ? "Create your tester account" : "Create your studio"}
+        title={google ? "Almost there" : invite ? "Create your tester account" : "Create your Desk"}
         sub={
           google ? (
             <>
@@ -169,7 +169,7 @@ export function SignupForm({ root, paid, price, invite }: { root: string; paid: 
               await pb().collection("users").authWithPassword(email, password);
             }
             if (body.checkoutUrl) window.location.assign(body.checkoutUrl);
-            else router.replace("/studio");
+            else router.replace("/desk");
           } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
             setBusy(false);
@@ -218,7 +218,7 @@ export function SignupForm({ root, paid, price, invite }: { root: string; paid: 
           </p>
         )}
         <button type="submit" disabled={busy || subNote !== "available"} className="auth-go auth-rise d5 mt-1">
-          {busy ? "Creating your studio…" : paid ? `Continue to payment (${price})` : "Create my studio"}
+          {busy ? "Creating your Desk…" : paid ? `Continue to payment (${price})` : "Create my Desk"}
         </button>
       </form>
     </>

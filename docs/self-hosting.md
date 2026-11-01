@@ -23,7 +23,7 @@ Point two records at the server's IP:
 | `jollofpages.com` | A | server IP |
 | `pb.jollofpages.com` | A | server IP |
 
-`pb.` serves PocketBase. The browser talks to it directly for the studio, and Caddy gets
+`pb.` serves PocketBase. The browser talks to it directly for the Desk, and Caddy gets
 certificates for both names automatically.
 
 ## Ports on the shared server
@@ -50,7 +50,7 @@ docker compose up -d --build
 cp deploy/jollofpages.caddy /etc/caddy/sites/ && systemctl reload caddy
 ```
 
-## 3. Create the admin and your studio login
+## 3. Create the admin and your Desk login
 
 ```bash
 docker compose exec pocketbase /pb/pocketbase superuser upsert admin@example.com 'a-long-password' --dir /pb/pb_data
@@ -66,7 +66,7 @@ npm run seed
 ```
 
 Sign in at `https://jollofpages.com/studio`. Public sign-up is closed; only the accounts you
-create can use the studio.
+create can use the Desk.
 
 The PocketBase dashboard is at `https://pb.jollofpages.com/_/` for backups and settings. In
 **Settings > Backups** turn on daily backups, and ideally send them to S3-compatible storage

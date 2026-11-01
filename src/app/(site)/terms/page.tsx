@@ -4,7 +4,7 @@ import { ContactLine, LegalPage } from "@/components/marketing/legal-page";
 
 export const metadata: Metadata = {
   title: "Terms and conditions",
-  description: "The terms for using Jollof Pages, the book studio for authors.",
+  description: "The terms for using Jollof Pages, the writing desk for authors.",
 };
 
 export default function TermsPage() {
@@ -68,7 +68,7 @@ export default function TermsPage() {
       <h2>Availability and changes</h2>
       <p>
         We work to keep the service running and your work safe, but we cannot promise it will always be available or free of errors. Keep your own copy of anything important: you can download a
-        full backup of every book from the studio at any time. We may improve, change or stop parts of the service. If we ever close the service, we will give you reasonable notice and time to
+        full backup of every book from the Desk at any time. We may improve, change or stop parts of the service. If we ever close the service, we will give you reasonable notice and time to
         download your books.
       </p>
 

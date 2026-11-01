@@ -1,6 +1,6 @@
 # Video guides
 
-The short videos on the studio's Learn page (`/studio/learn#videos`) are recorded from the real
+The short videos on the Desk's Learn page (`/desk/learn#videos`) are recorded from the real
 studio by a script, so they can be recorded again whenever a screen changes.
 
 - `src/lib/video-guides.ts` lists the videos: title, summary, group and the written guide each belongs to.

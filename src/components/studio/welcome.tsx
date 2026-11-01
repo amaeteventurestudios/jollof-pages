@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const KEY = "jp-welcome-v1";
 
-/** Brings the welcome back on the next visit to the studio home. */
+/** Brings the welcome back on the next visit to the Desk home. */
 export function replayWelcome() {
   localStorage.removeItem(KEY);
 }
@@ -33,27 +33,27 @@ const CARDS: Card[] = [
     icon: PenLine,
     title: "Write",
     text: "Start a new book from the home page, or bring the one you already have: a Word file (.docx) or Markdown comes in with its chapters, headings and italics.",
-    links: [{ href: "/studio/learn", label: "Watch the short guides" }],
+    links: [{ href: "/desk/learn", label: "Watch the short guides" }],
   },
   {
     icon: Sparkles,
     title: "Design and publish",
     text: "On a book's Cover tab, make a cover with AI or refit one you already have to the right KDP size. The Export tab builds your paperback and hardcover PDFs and the Kindle EPUB. Your author website shows your books with buy links.",
-    links: [{ href: "/studio/site", label: "Set up your website" }],
+    links: [{ href: "/desk/site", label: "Set up your website" }],
   },
   {
     icon: LifeBuoy,
     title: "Tell us",
     text: "Something broken or confusing? Open a ticket and add a screenshot; we answer within one working day. Wish it did something else? Suggest it on the ideas board and vote on others'.",
     links: [
-      { href: "/studio/help#contact", label: "Report a problem" },
-      { href: "/studio/ideas", label: "Suggest a feature" },
+      { href: "/desk/help#contact", label: "Report a problem" },
+      { href: "/desk/ideas", label: "Suggest a feature" },
     ],
   },
 ];
 
 /**
- * A short welcome on the first visit to the studio: four cards for testers, three for everyone
+ * A short welcome on the first visit to the Desk: four cards for testers, three for everyone
  * else. Skippable, shown once per browser, and it can be replayed from Help.
  */
 export function Welcome() {
@@ -63,7 +63,7 @@ export function Welcome() {
   const cards = tester
     ? [TESTER, ...CARDS]
     : [{ ...TESTER, icon: FileUp, title: `Welcome to ${brand?.name || "Jollof Pages"}`, text: "A quick tour of the three things you'll do here. It takes half a minute." }, ...CARDS];
-  // the studio renders client-only, after the sign-in check, so localStorage is readable here
+  // the Desk renders client-only, after the sign-in check, so localStorage is readable here
   const [open, setOpen] = useState(() => record?.access !== "collaborator" && !localStorage.getItem(KEY));
   const [i, setI] = useState(0);
   const close = () => {

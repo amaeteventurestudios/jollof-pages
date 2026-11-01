@@ -17,7 +17,7 @@ export const FAQ: FaqGroup[] = [
     title: "Writing",
     items: [
       {
-        q: "Does the studio save my work?",
+        q: "Does the Desk save my work?",
         a: 'Yes. Every chapter saves itself a moment after you stop typing, and again when you switch chapters. The book header shows "All changes saved" once it is done. If you close the tab with a change still waiting, your browser asks you first.',
       },
       {
@@ -82,7 +82,7 @@ export const FAQ: FaqGroup[] = [
       },
       {
         q: "How do I page through the whole printed book?",
-        a: "Click Full book preview above the preview. The studio lays out every page at your trim size, then shows them two at a time like an open book. Turn pages with the arrows or your arrow keys, jump between chapters, or type a page number. Go back returns you to where you were writing.",
+        a: "Click Full book preview above the preview. The Desk lays out every page at your trim size, then shows them two at a time like an open book. Turn pages with the arrows or your arrow keys, jump between chapters, or type a page number. Go back returns you to where you were writing.",
       },
       {
         q: "Can I hide a chapter's title, page number or running head?",
@@ -136,7 +136,7 @@ export const FAQ: FaqGroup[] = [
     items: [
       {
         q: "Where is my author website?",
-        a: "Every studio comes with a website at yourname.jollofpages.com. It lists your books, gives each one a page with a free sample and buy links, and has a sign-up form for your reader list. Set it up on the Website page.",
+        a: "Every Desk comes with a website at yourname.jollofpages.com. It lists your books, gives each one a page with a free sample and buy links, and has a sign-up form for your reader list. Set it up on the Website page.",
       },
       {
         q: "Can I use my own domain?",
@@ -162,11 +162,11 @@ export const FAQ: FaqGroup[] = [
       },
       {
         q: "Is there a subscription?",
-        a: "No. The studio is one payment of $129 with every future update included. AI cover credits are optional and pay as you go. Author Site Pro is the only monthly plan, and you only need it for your own domain and the Pro website features.",
+        a: "No. The Desk is one payment of $129 with every future update included. AI cover credits are optional and pay as you go. Author Site Pro is the only monthly plan, and you only need it for your own domain and the Pro website features.",
       },
       {
-        q: "Can I install the studio like an app?",
-        a: 'Yes. Use the Install button in the studio header, or your browser\'s "Install" or "Add to Home Screen" option, to open the studio in its own window.',
+        q: "Can I install the Desk like an app?",
+        a: 'Yes. Use the Install button in the Desk header, or your browser\'s "Install" or "Add to Home Screen" option, to open the Desk in its own window.',
       },
       {
         q: "How do I get help with something not listed here?",

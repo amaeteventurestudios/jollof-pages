@@ -7,7 +7,7 @@ import { getCheckout, stripeConfigured } from "@/lib/server/stripe";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** POST { sessionId } on the way back from Stripe: opens the studio without waiting for the webhook. */
+/** POST { sessionId } on the way back from Stripe: opens the Desk without waiting for the webhook. */
 export async function POST(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });

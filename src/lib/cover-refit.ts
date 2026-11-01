@@ -3,7 +3,7 @@ import { BLEED, SPINE_PER_PAGE, TRIM_SIZES, getTrim, type PaperType, type TrimSi
 /**
  * "Refit my cover": a writer brings the full KDP paperback wrap they already have (back, spine and
  * front in one picture) made for an older page count or another printer. We work out where its
- * back, spine and front sit, cut out the two panels, and the studio rebuilds the wrap around the
+ * back, spine and front sit, cut out the two panels, and the Desk rebuilds the wrap around the
  * spine this book needs now. The spine is redrawn in the old spine's colour with the title on it.
  */
 
@@ -43,7 +43,7 @@ function readAs(img: { width: number; height: number }, trim: TrimSize, bleed: b
   const spinePx = Math.max(0, img.width - 2 * panel);
   const notes: string[] = [];
   if (!bleed)
-    notes.push("This picture has no bleed round the edge. KDP needs 0.125 in, so the studio stretches the art very slightly to cover it. Check that nothing important sits right at the edges.");
+    notes.push("This picture has no bleed round the edge. KDP needs 0.125 in, so the Desk stretches the art very slightly to cover it. Check that nothing important sits right at the edges.");
   if (dpi < 290) notes.push(`It is ${Math.round(dpi)} dpi. KDP asks for 300, so print may look soft. A larger original gives a sharper book.`);
   return {
     trim,

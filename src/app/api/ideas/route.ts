@@ -36,6 +36,6 @@ export async function POST(req: Request) {
     .getList(1, 1, { filter: pb.filter("owner = {:o} && created >= {:d}", { o: me.id, d: new Date(Date.now() - 864e5).toISOString().replace("T", " ") }) });
   if (today.totalItems >= 10) return NextResponse.json({ error: "That's ten ideas today. Thank you! Add more tomorrow." }, { status: 429 });
   const row = await pb.collection("feature_requests").create<IdeaRow>({ owner: me.id, title, details, status: "new", voters: [me.id], votes: 1, response: "" });
-  void notifyTeamOfIdea(me.email, title, details, `${new URL(req.url).origin}/studio/ideas`);
+  void notifyTeamOfIdea(me.email, title, details, `${new URL(req.url).origin}/desk/ideas`);
   return NextResponse.json({ idea: toIdea(row, me.id) });
 }

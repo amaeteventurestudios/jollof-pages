@@ -5,7 +5,7 @@ import { SUPPORT_TOPICS } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Contact us",
-  description: "Questions about writing, formatting for Amazon KDP, covers, your author website or payments? Email the Jollof Pages team or open a help request in the studio.",
+  description: "Questions about writing, formatting for Amazon KDP, covers, your author website or payments? Email the Jollof Pages team or open a help request in the Desk.",
   alternates: { canonical: "/contact" },
 };
 
@@ -16,7 +16,7 @@ export default function ContactPage() {
     <LegalPage title="Contact us" sub="We read every message, and a person replies.">
       <h2>Have an account?</h2>
       <p>
-        The fastest way is <Link href="/studio/help">Help in the studio</Link>. Your request is tied to your account, you can add screenshots, and you&rsquo;ll see our reply there and by
+        The fastest way is <Link href="/desk/help">Help in the Desk</Link>. Your request is tied to your account, you can add screenshots, and you&rsquo;ll see our reply there and by
         email.
       </p>
       <h2>Email us</h2>
@@ -38,7 +38,7 @@ export default function ContactPage() {
       </p>
       <h2>Before you write</h2>
       <p>
-        <Link href="/help">Help</Link> has a short video for every part of the studio, and the <Link href="/#faq">FAQ</Link> answers the common questions about pricing, KDP and covers.
+        <Link href="/help">Help</Link> has a short video for every part of the Desk, and the <Link href="/#faq">FAQ</Link> answers the common questions about pricing, KDP and covers.
       </p>
       <h2>Legal and privacy</h2>
       <p>

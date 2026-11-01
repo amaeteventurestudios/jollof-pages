@@ -9,7 +9,7 @@ import { usableInvite } from "@/lib/server/invites";
 import { SignupForm } from "./signup-form";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Start writing", description: "Create your Jollof Pages studio and your own author website." };
+export const metadata: Metadata = { title: "Start writing", description: "Create your Jollof Pages Desk and your own author website." };
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
   const code = String((await searchParams).invite ?? "");
@@ -21,9 +21,9 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const price = `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`;
   return (
     <AuthShell
-      title="Your studio and"
+      title="Your Desk and"
       accent="your author website."
-      lead={`Write, format and export print books and ebooks. Your own site at yourname.${root} fills itself in from the studio.`}
+      lead={`Write, format and export print books and ebooks. Your own site at yourname.${root} fills itself in from the Desk.`}
       points={[mode === "paid" ? `${price} once. No subscription.` : mode === "free" ? "Free during early access" : "Early access", "Print and ebook files", "Connect your own domain"]}
     >
       <div className="auth-card p-6 sm:p-9">
@@ -51,7 +51,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   );
 }
 
-/** Opened from a tester invite link: the full studio, no payment. */
+/** Opened from a tester invite link: the full Desk, no payment. */
 async function TesterSignup({ code }: { code: string }) {
   const found = await usableInvite(code);
   const brand = await currentBrand();
@@ -60,7 +60,7 @@ async function TesterSignup({ code }: { code: string }) {
     <AuthShell
       title="You are invited"
       accent={`to test ${brand?.name || "Jollof Pages"}.`}
-      lead={`Use the full studio free while you test it: write, format, design covers and export print books and ebooks. Your own site at yourname.${root} comes with it. Tell us what works and what does not.`}
+      lead={`Use the full Desk free while you test it: write, format, design covers and export print books and ebooks. Your own site at yourname.${root} comes with it. Tell us what works and what does not.`}
       points={["Every feature, no payment", "Print and ebook files", "Your feedback shapes what we build"]}
     >
       <div className="auth-card p-6 sm:p-9">

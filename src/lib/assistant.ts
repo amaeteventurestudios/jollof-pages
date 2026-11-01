@@ -1,4 +1,4 @@
-/** The writing assistant's providers and the requests it understands, shared by the studio and the server. */
+/** The writing assistant's providers and the requests it understands, shared by the Desk and the server. */
 
 export type Provider = "anthropic" | "openai" | "openrouter";
 
@@ -35,7 +35,7 @@ export const PROVIDERS: Record<Provider, { label: string; company: string; keyUr
 
 export const PROVIDER_IDS = Object.keys(PROVIDERS) as Provider[];
 
-/** What the studio is told about a person's setup. Keys never leave the server; only their last four characters do. */
+/** What the Desk is told about a person's setup. Keys never leave the server; only their last four characters do. */
 export interface AssistantSetup {
   provider: Provider | null;
   models: Partial<Record<Provider, string>>;
@@ -75,7 +75,7 @@ export const QUICK_ASKS: { id: string; label: string; needs?: "selection"; promp
 export const CHAPTER_CHARS = 24000;
 
 /**
- * One-click suggestions around the studio (new book, details, cover, outline). Each asks for a short
+ * One-click suggestions around the Desk (new book, details, cover, outline). Each asks for a short
  * list the writer picks from; nothing is changed until they pick.
  */
 export type SuggestKind = "title" | "subtitle" | "penname" | "pitch" | "description" | "keywords" | "categories" | "cover" | "outline";

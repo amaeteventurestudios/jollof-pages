@@ -32,7 +32,7 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
   return out;
 }
 
-/** The studio's view of /api/pro, refreshed after returning from Stripe. */
+/** The Desk's view of /api/pro, refreshed after returning from Stripe. */
 export function useProStatus(): { status: ProStatus | null; reload: () => void } {
   const [status, setStatus] = useState<ProStatus | null>(null);
   const reload = useCallback(() => {

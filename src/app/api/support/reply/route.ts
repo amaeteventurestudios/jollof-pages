@@ -42,6 +42,6 @@ export async function POST(req: Request) {
   const saved = await pb.collection("support_requests").update<SupportRequest>(current.id, { replies, status });
   const origin = publicOrigin(req);
   let emailed = false;
-  if (said) emailed = from === "support" ? await notifyWriter(saved, text || "We added a file to your ticket.", `${origin}/studio/help`, "answer") : await notifyTeam(saved, `${origin}/studio/help#inbox`, text || `(${files.length} file${files.length === 1 ? "" : "s"} added)`);
+  if (said) emailed = from === "support" ? await notifyWriter(saved, text || "We added a file to your ticket.", `${origin}/desk/help`, "answer") : await notifyTeam(saved, `${origin}/desk/help#inbox`, text || `(${files.length} file${files.length === 1 ? "" : "s"} added)`);
   return NextResponse.json({ ok: true, emailed, request: saved });
 }

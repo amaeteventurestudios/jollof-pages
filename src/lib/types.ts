@@ -45,7 +45,7 @@ export interface BookFormat {
   custom?: ThemeCustom;
   /** the author's own print margins in inches from the trim; KDP's minimums still apply. Missing = automatic */
   margins?: CustomMargins;
-  /** how lengths are shown in the studio */
+  /** how lengths are shown in the Desk */
   units?: "in" | "mm";
   /** a background behind the book's pages, from the library ("bg:<id>") or an uploaded image URL */
   pageBackground?: PageBackground;

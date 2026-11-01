@@ -3,7 +3,7 @@ import { Pattern } from "./patterns";
 
 const COLUMNS = [
   {
-    title: "The studio",
+    title: "The Desk",
     links: [
       { href: "/#write", label: "Writing" },
       { href: "/#how", label: "Formatting" },
@@ -32,7 +32,7 @@ const COLUMNS = [
   },
 ];
 
-/** An author's site links to its own pages, then credits the studio it was made with. */
+/** An author's site links to its own pages, then credits the Desk it was made with. */
 function authorColumns(studioUrl: string) {
   return [
     {
@@ -58,7 +58,7 @@ export function SiteFooter({ name, email, blurb, studioUrl }: { name: string; em
       <div className="relative mx-auto max-w-[1600px] px-4 pt-20 pb-14 sm:px-8">
         <div className={studioUrl ? "grid grid-cols-2 gap-10 lg:grid-cols-[2.4fr_1fr_1fr]" : "grid grid-cols-2 gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]"}>
           <div className="col-span-2 lg:col-span-1">
-            <p className="max-w-[26ch] text-[1.25rem] leading-snug">{blurb ?? "The book studio for authors. Print books and ebooks, written, formatted and published in one place."}</p>
+            <p className="max-w-[26ch] text-[1.25rem] leading-snug">{blurb ?? "The writing desk for authors. Print books and ebooks, written, formatted and published in one place."}</p>
             {email && (
               <a href={`mailto:${email}`} className="link mt-4 inline-block font-medium">
                 {email}
