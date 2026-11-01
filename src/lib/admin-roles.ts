@@ -32,6 +32,7 @@ export const sectionsFor = (role: Role) => SEES[role];
 
 export type Action =
   | "writer.access" // give or take back free access
+  | "writer.apps" // switch Jollof Studio and the AI writer on or off
   | "writer.credits"
   | "writer.password" // set a temporary password
   | "writer.suspend"
@@ -42,8 +43,8 @@ export type Action =
   | "brands.manage";
 
 const DOES: Record<Role, Action[]> = {
-  owner: ["writer.access", "writer.credits", "writer.password", "writer.suspend", "writer.delete", "site.offline", "testers.manage", "team.manage", "brands.manage"],
-  admin: ["writer.access", "writer.credits", "writer.password", "writer.suspend", "site.offline", "testers.manage"],
+  owner: ["writer.access", "writer.apps", "writer.credits", "writer.password", "writer.suspend", "writer.delete", "site.offline", "testers.manage", "team.manage", "brands.manage"],
+  admin: ["writer.access", "writer.apps", "writer.credits", "writer.password", "writer.suspend", "site.offline", "testers.manage"],
   support: ["writer.credits", "writer.password"],
   finance: [],
   viewer: [],

@@ -27,7 +27,7 @@ import { toRange, type RangeDays } from "@/lib/admin";
 import { roleLabel, type Section } from "@/lib/admin-roles";
 import { cn } from "@/lib/utils";
 
-type Item = { label: string; href: string };
+type Item = { label: string; href: string; count?: (h: AdminHome) => number | undefined; red?: boolean };
 type Node = Item & { id: Section; icon: typeof Users; badge?: "needs" | "tickets" | "ideas"; children?: Item[] };
 
 /** The left panel as a tree: each heading, its pages, and the views inside a page. */
@@ -60,12 +60,15 @@ const TREE: { heading: string; nodes: Node[] }[] = [
         label: "Writers",
         icon: Users,
         children: [
-          { label: "All writers", href: "/studio/admin/writers" },
-          { label: "Paying", href: "/studio/admin/writers?show=paid" },
-          { label: "Free access", href: "/studio/admin/writers?show=comp" },
-          { label: "Not paid yet", href: "/studio/admin/writers?show=pending" },
-          { label: "Looks like spam", href: "/studio/admin/writers?show=spam" },
+          { label: "All writers", href: "/studio/admin/writers", count: (h) => h.overview.writers.total - h.overview.writers.collaborator },
+          { label: "Paying", href: "/studio/admin/writers?show=paid", count: (h) => h.overview.writers.paid },
+          { label: "Free access", href: "/studio/admin/writers?show=comp", count: (h) => h.overview.writers.comp },
+          { label: "Not paid yet", href: "/studio/admin/writers?show=pending", count: (h) => h.overview.writers.pending },
+          { label: "Testers", href: "/studio/admin/writers?show=testers", count: (h) => h.overview.writers.testers },
+          { label: "Looks like spam", href: "/studio/admin/writers?show=spam", count: (h) => h.needs.find((n) => n.kind === "spam")?.count ?? 0, red: true },
           { label: "Suspended", href: "/studio/admin/writers?show=suspended" },
+          { label: "Everyone", href: "/studio/admin/writers?show=all", count: (h) => h.overview.writers.total },
+          { label: "Access", href: "/studio/admin/writers/access" },
         ],
       },
       { id: "testers", href: "/studio/admin/testers", label: "Testers", icon: FlaskConical },
@@ -233,10 +236,16 @@ function Console({ children }: { children: React.ReactNode }) {
                                   className={cn(
                                     "relative flex h-8 items-center pr-3 pl-4 text-[13.5px] text-white/60 before:absolute before:top-1/2 before:left-0 before:h-px before:w-2.5 before:bg-white/15 hover:text-white",
                                     on && "font-medium text-white before:bg-[#f08a5d]",
+                                    c.red && home && (c.count?.(home) ?? 0) > 0 && "text-[#ff8a7a]",
                                   )}
                                 >
                                   {on && <span className="absolute top-1/2 left-[-3px] size-[5px] -translate-y-1/2 bg-[#f08a5d]" aria-hidden />}
                                   {c.label}
+                                  {home && c.count && (
+                                    <span className={cn("ml-auto pl-2 text-[12px] tabular-nums", c.red && (c.count(home) ?? 0) > 0 ? "font-semibold text-[#ff8a7a]" : "text-white/40")}>
+                                      {c.count(home)}
+                                    </span>
+                                  )}
                                 </Link>
                               </li>
                             );

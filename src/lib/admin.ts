@@ -16,6 +16,10 @@ export interface AdminUser {
   /** the tester invite link they signed up through, if any */
   tester_invite?: string;
   suspended?: boolean;
+  /** Jollof Studio (the design tool) closed to them by the admin */
+  studio_off?: boolean;
+  /** the AI co-writing app opened to them by the admin */
+  ai_writer?: boolean;
   /** the brand (white label) they signed up on, "" for Jollof Pages */
   brand?: string;
   created: string;
@@ -118,6 +122,8 @@ export interface Writer {
   tickets: number;
   ideas: number;
   suspended: boolean;
+  /** the apps the admin switched on or off for them */
+  apps: { studio: boolean; aiWriter: boolean };
   /** words written in the studio, all time (from the daily writing log) */
   words: number;
   /** reasons the account looks like a spam sign-up; empty when it doesn't */
@@ -258,6 +264,7 @@ export function writers(d: AdminData, listPrice: number): Writer[] {
         tickets: tickets.get(u.id) ?? 0,
         ideas: ideas.get(u.id) ?? 0,
         suspended: Boolean(u.suspended),
+        apps: { studio: !u.studio_off, aiWriter: Boolean(u.ai_writer) },
         words: words.get(u.id) ?? 0,
         spam: spamSigns(u, sites.get(u.id) ?? null, (books.get(u.id) ?? 0) + (words.get(u.id) ?? 0)),
       };
