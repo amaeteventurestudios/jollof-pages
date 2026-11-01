@@ -20,6 +20,8 @@ import {
   Strikethrough,
   Underline,
   Undo2,
+  ZoomIn,
+  ZoomOut,
   Plus,
   Smile,
   Pencil,
@@ -134,11 +136,26 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
     onEditor?.(editor);
     return () => onEditor?.(null);
   }, [editor, onEditor]);
+  // how big the writing surface looks, for this author on this device; the book's own font size is untouched
+  const [zoom, setZoomState] = useState(() => {
+    if (typeof window === "undefined") return 1;
+    const v = Number(localStorage.getItem("jp-editor-zoom"));
+    return v >= 0.7 && v <= 2 ? v : 1;
+  });
+  const setZoom = (v: number) => {
+    const next = Math.round(Math.min(2, Math.max(0.7, v)) * 10) / 10;
+    setZoomState(next);
+    try {
+      localStorage.setItem("jp-editor-zoom", String(next));
+    } catch {
+      // private window: the zoom lasts for this visit only
+    }
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {blockCss && <style>{blockCss}</style>}
-      {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} previewCss={previewCss} fontFamily={fontFamily} />}
+      {editor && !readOnly && <Toolbar editor={editor} bookId={bookId} previewCss={previewCss} fontFamily={fontFamily} zoom={zoom} onZoom={setZoom} />}
       {editor && !readOnly && <BlockBar editor={editor} bookId={bookId} accent={accent ?? "#b0412e"} book={book ?? {}} onBookStyles={onBookStyles} />}
       {live && (live.problem || !live.synced) && (
         <p role="status" className="border-b border-border bg-paper-2 px-4 py-1.5 text-[13px] text-ink-2">
@@ -160,7 +177,7 @@ export function ManuscriptEditor({ chapterId, bookId, initial, onChange, fontFam
           className="manuscript mx-auto max-w-[44rem] px-6 py-10 text-ink sm:px-10"
           data-para={settings.paragraphs}
           data-justify={settings.justified}
-          style={{ fontFamily: editorFontCss(settings, fontFamily), fontSize: settings.size, lineHeight: settings.lineHeight }}
+          style={{ fontFamily: editorFontCss(settings, fontFamily), fontSize: settings.size, lineHeight: settings.lineHeight, zoom }}
         >
           {editor && !readOnly ? (
             <>
@@ -201,7 +218,7 @@ function ToolButton({ on, active, label, children, disabled }: { on: () => void;
   );
 }
 
-function Toolbar({ editor, bookId, previewCss, fontFamily }: { editor: Editor; bookId: string; previewCss?: string; fontFamily?: string }) {
+function Toolbar({ editor, bookId, previewCss, fontFamily, zoom, onZoom }: { editor: Editor; bookId: string; previewCss?: string; fontFamily?: string; zoom: number; onZoom: (v: number) => void }) {
   const s = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -409,6 +426,24 @@ function Toolbar({ editor, bookId, previewCss, fontFamily }: { editor: Editor; b
         <ToolButton label="Redo" disabled={!s.canRedo} on={() => editor.chain().focus().redo().run()}>
           <Redo2 />
         </ToolButton>
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" />
+        <div className="flex shrink-0 items-center" role="group" aria-label="Writing area size">
+          <ToolButton label="Make the writing area smaller" disabled={zoom <= 0.7} on={() => onZoom(zoom - 0.1)}>
+            <ZoomOut />
+          </ToolButton>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onZoom(1)}
+            title="Back to 100%"
+            className="tabular h-8 w-12 shrink-0 rounded text-[13px] font-medium text-ink-2 hover:bg-paper-2"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <ToolButton label="Make the writing area bigger" disabled={zoom >= 2} on={() => onZoom(zoom + 0.1)}>
+            <ZoomIn />
+          </ToolButton>
+        </div>
       </div>
       <PromptDialog
         open={prompt === "link"}

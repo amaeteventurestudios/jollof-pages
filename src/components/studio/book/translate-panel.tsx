@@ -136,7 +136,7 @@ export function TranslatePanel({ ws }: { ws: Workspace }) {
   return (
     <Panel
       title="Translate this book"
-      description="Make the same book in another language, chapter by chapter, with your own AI model. Your original stays exactly as it is; the translation becomes a new book you can edit, format and publish."
+      description="Make the same book in another language, chapter by chapter, with your own AI model. Your original stays exactly as it is; the translation becomes a new book you can edit, format and publish. It shows up in Your books with its language on it, and you can show your books one language at a time."
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="grid gap-1 text-sm">
@@ -168,7 +168,7 @@ export function TranslatePanel({ ws }: { ws: Workspace }) {
       )}
       {made && (
         <p className="border border-primary/40 bg-primary-soft p-3 text-sm" role="status">
-          Done. <strong>{made.title}</strong> is your {languageName(lang)} edition.{" "}
+          Done. <strong>{made.title}</strong> is your {languageName(lang)} edition, and it is in Your books under {languageName(lang)}.{" "}
           <Link href={`/desk/books/${made.id}`} className="font-medium text-primary underline">
             Open it
           </Link>{" "}

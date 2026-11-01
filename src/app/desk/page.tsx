@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowRight, ArrowUp, BookPlus, ExternalLink, FileUp, Globe, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Welcome } from "@/components/studio/welcome";
+import { JollofPlate } from "@/components/studio/jollof-plate";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { useMySite } from "@/components/studio/use-my-site";
 import { PENDING_BOOK, type PendingBook } from "@/components/site/site-tryout";
@@ -27,6 +28,7 @@ import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { IMPORT_ACCEPT, IMPORT_EXT } from "@/lib/import/formats";
 import { TUTORIALS, loadDone } from "@/lib/tutorials";
 import { cn } from "@/lib/utils";
+import { languageName } from "@/lib/translate";
 
 export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
@@ -54,6 +56,34 @@ export default function StudioHome() {
       .catch((e) => setError(errorMessage(e)));
   }, [guest]);
   useEffect(load, [load]);
+  // translated editions: once there is more than one language, books can be shown one language at a time
+  const [lang, setLang] = useState("");
+  const langs = [...new Set((books ?? []).map((b) => b.language || "en"))].sort((a, b) => (a === "en" ? -1 : b === "en" ? 1 : languageName(a).localeCompare(languageName(b))));
+  // drop a manuscript anywhere on the page to import it
+  const [dropped, setDropped] = useState<File | null>(null);
+  useEffect(() => {
+    const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes("Files");
+    const over = (e: DragEvent) => {
+      if (!hasFiles(e) || isCollaboratorOnly()) return;
+      e.preventDefault();
+      setDialog((d) => (d === null ? "import" : d));
+    };
+    const drop = (e: DragEvent) => {
+      if (!hasFiles(e) || isCollaboratorOnly()) return;
+      e.preventDefault();
+      const f = e.dataTransfer?.files?.[0];
+      if (f) {
+        setDropped(f);
+        setDialog("import");
+      }
+    };
+    window.addEventListener("dragover", over);
+    window.addEventListener("drop", drop);
+    return () => {
+      window.removeEventListener("dragover", over);
+      window.removeEventListener("drop", drop);
+    };
+  }, []);
 
   const byDay = wordsByDay(logs);
   const week = lastDays(7).reduce((s, d) => s + Math.max(byDay.get(d) ?? 0, 0), 0);
@@ -94,7 +124,7 @@ export default function StudioHome() {
           </div>
           <div className="flex flex-wrap gap-2 app:grid app:w-full app:grid-cols-1 app:sm:flex">
             <Button variant="outline" onClick={() => setDialog("import")}>
-              <FileUp /> Import Word or Markdown
+              <FileUp /> Import a manuscript
             </Button>
             {(books ?? []).filter((b) => !b.box_set).length >= 2 && (
               <Button variant="outline" onClick={() => setDialog("boxset")}>
@@ -138,7 +168,7 @@ export default function StudioHome() {
             <p className="mx-auto mt-2 max-w-md text-soft">Create a book with the usual front and back matter already in place, or bring in a manuscript you wrote in Word.</p>
             <div className="mt-6 flex justify-center gap-2">
               <Button variant="outline" onClick={() => setDialog("import")}>
-                <FileUp /> Import Word or Markdown
+                <FileUp /> Import a manuscript
               </Button>
               <Button onClick={() => setDialog("new")}>
                 <Plus /> New book
@@ -146,8 +176,24 @@ export default function StudioHome() {
             </div>
           </div>
         ) : (
-          <ul className="mt-10 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
-            {(books ?? []).map((b) => {
+          <>
+          {langs.length > 1 && (
+            <div className="mt-10 flex flex-wrap items-center gap-2" role="group" aria-label="Show books in">
+              {[{ code: "", name: "All languages" }, ...langs.map((code) => ({ code, name: languageName(code) }))].map((l) => (
+                <button
+                  key={l.code || "all"}
+                  type="button"
+                  aria-pressed={lang === l.code}
+                  onClick={() => setLang(l.code)}
+                  className={cn("border px-3 py-1.5 text-sm transition-colors", lang === l.code ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-ink-2 hover:border-primary/60")}
+                >
+                  {l.name}
+                </button>
+              ))}
+            </div>
+          )}
+          <ul className={cn("grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-5", langs.length > 1 ? "mt-6" : "mt-10")}>
+            {(books ?? []).filter((b) => !lang || (b.language || "en") === lang).map((b) => {
               const goal = bookGoal(b);
               const pct = goal.targetWords ? Math.min(100, Math.round(((b.word_count || 0) / goal.targetWords) * 100)) : 0;
               return (
@@ -158,6 +204,7 @@ export default function StudioHome() {
                     </div>
                     <div className="mt-3 flex items-start justify-between gap-2">
                       <h2 className="leading-snug font-medium text-ink group-hover:text-primary">{b.title}</h2>
+                      {langs.length > 1 && <Badge>{languageName(b.language || "en")}</Badge>}
                       {b.box_set && <Badge>Box set</Badge>}
                       {b.published && <Badge variant="success">Live</Badge>}
                     </div>
@@ -173,6 +220,7 @@ export default function StudioHome() {
               );
             })}
           </ul>
+          </>
         )}
 
         {shared.length > 0 && (
@@ -190,7 +238,7 @@ export default function StudioHome() {
         )}
       </main>
       <NewBookDialog open={dialog === "new"} onClose={() => setDialog(null)} />
-      <ImportDialog open={dialog === "import"} onClose={() => setDialog(null)} />
+      <ImportDialog open={dialog === "import"} dropped={dropped} onClose={() => (setDialog(null), setDropped(null))} />
       <BoxSetDialog open={dialog === "boxset"} books={(books ?? []).filter((b) => !b.box_set)} onClose={() => setDialog(null)} />
       <IsbnDialog
         open={dialog === "isbn"}
@@ -570,12 +618,37 @@ function BoxSetDialog({ open, books, onClose }: { open: boolean; books: Book[]; 
   );
 }
 
-function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** Lines that run while a manuscript is saved, in cooking order. */
+const COOKING = ["Washing the rice", "Blending the peppers", "Frying the tomato stew", "Stirring in the rice", "Letting it steam", "Adding the chicken", "Frying the plantain", "Plating up"];
+
+function ImportDialog({ open, onClose, dropped }: { open: boolean; onClose: () => void; dropped?: File | null }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [over, setOver] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const choose = useCallback((f: File | null) => {
+    if (f && !IMPORT_EXT.test(f.name)) {
+      setStatus("That file type can't be imported. Use .docx, .md, .epub, .rtf, .odt, .html or .txt.");
+      return;
+    }
+    setStatus("");
+    setFile(f);
+    if (f) setTitle((t) => t || f.name.replace(IMPORT_EXT, "").replace(/-[A-Za-z0-9]{8,}$/, ""));
+  }, []);
+  // a file dropped anywhere on Your books arrives here
+  const [taken, setTaken] = useState<File | null>(null);
+  if (dropped && dropped !== taken) {
+    setTaken(dropped);
+    choose(dropped);
+  }
+
+  const fraction = progress && progress.total ? progress.done / progress.total : busy ? 0.05 : file ? 1 : 0.35;
+  const line = COOKING[Math.min(COOKING.length - 1, Math.floor(fraction * COOKING.length))];
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent>
@@ -585,6 +658,7 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
             e.preventDefault();
             if (!file) return;
             setBusy(true);
+            setProgress(null);
             try {
               setStatus("Creating the book…");
               const book = await createBook({ title: title.trim() || file.name.replace(IMPORT_EXT, ""), withStarter: false });
@@ -602,41 +676,78 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
               await createChapter(book, { kind: "copyright", title: "Copyright", order: counters.front++ });
               if (!elements.some((el) => el.kind === "contents")) await createChapter(book, { kind: "contents", title: "Contents", order: counters.front++ });
               for (const [i, el] of elements.entries()) {
-                setStatus(`Saving section ${i + 1} of ${elements.length}…`);
+                setProgress({ done: i, total: elements.length });
+                setStatus(`${el.title || "Untitled"} · ${i + 1} of ${elements.length}`);
                 await createChapter(book, { kind: el.kind, title: el.title, order: counters[el.section]++, content: el.content });
               }
+              setProgress({ done: elements.length, total: elements.length });
+              setStatus("Served. Opening your book…");
               router.push(`/desk/books/${book.id}`);
             } catch (err) {
               setStatus(`Import failed: ${errorMessage(err)}`);
+              setProgress(null);
               setBusy(false);
             }
           }}
         >
-          <DialogTitle>Import a manuscript</DialogTitle>
+          <DialogTitle>Bring in a manuscript</DialogTitle>
           <DialogDescription>
-            A Word, Markdown (such as one written with ChatGPT), EPUB, RTF, OpenDocument, web page or plain text file, including public-domain books from Project Gutenberg and Standard Ebooks. Each
-            top heading (Heading 1, or # in Markdown) becomes its own chapter. Headings below it, bold and italic text, lists, quotes, images and footnotes come across. Sections named Introduction,
-            Acknowledgments and so on are placed in the front or back matter.
+            Word, Markdown (such as one written with ChatGPT), EPUB (from Atticus, Vellum or anywhere else), RTF, OpenDocument, web page or plain text. Each top heading becomes its own chapter, and
+            sections like Introduction and Acknowledgments go to the front or back of the book.
           </DialogDescription>
-          <div className="grid gap-1.5">
-            <Label htmlFor="imp-file">Manuscript (.docx, .md, .epub, .rtf, .odt, .html or .txt)</Label>
-            <Input
-              id="imp-file"
-              type="file"
-              required
-              accept={IMPORT_ACCEPT}
-              onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                setFile(f);
-                if (f && !title) setTitle(f.name.replace(IMPORT_EXT, ""));
-              }}
-            />
-          </div>
+          <label
+            htmlFor="imp-file"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!busy) setOver(true);
+            }}
+            onDragLeave={() => setOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOver(false);
+              if (!busy) choose(e.dataTransfer.files?.[0] ?? null);
+            }}
+            className={cn(
+              "import-drop grid cursor-pointer justify-items-center gap-1 border-2 border-dashed px-4 pt-2 pb-4 text-center transition-colors",
+              over ? "border-primary bg-primary-soft" : file ? "border-primary/50 bg-card" : "border-border bg-card hover:border-primary/60",
+              busy && "pointer-events-none",
+            )}
+          >
+            <JollofPlate fill={fraction} hot={over || busy} className="h-40 w-auto" />
+            {busy ? (
+              <>
+                <span className="text-lg font-semibold text-ink" aria-live="polite">
+                  {line}…
+                </span>
+                <span className="w-full max-w-sm truncate text-sm text-soft" role="status">
+                  {status}
+                </span>
+                <span className="mt-1 h-1.5 w-full max-w-sm overflow-hidden bg-border">
+                  <span className="block h-full bg-primary transition-[width] duration-300" style={{ width: `${Math.round(Math.max(0.04, fraction) * 100)}%` }} />
+                </span>
+              </>
+            ) : file ? (
+              <>
+                <span className="text-lg font-semibold text-ink">{file.name}</span>
+                <span className="text-sm text-soft">Ready to cook. Drop another file or click to change it.</span>
+              </>
+            ) : (
+              <>
+                <span className="text-lg font-semibold text-ink">{over ? "Let it go, we'll take it from here" : "Drop your manuscript here"}</span>
+                <span className="text-sm text-soft">
+                  or <span className="font-medium text-primary underline underline-offset-4">choose a file</span> (.docx, .md, .epub, .rtf, .odt, .html or .txt)
+                </span>
+              </>
+            )}
+            <input id="imp-file" type="file" className="sr-only" accept={IMPORT_ACCEPT} disabled={busy} onChange={(e) => choose(e.target.files?.[0] ?? null)} />
+          </label>
           <div className="grid gap-1.5">
             <Label htmlFor="imp-title">Book title</Label>
-            <Input id="imp-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input id="imp-title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={busy} />
           </div>
-          {status && (
+          {status && !busy && (
             <p className="text-sm text-soft" role="status">
               {status}
             </p>
@@ -646,7 +757,7 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
               Cancel
             </Button>
             <Button type="submit" disabled={busy || !file}>
-              {busy ? "Importing…" : "Import"}
+              {busy ? "Cooking…" : "Import"}
             </Button>
           </div>
         </form>
