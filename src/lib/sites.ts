@@ -1,7 +1,7 @@
 /**
  * Author sites. Every account has a public site at <subdomain>.<root domain>, such as
  * ada.jollofpages.com; the publisher's own site (marked `home`) is the root domain itself.
- * Shared by the proxy, the server and the studio, so nothing here may import server code.
+ * Shared by the proxy, the server and the Desk, so nothing here may import server code.
  */
 
 /** The root domain, from ROOT_DOMAIN, else SITE_URL's host, else jollofpages.com. */
@@ -22,7 +22,7 @@ function hostOf(url: string | undefined): string {
 /** Names that are ours, are already in DNS, or would confuse readers. */
 export const RESERVED = new Set(
   (
-    "www pb api app apps admin administrator root studio login signin signup sign-in sign-up register account accounts billing pay " +
+    "www pb api app apps admin administrator root studio desk login signin signup sign-in sign-up register account accounts billing pay " +
     "checkout payments mail email smtp imap pop ftp ns ns1 ns2 dns cdn static assets files media img images dev staging test demo " +
     "beta status help support docs blog news shop store books book authors author readers jollof jollofpages jollof-pages authornx " +
     "authornx-db db database dashboard settings about terms privacy legal security abuse postmaster hostmaster webmaster official"
@@ -100,11 +100,17 @@ export function siteKeyOf(host: string, root = rootDomain()): string | null {
   return DOMAIN_RE.test(h) ? h : null;
 }
 
-/** The public address of a site, for links from the studio (which runs on the root domain). */
+/** The Desk (the writing app) and its sign-in live on this subdomain of the root domain. */
+export const DESK_SUBDOMAIN = "desk";
+
+/** The pages that belong to the Desk: the app itself and the account pages in front of it. */
+export const DESK_PATHS = /^\/(desk|studio|login|signup|join|invite)(\/|$)/;
+
+/** The public address of a site, for links from the Desk (which runs on desk.<root domain>). */
 export function siteUrl(site: { subdomain?: string; home?: boolean; custom_domain?: string } | null | undefined, here?: { protocol: string; host: string }): string {
   if (site && !site.home && site.custom_domain) return `https://${site.custom_domain}`;
   const loc = here ?? (typeof window !== "undefined" ? window.location : { protocol: "https:", host: rootDomain() });
-  const host = loc.host.replace(/^www\./, "");
+  const host = loc.host.replace(new RegExp(`^(www|${DESK_SUBDOMAIN})\\.`), "");
   if (!site || site.home || !site.subdomain) return `${loc.protocol}//${host}`;
   return `${loc.protocol}//${site.subdomain}.${host}`;
 }

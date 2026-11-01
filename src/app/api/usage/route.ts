@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 const EXPORTS = new Set(["epub", "docx", "pdf-paperback", "pdf-hardcover", "typ", "backup"]);
 
-/** POST { kind, key }: the studio counts one export or finished translation. Only the count is kept. */
+/** POST { kind, key }: the Desk counts one export or finished translation. Only the count is kept. */
 export async function POST(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });

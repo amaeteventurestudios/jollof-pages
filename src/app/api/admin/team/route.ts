@@ -38,7 +38,7 @@ export async function GET(req: Request) {
 }
 
 /**
- * POST { action: "add", email, role, note } adds someone (they sign in with their own studio
+ * POST { action: "add", email, role, note } adds someone (they sign in with their own Desk
  * account under that email). POST { action: "role", id, role } changes a role, and
  * POST { action: "remove", id } takes someone off the team.
  */

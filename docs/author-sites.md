@@ -1,9 +1,9 @@
 # Author accounts and author sites
 
-Every studio buyer gets a private studio and a public website, filled in from the studio:
+Every Desk buyer gets a private Desk and a public website, filled in from the Desk:
 
-- `ada.jollofpages.com`: free with the studio, chosen at sign-up, changeable under Studio > Website.
-- `adaokafor.com`: optional, any domain the author owns, connected under Studio > Website.
+- `ada.jollofpages.com`: free with the Desk, chosen at sign-up, changeable under Desk > Website.
+- `adaokafor.com`: optional, any domain the author owns, connected under Desk > Website.
 - `jollofpages.com` stays the publisher's own site: the account whose site is marked `home`
   (the owner's, set by the `1761480000_author_accounts` migration).
 
@@ -100,7 +100,7 @@ home site always has Pro. Each part stays hidden or marked "coming soon" until i
    Edit): listen to `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
    `invoice.paid`, `customer.subscription.updated` and `customer.subscription.deleted`.
 2. **Customer portal** (Settings → Billing → Customer portal): allow cancelling and updating the card.
-   The studio's "Manage plan" button opens it.
+   The Desk's "Manage plan" button opens it.
 3. **Connect** (Connect → Get started, platform type "Platform or marketplace", Express accounts):
    needed for direct ebook sales. Readers pay on Jollof Pages' Checkout; Stripe sends the price minus
    `EBOOK_FEE_PERCENT` + `EBOOK_FEE_FIXED_CENTS` to the author's own account.
@@ -126,7 +126,7 @@ unsubscribe link and header. In Resend, add `MAIL_FROM_DOMAIN` (Domains → Add)
 it shows into Cloudflare (DNS only).
 
 Authors can connect their own free Resend account on the Readers page (key with Full access plus
-a domain they own; the studio adds the domain in their account and shows the DNS records). Once it
+a domain they own; the Desk adds the domain in their account and shows the DNS records). Once it
 is verified their newsletters go out on it, from `news@<their domain>`, and don't touch the shared
 allowance. Keys are sealed (`secret-box.ts`) in the server-only `mail_accounts` collection. The
 Learn video `own-email` walks through it.

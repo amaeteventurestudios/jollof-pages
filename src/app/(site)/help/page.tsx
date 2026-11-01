@@ -13,9 +13,9 @@ const length = (s?: number) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s
 
 export default function HelpPage() {
   return (
-    <LegalPage title="Help" sub="A short video for every part of the studio, and a person when you need one.">
+    <LegalPage title="Help" sub="A short video for every part of the Desk, and a person when you need one.">
       <p>
-        Already have an account? Open <Link href="/studio/help">Help in the studio</Link> to search common questions or send us a request with screenshots. You can also{" "}
+        Already have an account? Open <Link href="/desk/help">Help in the Desk</Link> to search common questions or send us a request with screenshots. You can also{" "}
         <Link href="/contact">contact us</Link> by email, or read the <Link href="/#faq">questions people ask before buying</Link>.
       </p>
       <nav aria-label="Topics" className="mt-6 flex flex-wrap gap-2">

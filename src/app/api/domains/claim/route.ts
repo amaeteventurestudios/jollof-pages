@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     if (billing?.stripe_subscription && ["active", "trialing", "past_due"].includes(billing.status))
       return NextResponse.json({ error: "The free domain comes with the yearly plan. Switch to yearly under Manage plan, then claim it." }, { status: 400 });
 
-    const back = `${publicOrigin(req)}/studio/site`;
+    const back = `${publicOrigin(req)}/desk/site`;
     const session = await createProCheckout({
       userId: me.id,
       email: me.email,

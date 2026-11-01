@@ -1,7 +1,7 @@
 /**
  * Sets up a Jollof Pages PocketBase:
  *   - the owner account (free studio access; its site is the publisher site at the root domain)
- *   - the publisher site settings (pen names are added in the studio, so the owner's own name
+ *   - the publisher site settings (pen names are added in the Desk, so the owner's own name
  *     never appears on the public site)
  *   - with --demo, four clearly marked sample books with covers, for trying the app out
  *

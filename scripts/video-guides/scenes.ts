@@ -19,7 +19,7 @@ const BOOK = "The Long Table";
 
 /** Opens a demo book's tab directly, without recording the trip there. */
 async function openBook(d: Director, tab?: string, title = BOOK) {
-  const href = await d.page.locator("a[href*=\"/studio/books/\"]", { hasText: title }).first().getAttribute("href");
+  const href = await d.page.locator("a[href*=\"/desk/books/\"]", { hasText: title }).first().getAttribute("href");
   await d.goto(`${href}${tab ? `?tab=${tab}` : ""}`);
 }
 
@@ -29,11 +29,11 @@ const link = (d: Director, name: string | RegExp) => d.page.getByRole("link", { 
 
 export const SCENES: Record<string, Scene> = {
   tour: {
-    start: "/studio",
+    start: "/desk",
     async run(d) {
       await d.say("Everything starts on the <b>Books</b> page: your books, today's words and your writing streak.");
       await d.ring(d.page.locator("nav[aria-label=Studio]"));
-      await d.say("The bar along the top takes you to each part of the studio.");
+      await d.say("The bar along the top takes you to each part of the Desk.");
       await d.ring(null);
       await d.click(link(d, "Pen names"));
       await d.say("<b>Pen names</b> holds the names you publish under.", 2000);
@@ -53,7 +53,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "new-book": {
-    start: "/studio",
+    start: "/desk",
     async run(d) {
       await d.say("To start a book, choose <b>New book</b>.", 1600);
       await d.click(btn(d, "New book"));
@@ -70,7 +70,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   import: {
-    start: "/studio",
+    start: "/desk",
     async run(d) {
       await d.say("Already wrote it somewhere else? Choose <b>Import Word or Markdown</b>.");
       await d.click(btn(d, "Import Word or Markdown"));
@@ -85,7 +85,7 @@ export const SCENES: Record<string, Scene> = {
     },
   },
   isbn: {
-    start: "/studio",
+    start: "/desk",
     // Open Library is out of reach while recording, so the lookup answers with a made-up book
     async setup(d) {
       const cover = `data:image/jpeg;base64,${readFileSync(path.join(FIXTURES, "isbn-cover.jpg")).toString("base64")}`;
@@ -119,7 +119,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "pen-names": {
-    start: "/studio/authors",
+    start: "/desk/authors",
     async run(d) {
       await d.say("Publish under as many names as you like. Each one gets its own bio, photo and link.");
       await d.say("Paste your pen names here, one per line.", 1600);
@@ -135,7 +135,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "box-set": {
-    start: "/studio",
+    start: "/desk",
     async run(d) {
       await d.say("A box set bundles several of your books into one edition, ready to export and sell.");
       await d.click(btn(d, "Box set"));
@@ -150,7 +150,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   chapters: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("The chapter list runs down the left: front matter, the body, then back matter.");
@@ -172,7 +172,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   toolbar: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("The toolbar above the page styles your text, the way it will print.");
@@ -196,7 +196,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "chapter-settings": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("Above each chapter: its title, an optional subtitle, and its status.");
@@ -212,7 +212,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "editor-settings": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("Make the page comfortable to write on. This only changes your screen, not the book.");
@@ -232,7 +232,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "find-replace": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("<b>Find and replace</b> is on the tool rail to the right of the page.");
@@ -252,7 +252,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "smart-quotes": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("Pasted text often brings straight quotes and double hyphens with it.");
@@ -267,7 +267,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   sprint: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("A sprint is a short, timed burst of writing. Choose <b>Sprint</b> above the page.");
@@ -284,19 +284,19 @@ export const SCENES: Record<string, Scene> = {
   },
 
   goals: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "goals"),
     async run(d) {
       await d.say("On the <b>Goals</b> tab, set how long the book should be and when you want it done.");
       await d.type(d.page.locator("input").first(), "80000", { clear: true });
-      await d.say("The studio works out the words a day you need to finish on time.");
+      await d.say("The Desk works out the words a day you need to finish on time.");
       await d.scrollTo(d.page.getByRole("heading", { name: "Last 30 days" }));
       await d.say("The chart shows the words you wrote each day on this book.");
     },
   },
 
   progress: {
-    start: "/studio/progress",
+    start: "/desk/progress",
     async run(d) {
       await d.say("<b>Progress</b> shows your writing across every book.");
       await d.say("The year at a glance: each square is a day, darker for more words.");
@@ -308,7 +308,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   assistant: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("The writing assistant uses the AI you choose: Claude, ChatGPT or OpenRouter.");
@@ -331,7 +331,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   preview: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("The preview beside the page shows the chapter exactly as it will print.");
@@ -354,7 +354,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "full-preview": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("To read the whole book the way a reader will, open <b>Full book preview</b>.");
@@ -367,7 +367,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   invite: {
-    start: "/studio/collaboration",
+    start: "/desk/collaboration",
     async run(d) {
       await d.say("Invite people to work on a book with you. Each person gets one of three roles.");
       await d.click(btn(d, "Invite someone"));
@@ -383,7 +383,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "track-changes": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("With track changes on, edits are kept as suggestions instead of changing the text straight away.");
@@ -402,7 +402,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   comments: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("Comments are notes pinned to a passage. They never print.");
@@ -418,7 +418,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "cover-designer": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "cover"),
     async run(d) {
       await d.say("No designer yet? The <b>Cover</b> tab makes a clean typographic cover in a minute.");
@@ -438,7 +438,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "cover-kit": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "cover"),
     async run(d) {
       await d.say("Made your art somewhere else, like ChatGPT or with a designer? Open <b>Paperback</b> and choose <b>Your artwork</b>.");
@@ -454,7 +454,7 @@ export const SCENES: Record<string, Scene> = {
 
 
   "ai-cover": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "cover"),
     async run(d) {
       await d.say("Want a picture for your cover? Choose <b>Make artwork with AI</b>.");
@@ -473,7 +473,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "chapter-images": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d),
     async run(d) {
       await d.say("Put a picture inside a chapter with the <b>Image</b> button.");
@@ -492,7 +492,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   images: {
-    start: "/studio/images",
+    start: "/desk/images",
     async run(d) {
       await d.say("<b>My images</b> holds every picture across your books: covers, chapter art and uploads.");
       await d.say("Drop pictures here, or click to upload. JPG, PNG, WebP and GIF all work.");
@@ -507,7 +507,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   details: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "details"),
     async run(d) {
       await d.say("<b>Book details</b> holds what the stores and your website show about the book.");
@@ -523,7 +523,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   format: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "format"),
     async run(d) {
       await d.say("The <b>Format</b> tab sets how the printed book and ebook look.");
@@ -539,20 +539,20 @@ export const SCENES: Record<string, Scene> = {
   },
 
   hardcover: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "format"),
     async run(d) {
       await d.say("Selling a hardcover too? Turn on the hardcover edition.");
       await d.scrollTo(d.page.getByRole("heading", { name: "Hardcover edition" }));
       const toggle = d.page.getByRole("heading", { name: "Hardcover edition" }).first().locator("xpath=following::input[1]");
       await d.click(toggle, { after: 1300 });
-      await d.say("Pick a KDP case laminate trim. The studio adds the wider gutter a hardcover needs.");
+      await d.say("Pick a KDP case laminate trim. The Desk adds the wider gutter a hardcover needs.");
       await d.say("Export then builds a separate hardcover PDF, and the Cover tab draws the wrap with its board and hinge.");
     },
   },
 
   export: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "export"),
     async run(d) {
       await d.say("When you are ready, the <b>Export</b> tab makes your files.");
@@ -566,7 +566,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   kdp: {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "publish"),
     async run(d) {
       await d.say("Publishing on Amazon? The <b>Publish</b> tab ends with a KDP checklist.");
@@ -580,7 +580,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "book-page": {
-    start: "/studio",
+    start: "/desk",
     setup: (d) => openBook(d, "publish"),
     async run(d) {
       await d.say("Every book can have its own page on your website. Tick <b>Show this book on the website</b>.");
@@ -595,7 +595,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   website: {
-    start: "/studio/site",
+    start: "/desk/site",
     // the demo login owns the publisher's own site; show the page an ordinary author sees instead
     async setup(d) {
       await d.page.route("**/api/collections/site_settings/records**", async (r) => {
@@ -604,10 +604,10 @@ export const SCENES: Record<string, Scene> = {
         for (const it of j.items ?? [j]) Object.assign(it, { home: false, subdomain: it.subdomain || "tolaekanem" });
         await r.fulfill({ response: res, json: j });
       });
-      await d.goto("/studio/site");
+      await d.goto("/desk/site");
     },
     async run(d) {
-      await d.say("Every studio comes with a free author website. Set it up on the <b>Website</b> page.");
+      await d.say("Every Desk comes with a free author website. Set it up on the <b>Website</b> page.");
       await d.say("Your site lives at <b>yourname.jollofpages.com</b>. You can also connect a domain of your own.");
       await d.scrollTo(d.page.getByRole("heading", { name: "Identity" }));
       await d.say("Name the site, add a tagline and choose which book leads the home page.");
@@ -622,7 +622,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   readers: {
-    start: "/studio/readers",
+    start: "/desk/readers",
     async run(d) {
       await d.say("Readers who sign up on your website land on your list here.");
       await d.scrollTo(d.page.getByRole("heading", { name: "Your list" }));
@@ -638,13 +638,13 @@ export const SCENES: Record<string, Scene> = {
   },
 
   "own-email": {
-    start: "/studio/readers",
+    start: "/desk/readers",
     async run(d) {
       await d.say("Newsletters can go out on your own free Resend account. It comes with 3,000 emails a month.");
       await d.title("Step 1", "Sign up at resend.com", "Click Sign up. You can use Continue with Google.", 3200);
       await d.title("Step 2", "Make an API key", "In the left menu click API Keys, then Create API Key. Name it Jollof Pages.", 3600);
       await d.title("Step 3", "Give it Full access", "Choose Full access, click Add, and copy the key. It starts with re_.", 3600);
-      await d.say("Back in the studio, open <b>Readers</b> and find <b>Send on your own free Resend account</b>.");
+      await d.say("Back in the Desk, open <b>Readers</b> and find <b>Send on your own free Resend account</b>.");
       const form = d.page.getByLabel("Your own free sending");
       await d.scrollTo(form);
       await d.say("Paste your key, then type a domain you own. A mail address on it works well, like mail.yourname.com.");
@@ -661,7 +661,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   analytics: {
-    start: "/studio/stats",
+    start: "/desk/stats",
     async run(d) {
       await d.say("<b>Analytics</b> shows who visits your website. No cookies, and nothing about your readers is stored.");
       await d.click(btn(d, "90 days"), { after: 1200 });
@@ -674,7 +674,7 @@ export const SCENES: Record<string, Scene> = {
   },
 
   help: {
-    start: "/studio/help",
+    start: "/desk/help",
     async run(d) {
       await d.say("Stuck? Search the common questions first.", 1600);
       await d.type(d.page.getByPlaceholder(/Search/), "gutter");

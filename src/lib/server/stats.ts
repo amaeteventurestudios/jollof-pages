@@ -24,7 +24,7 @@ export function count(owner: string, kind: StatKind, key = "", by = 1, date = to
 }
 
 /**
- * What writers do in the studio, for the admin's Insights: exports, translations and the like.
+ * What writers do in the Desk, for the admin's Insights: exports, translations and the like.
  * Counts only; what was exported or translated is never kept.
  */
 export type UsageKind = "export" | "translate";

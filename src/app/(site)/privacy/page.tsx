@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       <ul>
         <li>Your name and email address, and your password, which is stored only in a hashed form we cannot read.</li>
         <li>What you write and upload: manuscripts, chapters, images, covers, pen names and their biographies and photographs, and the settings for each book.</li>
-        <li>Your writing activity, such as words written per day and sprint minutes, so the studio can show goals and streaks.</li>
+        <li>Your writing activity, such as words written per day and sprint minutes, so the Desk can show goals and streaks.</li>
       </ul>
       <h3>When you visit</h3>
       <p>
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
 
       <h2>Why we use it</h2>
       <ul>
-        <li>To run the studio for you: saving your work, building your files and showing your book pages.</li>
+        <li>To run the Desk for you: saving your work, building your files and showing your book pages.</li>
         <li>To send the emails you asked for, such as early-access news or a new book from an author you follow.</li>
         <li>To send messages about your account and important changes to the service.</li>
         <li>To protect the service from abuse and fix problems.</li>
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
       <h2>Your choices and rights</h2>
       <ul>
         <li>Leave any mailing list using the link in our emails, or by writing to us.</li>
-        <li>Download your books at any time from the studio, as a full backup or as Word files.</li>
+        <li>Download your books at any time from the Desk, as a full backup or as Word files.</li>
         <li>Ask to see, correct or delete the personal information we hold about you.</li>
         <li>Object to how we use it, or complain to your local data protection authority.</li>
       </ul>

@@ -1,7 +1,7 @@
-/** Help requests, shared by the studio and the API. */
+/** Help requests, shared by the Desk and the API. */
 
 export const SUPPORT_TOPICS = [
-  { id: "question", label: "A question about the studio" },
+  { id: "question", label: "A question about the Desk" },
   { id: "publishing", label: "Publishing on Amazon KDP or elsewhere" },
   { id: "formatting", label: "Formatting, print PDF or ebook files" },
   { id: "covers", label: "Covers and AI cover art" },

@@ -124,7 +124,7 @@ export interface Writer {
   suspended: boolean;
   /** the apps the admin switched on or off for them */
   apps: { studio: boolean; aiWriter: boolean };
-  /** words written in the studio, all time (from the daily writing log) */
+  /** words written in the Desk, all time (from the daily writing log) */
   words: number;
   /** reasons the account looks like a spam sign-up; empty when it doesn't */
   spam: string[];
@@ -279,7 +279,7 @@ export function payments(d: AdminData, listPrice: number): Payment[] {
   for (const u of d.users) {
     const cents = studioCents(u, listPrice);
     if (cents)
-      out.push({ id: `s-${u.id}`, kind: "studio", owner: u.id, email: u.email, cents, keepCents: cents, note: u.paid_cents ? "Studio" : "Studio (amount not recorded)", at: u.paid_at || u.created });
+      out.push({ id: `s-${u.id}`, kind: "studio", owner: u.id, email: u.email, cents, keepCents: cents, note: u.paid_cents ? "Desk" : "Desk (amount not recorded)", at: u.paid_at || u.created });
   }
   for (const l of d.ledger)
     if (l.reason === "topup")
@@ -691,18 +691,18 @@ export interface NeedItem {
 export function needsYou(o: Overview, list: Writer[], sites: Website[] | null, reminders: { label: string; href: string }[] = []): NeedItem[] {
   const spam = list.filter((w) => w.spam.length && !w.suspended).length;
   const items: NeedItem[] = [
-    { kind: "ticket", label: "Support tickets waiting for an answer", count: o.tickets.open, href: "/studio/admin/tickets" },
-    { kind: "spam", label: "Sign-ups that look like spam", count: spam, href: "/studio/admin/writers?show=spam" },
-    { kind: "idea", label: "New feature ideas to review", count: o.ideas.new, href: "/studio/admin/ideas" },
+    { kind: "ticket", label: "Support tickets waiting for an answer", count: o.tickets.open, href: "/desk/admin/tickets" },
+    { kind: "spam", label: "Sign-ups that look like spam", count: spam, href: "/desk/admin/writers?show=spam" },
+    { kind: "idea", label: "New feature ideas to review", count: o.ideas.new, href: "/desk/admin/ideas" },
   ];
   if (sites) {
     items.push({
       kind: "domain",
       label: "Own domains not connected yet",
       count: sites.filter((s) => s.domain === "waiting" || s.domain === "failed").length,
-      href: "/studio/admin/websites?show=domains",
+      href: "/desk/admin/websites?show=domains",
     });
-    items.push({ kind: "nosite", label: "Websites with no books on them", count: sites.filter((s) => !s.books && !s.home && !s.offline).length, href: "/studio/admin/websites?show=empty" });
+    items.push({ kind: "nosite", label: "Websites with no books on them", count: sites.filter((s) => !s.books && !s.home && !s.offline).length, href: "/desk/admin/websites?show=empty" });
   }
   for (const r of reminders) items.push({ kind: "reminder", label: r.label, count: 1, href: r.href });
   return items.filter((i) => i.count > 0);

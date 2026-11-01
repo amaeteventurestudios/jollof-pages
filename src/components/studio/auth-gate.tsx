@@ -8,13 +8,13 @@ import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Keeps the studio private: anyone without a valid PocketBase session goes to /login, and an
- * account that has not paid yet sees the checkout step instead of the studio. Free collaborator
+ * Keeps the Desk private: anyone without a valid PocketBase session goes to /login, and an
+ * account that has not paid yet sees the checkout step instead of the Desk. Free collaborator
  * accounts (made by accepting an invitation) only reach the books shared with them.
  */
 
 /** Pages a collaborator account can open. */
-const COLLABORATOR_PAGES = /^\/studio(\/books\/[^/]+|\/collaboration|\/help|\/learn)?\/?$/;
+const COLLABORATOR_PAGES = /^\/desk(\/books\/[^/]+|\/collaboration|\/help|\/learn)?\/?$/;
 
 /** A free account that only works on other authors' books. Valid once the gate has opened. */
 export function isCollaboratorOnly(): boolean {
@@ -34,7 +34,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }
     (async () => {
       try {
-        // back from Stripe: open the studio without waiting for the webhook
+        // back from Stripe: open the Desk without waiting for the webhook
         const params = new URLSearchParams(window.location.search);
         const session = params.get("session_id");
         if (params.get("studio") === "paid" && session) {
@@ -47,7 +47,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         }
         const auth = await client.collection("users").authRefresh();
         setState(auth.record.access === "pending" ? "unpaid" : "ready");
-        if (auth.record.access === "collaborator" && !COLLABORATOR_PAGES.test(path)) router.replace("/studio");
+        if (auth.record.access === "collaborator" && !COLLABORATOR_PAGES.test(path)) router.replace("/desk");
       } catch {
         client.authStore.clear();
         router.replace(`/login?next=${encodeURIComponent(path)}`);
@@ -61,7 +61,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   if (state !== "ready")
     return (
       <div className="grid min-h-screen place-items-center text-sm text-soft app:bg-[var(--app-bar)] app:text-[var(--app-bar-ink)]" role="status">
-        <span className="app:hidden">Opening your studio…</span>
+        <span className="app:hidden">Opening your Desk…</span>
         {/* phones and tablets: the app's launch screen */}
         <span className="hidden flex-col items-center gap-4 app:flex">
           <span aria-hidden className="grid size-20 place-items-center bg-[#fff7ef] text-primary shadow-[0_18px_40px_-16px_rgb(20_5_0/0.7)]">
@@ -70,7 +70,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <span className="text-[15px] font-semibold tracking-[0.08em] uppercase">
             <BrandName />
           </span>
-          <span className="sr-only">Opening your studio…</span>
+          <span className="sr-only">Opening your Desk…</span>
         </span>
       </div>
     );
@@ -88,7 +88,7 @@ function FinishPurchase() {
       <div className="w-full max-w-md">
         <h1 className="text-3xl tracking-tight">One step left</h1>
         <p className="mt-4 text-lg text-soft">
-          Your account {email && <strong className="text-ink">{email}</strong>} is ready. Pay once to open your studio and put your author site online. There is nothing more to pay after this.
+          Your account {email && <strong className="text-ink">{email}</strong>} is ready. Pay once to open your Desk and put your author site online. There is nothing more to pay after this.
         </p>
         {error && (
           <p role="alert" className="mt-4 text-sm text-destructive">

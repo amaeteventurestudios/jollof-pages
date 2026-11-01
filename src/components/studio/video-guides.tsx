@@ -97,7 +97,7 @@ export function VideoStrip({ tutorial, onPlay }: { tutorial: string; onPlay: (id
   );
 }
 
-/** Every video guide, grouped by part of the studio. */
+/** Every video guide, grouped by part of the Desk. */
 export function VideoLibrary({ onPlay }: { onPlay: (id: string) => void }) {
   const [group, setGroup] = useState<VideoGroup | "All">("All");
   const shown = VIDEO_GUIDES.filter((v) => group === "All" || v.group === group);
@@ -106,7 +106,7 @@ export function VideoLibrary({ onPlay }: { onPlay: (id: string) => void }) {
       <h2 id="videos-title" className="text-[clamp(1.4rem,2.4vw,1.9rem)] leading-tight tracking-[-0.02em]">
         Video guides
       </h2>
-      <p className="mt-1 max-w-2xl text-soft">A short video for every feature, recorded in the studio itself. Most are under a minute.</p>
+      <p className="mt-1 max-w-2xl text-soft">A short video for every feature, recorded in the Desk itself. Most are under a minute.</p>
       <div className="mt-5 flex flex-wrap gap-1" role="group" aria-label="Show videos about">
         {(["All", ...VIDEO_GROUPS] as const).map((g) => (
           <Button key={g} size="sm" variant={group === g ? "secondary" : "ghost"} aria-pressed={group === g} onClick={() => setGroup(g)}>

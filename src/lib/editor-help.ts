@@ -30,7 +30,7 @@ export const WHATS_NEW: NewsItem[] = [
   {
     date: "2026-10-28",
     title: "Book design",
-    items: ["Interior themes, 61 special blocks, section backgrounds and print layout options.", "The studio runs as an app on phones and tablets."],
+    items: ["Interior themes, 61 special blocks, section backgrounds and print layout options.", "The Desk runs as an app on phones and tablets."],
   },
   {
     date: "2026-10-27",

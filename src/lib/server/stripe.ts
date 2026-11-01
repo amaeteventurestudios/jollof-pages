@@ -50,7 +50,7 @@ export function createCheckout(p: { pack: CreditPack; userId: string; email: str
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(p.pack.cents),
       "line_items[0][price_data][product_data][name]": `${p.pack.credits} AI cover credits`,
-      "line_items[0][price_data][product_data][description]": "Jollof Pages studio. Pay as you go: credits never expire.",
+      "line_items[0][price_data][product_data][description]": "Jollof Pages Desk. Pay as you go: credits never expire.",
       "metadata[user]": p.userId,
       "metadata[credits]": String(p.pack.credits),
       "metadata[kind]": "cover-credits",
@@ -100,14 +100,14 @@ export function verifyWebhook(payload: string, header: string | null, secret: st
 }
 
 /**
- * The studio itself: one payment of $129, a lifetime account. Fixed here, not in the server's
+ * The Desk itself: one payment of $129, a lifetime account. Fixed here, not in the server's
  * environment, so the sign-up page, Stripe and the sales page can never show different prices.
  */
 export function studioPriceCents(): number {
   return 12900;
 }
 
-/** The studio price on a brand (white label), or the Jollof Pages price. */
+/** The Desk price on a brand (white label), or the Jollof Pages price. */
 export function brandPriceCents(brand?: { price_cents?: number } | null): number {
   return brand?.price_cents || studioPriceCents();
 }
@@ -124,8 +124,8 @@ export function createStudioCheckout(p: { userId: string; email: string; success
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(brandPriceCents(p.brand)),
-      "line_items[0][price_data][product_data][name]": `${p.brand?.name || "Jollof Pages"} studio`,
-      "line_items[0][price_data][product_data][description]": "One-time payment. Your writing studio and your own author website, for life.",
+      "line_items[0][price_data][product_data][name]": `${p.brand?.name || "Jollof Pages"} Desk`,
+      "line_items[0][price_data][product_data][description]": "One-time payment. Your writing Desk and your own author website, for life.",
       "metadata[user]": p.userId,
       "metadata[kind]": "studio",
     },

@@ -160,7 +160,7 @@ export function CoverKit({
   const rows: [string, string, string][] = [
     ["Front artwork", `${spec.front.px.width} x ${spec.front.px.height} px`, `${spec.front.width.toFixed(3)} x ${spec.front.height.toFixed(3)} in, ask for ${spec.front.ratio}`],
     ["Back artwork", `${spec.back.px.width} x ${spec.back.px.height} px`, `same size as the front`],
-    ["Spine", `${spec.spine.px} px wide`, `${g.spine.toFixed(4)} in${g.binding === "hardcover" ? " including the boards" : ""}, made by the studio`],
+    ["Spine", `${spec.spine.px} px wide`, `${g.spine.toFixed(4)} in${g.binding === "hardcover" ? " including the boards" : ""}, made by the Desk`],
     ["Whole wrap", `${spec.wrap.px.width} x ${spec.wrap.px.height} px`, `${g.width.toFixed(3)} x ${g.height.toFixed(3)} in, if you design it in one piece`],
   ];
   return (
@@ -171,7 +171,7 @@ export function CoverKit({
             Make the art in ChatGPT or Nano Banana
           </h2>
           <p className="mt-1 text-sm text-soft">
-            Make the front and back as two pictures. The studio adds the spine, the back text, the bleed and the barcode space, and sizes all of it from your page count. At 300 dpi, the size KDP asks
+            Make the front and back as two pictures. The Desk adds the spine, the back text, the bleed and the barcode space, and sizes all of it from your page count. At 300 dpi, the size KDP asks
             for:
           </p>
         </div>
@@ -189,7 +189,7 @@ export function CoverKit({
           </tbody>
         </table>
         <p className="text-[13px] text-soft">
-          Image tools make {spec.front.ratio} pictures, so the studio trims about {spec.front.cropPercent}% to fit. ChatGPT pictures (1024 x 1536 px) are too small to print sharp at this size; use
+          Image tools make {spec.front.ratio} pictures, so the Desk trims about {spec.front.cropPercent}% to fit. ChatGPT pictures (1024 x 1536 px) are too small to print sharp at this size; use
           Nano Banana&apos;s 4K setting, or upscale before you upload. The check on the right reads the real size of what you upload.
         </p>
         <div className="flex flex-wrap gap-2">

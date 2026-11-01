@@ -89,7 +89,7 @@ function writePref(key: string, v: unknown) {
  * chapters, zoom, and switch device and font.
  */
 export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; chapters: Chapter[]; chapterId: string | null; onSelect?: (id: string) => void }) {
-  // the studio's book pages only render in the browser, so saved preferences can seed state directly
+  // the Desk's book pages only render in the browser, so saved preferences can seed state directly
   const [deviceId, setDeviceId] = useState(() => readPref("jp-preview-device", "print"));
   const [fontId, setFontId] = useState(() => readPref("jp-preview-font", "book"));
   const [textScale, setTextScale] = useState(() => readPref("jp-preview-text", 1));

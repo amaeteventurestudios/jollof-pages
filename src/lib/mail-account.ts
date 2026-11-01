@@ -1,4 +1,4 @@
-/** An author's own Resend account as the studio sees it (the key never leaves the server). */
+/** An author's own Resend account as the Desk sees it (the key never leaves the server). */
 export interface DnsRecord {
   record: string;
   type: string;

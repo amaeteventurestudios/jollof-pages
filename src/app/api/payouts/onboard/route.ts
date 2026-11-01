@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   try {
     let billing = await getBilling(me.id);
     if (!billing?.payout_account) billing = await saveBilling(me.id, { payout_account: (await createExpressAccount(me.email)).id });
-    const back = `${publicOrigin(req)}/studio/site`;
+    const back = `${publicOrigin(req)}/desk/site`;
     const { url } = await accountLink(billing.payout_account, `${back}?payouts=retry`, `${back}?payouts=done`);
     return NextResponse.json({ url });
   } catch (e) {

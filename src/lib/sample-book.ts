@@ -41,7 +41,7 @@ export function sampleChapters(): Omit<Chapter, "id" | "collectionId" | "book" |
       section: "front",
       order: 4,
       title: "Introduction",
-      content: doc(p(t(LOREM[0])), p(t(LOREM[1])), p(t("This is "), t("sample text", ["italic"]), t(" to show how the studio formats a book."), fn("Replace it with your own manuscript."))),
+      content: doc(p(t(LOREM[0])), p(t(LOREM[1])), p(t("This is "), t("sample text", ["italic"]), t(" to show how the Desk formats a book."), fn("Replace it with your own manuscript."))),
     },
     { ...base, kind: "part", section: "body", order: 0, title: "Preparing the pot", content: null },
     {

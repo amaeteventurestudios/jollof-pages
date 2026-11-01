@@ -57,11 +57,11 @@ export function RailHelp() {
         <MapIcon />
         <span className={label}>Tour</span>
       </button>
-      <a className={btn} title="Help and video guides" href="/studio/help" target="_blank" rel="noopener">
+      <a className={btn} title="Help and video guides" href="/desk/help" target="_blank" rel="noopener">
         <LifeBuoy />
         <span className={label}>Help</span>
       </a>
-      <a className={btn} title="Report a bug" href="/studio/help?topic=bug" target="_blank" rel="noopener">
+      <a className={btn} title="Report a bug" href="/desk/help?topic=bug" target="_blank" rel="noopener">
         <Bug />
         <span className={label}>Bug</span>
       </a>
@@ -69,7 +69,7 @@ export function RailHelp() {
       <Dialog open={open === "news"} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogTitle>What&apos;s new</DialogTitle>
-          <DialogDescription>The latest changes to the studio.</DialogDescription>
+          <DialogDescription>The latest changes to the Desk.</DialogDescription>
           <ol className="mt-2 grid gap-5">
             {WHATS_NEW.map((n) => (
               <li key={n.date + n.title}>

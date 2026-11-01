@@ -63,7 +63,7 @@ export function SellDirect({ ws }: { ws: Workspace }) {
               ? "Part of Author Site Pro. "
               : "Set up payouts first, so Stripe knows where to pay you. "}
           {status.available && (
-            <Link href="/studio/site" className="text-primary underline-offset-4 hover:underline">
+            <Link href="/desk/site" className="text-primary underline-offset-4 hover:underline">
               {status.pro ? "Set up payouts" : "See Pro"}
             </Link>
           )}

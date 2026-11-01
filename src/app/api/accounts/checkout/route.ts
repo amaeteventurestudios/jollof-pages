@@ -18,8 +18,8 @@ export async function POST(req: Request) {
     const session = await createStudioCheckout({
       userId: me.id,
       email: me.email,
-      successUrl: `${origin}/studio?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/studio?studio=cancelled`,
+      successUrl: `${origin}/desk?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origin}/desk?studio=cancelled`,
       brand: await brandOf(req),
     });
     return NextResponse.json({ url: session.url });

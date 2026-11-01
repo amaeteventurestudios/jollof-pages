@@ -1,5 +1,5 @@
 /**
- * Records the studio video guides from a running studio.
+ * Records the Desk video guides from a running studio.
  *
  *   npm run videos                    # every guide
  *   npm run videos -- new-book import # just these
@@ -32,8 +32,8 @@ async function signIn(browser: Browser) {
   await page.goto(`${BASE}/login`);
   await page.getByLabel("Email").fill(process.env.OWNER_EMAIL ?? "owner@example.com");
   await page.getByLabel("Password").fill(process.env.OWNER_PASSWORD ?? "change-me-please");
-  await page.getByRole("button", { name: "Open the studio" }).click();
-  await page.waitForURL(/\/studio/);
+  await page.getByRole("button", { name: "Open the Desk" }).click();
+  await page.waitForURL(/\/desk/);
   await page.waitForTimeout(1000);
   const state = await page.context().storageState();
   await page.close();

@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/assistant/*": ["./node_modules/onnxruntime-node/bin/napi-v3/linux/*/libonnxruntime.so*"],
   },
-  // the usual guesses for the studio sign-in all land on it
+  // the usual guesses for the Desk sign-in all land on it
   async redirects() {
     return [
       ...["/signin", "/sign-in", "/admin", "/dashboard", "/author", "/write"].map((source) => ({ source, destination: "/login", permanent: false })),

@@ -1,7 +1,7 @@
 /**
  * The AI writing tools in the editor's menus. Each one is a short instruction sent with the selected
  * words (or the text before the cursor) to the writer's own model. Nothing reaches the book until
- * the writer accepts the suggestion. Shared by the studio and the server, which builds the prompt.
+ * the writer accepts the suggestion. Shared by the Desk and the server, which builds the prompt.
  */
 import type { DocNode } from "@/lib/doc/types";
 
