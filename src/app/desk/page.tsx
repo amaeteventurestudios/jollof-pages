@@ -32,6 +32,8 @@ import { TUTORIALS, loadDone } from "@/lib/tutorials";
 import { cn } from "@/lib/utils";
 import { languageName } from "@/lib/translate";
 
+const DEMO_AUTHOR_SLUGS = ["tola-ekanem", "sample-author"];
+
 export default function StudioHome() {
   const [books, setBooks] = useState<Book[] | null>(null);
   const [logs, setLogs] = useState<WritingLog[]>([]);
@@ -93,6 +95,8 @@ export default function StudioHome() {
     };
   }, []);
 
+  // books the seed script made for trying the app, credited to a made-up pen name
+  const demoBooks = (books ?? []).filter((b) => DEMO_AUTHOR_SLUGS.includes(b.expand?.author?.slug ?? ""));
   const shown = (books ?? []).filter((b) => !lang || (b.language || "en") === lang);
 
   const byDay = wordsByDay(logs);
@@ -177,6 +181,20 @@ export default function StudioHome() {
         <TesterNote />
         <WebsiteCard live={(books ?? []).filter((b) => b.published).length} onAddBook={() => setDialog("isbn")} />
         <LearnCard />
+
+        {demoBooks.length > 0 && (
+          <section className="mt-4 flex flex-wrap items-center gap-4 border border-border bg-card p-5 sm:p-6" aria-labelledby="demo-h">
+            <div className="min-w-0 flex-1">
+              <h2 id="demo-h" className="text-lg font-medium">
+                {demoBooks.length === 1 ? "1 sample book is in your Desk" : `${demoBooks.length} sample books are in your Desk`}
+              </h2>
+              <p className="mt-0.5 text-soft">They are credited to a made-up pen name and are only here to try things out. Remove them once your own books are in; they come off your website too.</p>
+            </div>
+            <Button variant="outline" onClick={() => setToTrash(demoBooks)}>
+              <Trash2 /> Remove sample books
+            </Button>
+          </section>
+        )}
 
         {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load your books: {error}</p>}
 
