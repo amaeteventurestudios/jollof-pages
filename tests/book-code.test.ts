@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { amazonLink, cleanIsbn, parseBookCode } from "../src/lib/isbn";
+import { amazonHost, amazonLink, cleanIsbn, parseBookCode, tidyStoreLink, titleFromAmazonLink } from "../src/lib/isbn";
 
 describe("parseBookCode", () => {
   it("takes ISBN-13 and ISBN-10, with dashes", () => {
@@ -26,5 +26,22 @@ describe("parseBookCode", () => {
   });
   it("links straight to the Amazon page", () => {
     expect(amazonLink("B0C7G8NHC2")).toBe("https://www.amazon.com/dp/B0C7G8NHC2");
+  });
+});
+
+describe("Amazon links", () => {
+  const long =
+    "https://www.amazon.com/Venture-Studio-Blueprint-Building-Ultimate-ebook/dp/B0C7G8NHC2/ref=sr_1_1?crid=DBDSZKS7U0BN&dib=eyJ2IjoiMSJ9.5Uk&keywords=venture+studio+blueprint&qid=1793561249&sr=8-1";
+  it("reads the title Amazon puts in the link", () => {
+    expect(titleFromAmazonLink(long)).toBe("Venture Studio Blueprint Building Ultimate");
+    expect(titleFromAmazonLink("https://www.amazon.co.uk/Small-Pot-Big-Fire-paperback/dp/0306406152")).toBe("Small Pot Big Fire");
+    expect(titleFromAmazonLink("https://www.amazon.com/dp/B0C7G8NHC2")).toBe("");
+    expect(titleFromAmazonLink("B0C7G8NHC2")).toBe("");
+  });
+  it("tidies a long link to the short one, keeping the store", () => {
+    expect(tidyStoreLink(long)).toBe("https://www.amazon.com/dp/B0C7G8NHC2");
+    expect(tidyStoreLink("https://www.amazon.co.uk/x/dp/B0C7G8NHC2?tag=1")).toBe("https://www.amazon.co.uk/dp/B0C7G8NHC2");
+    expect(tidyStoreLink("https://books2read.com/u/abc")).toBe("https://books2read.com/u/abc");
+    expect(amazonHost(long)).toBe("www.amazon.com");
   });
 });
