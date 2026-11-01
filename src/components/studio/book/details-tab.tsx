@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import type { Workspace } from "./workspace";
 import { AiSuggest } from "../ai-suggest";
 import { toWebp } from "@/lib/webp";
 import { TranslatePanel } from "./translate-panel";
+import { LANGUAGES } from "@/lib/translate";
 
 export function Field({ id, label, hint, action, children }: { id: string; label: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -67,39 +68,68 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
   // suggestions read the saved book, plus what is typed here but not saved yet
   const typed = () => ({ "Title (as typed)": d.title, "Subtitle (as typed)": d.subtitle, "Description (as typed)": d.description, "Hook (as typed)": d.pitch });
 
+  // Everything saves by itself a moment after you stop typing, and a picked suggestion saves at
+  // once, so a reload never loses work (or AI ideas you already paid for).
+  const saved = useRef(JSON.stringify(d));
+  const busy = useRef<Promise<void>>(Promise.resolve());
+  function persist(next: typeof d) {
+    const snap = JSON.stringify(next);
+    if (snap === saved.current || !next.title.trim()) return busy.current;
+    busy.current = busy.current.then(async () => {
+      if (snap === saved.current) return;
+      setMsg("Saving…");
+      try {
+        const patch: Partial<Book> = {
+          ...next,
+          keywords: next.keywords.map((k) => k.trim()).filter(Boolean),
+          categories: next.categories
+            .split(",")
+            .map((c) => c.trim())
+            .filter(Boolean),
+          publication_date: next.publication_date ? `${next.publication_date} 12:00:00.000Z` : "",
+          status: next.status as BookStatus,
+        };
+        if (next.title !== book.title && !book.published) patch.slug = await uniqueSlug("books", slugify(next.title), book.id);
+        await ws.saveBook(patch);
+        saved.current = snap;
+        setMsg(`All changes saved at ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`);
+      } catch (err) {
+        setMsg(`Could not save: ${errorMessage(err)}`);
+      }
+    });
+    return busy.current;
+  }
+  const latest = useRef(persist);
+  useEffect(() => {
+    latest.current = persist;
+  });
+  useEffect(() => {
+    const t = setTimeout(() => latest.current(d), 1200);
+    return () => clearTimeout(t);
+  }, [d]);
+  /** use a suggestion: fill the field and save it straight away */
+  const pick = <K extends keyof typeof d>(k: K, v: (typeof d)[K]) => {
+    const next = { ...d, [k]: v };
+    setD(next);
+    void persist(next);
+  };
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    setMsg("");
-    try {
-      const patch: Partial<Book> = {
-        ...d,
-        keywords: d.keywords.map((k) => k.trim()).filter(Boolean),
-        categories: d.categories
-          .split(",")
-          .map((c) => c.trim())
-          .filter(Boolean),
-        publication_date: d.publication_date ? `${d.publication_date} 12:00:00.000Z` : "",
-        status: d.status as BookStatus,
-      };
-      if (d.title !== book.title && !book.published) patch.slug = await uniqueSlug("books", slugify(d.title), book.id);
-      await ws.saveBook(patch);
-      setMsg("Saved.");
-    } catch (err) {
-      setMsg(`Could not save: ${errorMessage(err)}`);
-    }
+    await persist(d);
   }
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-8">
       <form onSubmit={save}>
         <Panel title="Title" description="As it appears on the cover, the title page and every store.">
-          <Field id="d-title" label="Title" action={<AiSuggest kind="title" bookId={book.id} context={typed} onPick={(v) => set("title", v)} />}>
+          <Field id="d-title" label="Title" action={<AiSuggest kind="title" bookId={book.id} context={typed} onPick={(v) => pick("title", v)} />}>
             <Input id="d-title" required value={d.title} onChange={(e) => set("title", e.target.value)} />
           </Field>
           <Field
             id="d-sub"
             label="Subtitle"
-            action={<AiSuggest kind="subtitle" bookId={book.id} context={typed} onPick={(v) => set("subtitle", v)} />}
+            action={<AiSuggest kind="subtitle" bookId={book.id} context={typed} onPick={(v) => pick("subtitle", v)} />}
             hint="Non-fiction subtitles carry search terms. Say who it is for and what it does."
           >
             <Input id="d-sub" value={d.subtitle} onChange={(e) => set("subtitle", e.target.value)} />
@@ -126,7 +156,7 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
           <Field
             id="d-pitch"
             label="One-line hook"
-            action={<AiSuggest kind="pitch" bookId={book.id} context={typed} onPick={(v) => set("pitch", v)} />}
+            action={<AiSuggest kind="pitch" bookId={book.id} context={typed} onPick={(v) => pick("pitch", v)} />}
             hint="Shown large on your website. About 20 words."
           >
             <Input id="d-pitch" value={d.pitch} maxLength={300} onChange={(e) => set("pitch", e.target.value)} />
@@ -134,13 +164,16 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
           <Field
             id="d-desc"
             label="Book description"
-            action={<AiSuggest kind="description" bookId={book.id} context={typed} onPick={(v) => set("description", v)} />}
+            action={<AiSuggest kind="description" bookId={book.id} context={typed} onPick={(v) => pick("description", v)} />}
             hint={`${d.description.length} of 4,000 characters (KDP's limit). Leave a blank line between paragraphs.`}
           >
             <Textarea id="d-desc" rows={9} maxLength={8000} value={d.description} onChange={(e) => set("description", e.target.value)} />
           </Field>
         </Panel>
-        <Panel title="Discovery" description="KDP gives you seven keyword boxes and lets you choose categories when you upload.">
+        <Panel
+          title="Discovery"
+          description="KDP gives you seven keyword boxes and three categories. Aim for narrow categories where a handful of launch-week sales from friends and family can put you in the top 100, which is what earns the bestseller tags."
+        >
           <div className="-mb-2 flex items-center justify-between gap-2">
             <span className="text-sm font-medium">Keywords</span>
             <AiSuggest
@@ -149,12 +182,12 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
               context={typed}
               onPick={(v) => {
                 const i = d.keywords.findIndex((k) => !k.trim());
-                set(
+                pick(
                   "keywords",
                   d.keywords.map((x, j) => (j === (i < 0 ? 6 : i) ? v : x)),
                 );
               }}
-              onPickAll={(items) => set("keywords", [...items, "", "", "", "", "", "", ""].slice(0, 7))}
+              onPickAll={(items) => pick("keywords", [...items, "", "", "", "", "", "", ""].slice(0, 7))}
             />
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -177,39 +210,49 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
           <Field
             id="d-cat"
             label="Categories"
-            action={<AiSuggest kind="categories" bookId={book.id} context={typed} onPick={(v) => set("categories", d.categories.trim() ? `${d.categories}, ${v}` : v)} />}
-            hint="Separate with commas, for example: Business, Entrepreneurship"
+            action={<AiSuggest kind="categories" bookId={book.id} context={typed} onPick={(v) => pick("categories", d.categories.trim() ? `${d.categories}, ${v}` : v)} />}
+            hint="Separate with commas. Our suggestions favour narrow categories a new book can rank in. To check one, open its Best Sellers list on Amazon and look at the Best Sellers Rank of the #100 book: the bigger that number, the fewer sales you need to get in."
           >
             <Input id="d-cat" value={d.categories} onChange={(e) => set("categories", e.target.value)} />
           </Field>
-          <Field id="d-lang" label="Language code" hint="en, en-GB, fr, yo, ig, ha…">
-            <Input id="d-lang" value={d.language} maxLength={12} onChange={(e) => set("language", e.target.value)} className="w-32" />
+          <Field id="d-lang" label="Language" hint="The language this book is written in. Stores use it to show your book to the right readers.">
+            <select id="d-lang" value={d.language} onChange={(e) => set("language", e.target.value)} className="h-9 w-64 rounded-md border border-input bg-card px-3 text-sm">
+              {!LANGUAGES.some((l) => l.code === d.language) && <option value={d.language}>{d.language}</option>}
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
           </Field>
         </Panel>
-        <Panel title="Publishing" description="ISBNs are optional for KDP; Amazon assigns a free one to paperbacks and hardcovers. Each edition needs its own.">
+        <Panel
+          title="Publishing"
+          description="All optional. Fill these in when you publish; leaving them blank is fine for now. An ISBN is the book's barcode number, and each edition (paperback, hardcover, ebook) has its own."
+        >
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field id="d-isbn-p" label="Paperback ISBN">
+            <Field id="d-isbn-p" label="Paperback ISBN" hint="Leave blank and KDP gives you a free one. Only use your own if you bought it, for example from Bowker.">
               <Input id="d-isbn-p" value={d.isbn_paperback} onChange={(e) => set("isbn_paperback", e.target.value)} />
             </Field>
-            <Field id="d-isbn-h" label="Hardcover ISBN">
+            <Field id="d-isbn-h" label="Hardcover ISBN" hint="Same as the paperback: KDP gives you a free one, or use one you bought.">
               <Input id="d-isbn-h" value={d.isbn_hardcover} onChange={(e) => set("isbn_hardcover", e.target.value)} />
             </Field>
-            <Field id="d-isbn-e" label="Ebook ISBN">
+            <Field id="d-isbn-e" label="Ebook ISBN" hint="Not needed for Kindle. A few other ebook stores ask for one.">
               <Input id="d-isbn-e" value={d.isbn_ebook} onChange={(e) => set("isbn_ebook", e.target.value)} />
             </Field>
-            <Field id="d-asin" label="Amazon ASIN">
+            <Field id="d-asin" label="Amazon ASIN" hint="Amazon's own ID for your book, starting B0. You get it after publishing; paste it so your website links to Amazon.">
               <Input id="d-asin" value={d.asin} maxLength={10} placeholder="B0…" onChange={(e) => set("asin", e.target.value.trim().toUpperCase())} />
             </Field>
-            <Field id="d-imprint" label="Imprint">
+            <Field id="d-imprint" label="Imprint" hint="The publisher name on the copyright page and store listing: your name, a pen name, or a press name.">
               <Input id="d-imprint" value={d.imprint} onChange={(e) => set("imprint", e.target.value)} />
             </Field>
-            <Field id="d-date" label="Publication date">
+            <Field id="d-date" label="Publication date" hint="The day it first came out. Leave blank until then.">
               <Input id="d-date" type="date" value={d.publication_date} onChange={(e) => set("publication_date", e.target.value)} />
             </Field>
           </div>
         </Panel>
         <div className="sticky bottom-0 flex items-center gap-3 bg-background/95 py-4">
-          <Button type="submit">Save changes</Button>
+          <Button type="submit" variant="outline">Save now</Button>
           <span className="text-sm text-soft" role="status">
             {msg}
           </span>

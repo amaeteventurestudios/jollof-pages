@@ -101,9 +101,13 @@ export const SUGGEST: Record<SuggestKind, { label: string; count: number; ask: s
   keywords: {
     label: "keywords",
     count: 7,
-    ask: "Suggest 7 Amazon KDP keyword phrases (2 to 5 words each, under 50 characters) that real readers would type to find this book. Don't repeat words from the title, don't use other authors' names or brand names.",
+    ask: "Suggest 7 Amazon KDP keyword phrases (2 to 5 words each, under 50 characters) that real readers would type to find this book. Favour specific long-tail phrases with less competition over broad one-word terms, and mix in phrases that match narrow categories. Don't repeat words from the title, don't use other authors' names or brand names.",
   },
-  categories: { label: "categories", count: 3, ask: "Suggest 3 Amazon book categories that fit, each written as a path like 'Business & Money > Entrepreneurship'." },
+  categories: {
+    label: "categories",
+    count: 5,
+    ask: "Suggest 5 Amazon Kindle Store or Books categories where this book honestly fits AND a new book from an unknown author could reach the top 100 with a handful of sales in its first days. Prefer narrow sub-categories three or four levels deep over big broad ones (avoid top-level categories like 'Self-Help' or 'Christian Living' on their own). Write each as a full path like 'Religion & Spirituality > Christianity > Christian Living > Business', easiest to rank in first. Only real Amazon categories.",
+  },
   cover: {
     label: "cover ideas",
     count: 3,
