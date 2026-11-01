@@ -131,6 +131,8 @@ export interface Book {
   publication_date: string;
   status: BookStatus;
   published: boolean;
+  /** when the author moved it to Trash; empty while it is in use. Deleted for good after 30 days */
+  trashed?: string;
   featured: boolean;
   cover: string;
   cover_full: string;
@@ -251,6 +253,10 @@ export interface SiteSettings {
   /** Author Site Pro is active until this date (own domain); the publisher's home site always has it */
   pro_until?: string;
   design?: import("./site-design").SiteDesign | null;
+  /** the author turned the site off; visitors see a short resting note */
+  paused?: boolean;
+  /** an admin took the site down (server-only) */
+  offline?: boolean;
 }
 
 export function bookFormat(b: Pick<Book, "format">): BookFormat {

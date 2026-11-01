@@ -35,7 +35,7 @@ export async function getSiteBySubdomain(sub: string): Promise<SiteSettings | nu
   try {
     return await serverPb()
       .collection("site_settings")
-      .getFirstListItem<SiteSettings>(serverPb().filter("subdomain = {:s} && offline != true", { s: sub.toLowerCase() }));
+      .getFirstListItem<SiteSettings>(serverPb().filter("subdomain = {:s} && offline != true && paused != true", { s: sub.toLowerCase() }));
   } catch {
     return null;
   }
@@ -46,9 +46,26 @@ export async function getSiteByDomain(domain: string): Promise<SiteSettings | nu
   try {
     const site = await serverPb()
       .collection("site_settings")
-      .getFirstListItem<SiteSettings>(serverPb().filter("custom_domain = {:d} && offline != true", { d: domain.toLowerCase() }));
+      .getFirstListItem<SiteSettings>(serverPb().filter("custom_domain = {:d} && offline != true && paused != true", { d: domain.toLowerCase() }));
     // an own domain answers only while Author Site Pro is paid up
     return hasPro(site) ? site : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A site its author turned off for now (not one an admin took down), so its home page can show a
+ * short resting note instead of "not found". Returns the name to show, or null.
+ */
+export async function pausedSiteName(key?: string): Promise<string | null> {
+  if (!key) return null;
+  const k = decodeURIComponent(key).toLowerCase();
+  try {
+    const site = await serverPb()
+      .collection("site_settings")
+      .getFirstListItem<SiteSettings>(serverPb().filter(k.includes(".") ? "custom_domain = {:k}" : "subdomain = {:k}", { k }) + " && paused = true && offline != true");
+    return site.publisher_name || k;
   } catch {
     return null;
   }

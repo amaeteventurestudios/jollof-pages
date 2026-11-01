@@ -4,7 +4,9 @@ import { BrandName } from "@/components/brand";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowRight, ArrowUp, BookPlus, ExternalLink, FileUp, Globe, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, BookPlus, CheckSquare, ExternalLink, FileUp, Globe, GraduationCap, Library, LifeBuoy, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { ConfirmTwice } from "@/components/studio/confirm-twice";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Welcome } from "@/components/studio/welcome";
 import { JollofPlate } from "@/components/studio/jollof-plate";
@@ -18,7 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Input, Textarea } from "@/components/ui/input";
 import { AiSuggest } from "@/components/studio/ai-suggest";
 import { Label } from "@/components/ui/label";
-import { createBook, createBoxSet, createChapter, listAuthors, listBooks, listSharedBooks, loadLogs, userId } from "@/lib/studio";
+import { createBook, createBoxSet, createChapter, deleteBooksForever, listAuthors, listBooks, listSharedBooks, listTrashedBooks, loadLogs, restoreBooks, TRASH_DAYS, trashBooks, userId } from "@/lib/studio";
 import { isCollaboratorOnly } from "@/components/studio/auth-gate";
 import { ROLE_INFO, roleOf } from "@/lib/collab";
 import { BOOK_STATUSES, bookGoal, type Author, type Book, type Section, type WritingLog } from "@/lib/types";
@@ -44,14 +46,20 @@ export default function StudioHome() {
   });
   const [dialog, setDialog] = useState<null | "new" | "import" | "isbn" | "boxset">(() => (pending && !isCollaboratorOnly() ? "isbn" : null));
   const [shared, setShared] = useState<Book[]>([]);
+  const [trash, setTrash] = useState<Book[]>([]);
+  // choosing books to delete: tick boxes on every cover, and the books waiting for the double check
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [toTrash, setToTrash] = useState<Book[]>([]);
   const guest = isCollaboratorOnly();
 
   const load = useCallback(() => {
-    Promise.all([guest ? [] : listBooks(), guest ? [] : loadLogs(60), listSharedBooks().catch(() => [])])
-      .then(([b, l, s]) => {
+    Promise.all([guest ? [] : listBooks(), guest ? [] : loadLogs(60), listSharedBooks().catch(() => []), guest ? [] : listTrashedBooks().catch(() => [])])
+      .then(([b, l, s, t]) => {
         setBooks(b);
         setLogs(l);
         setShared(s);
+        setTrash(t);
       })
       .catch((e) => setError(errorMessage(e)));
   }, [guest]);
@@ -84,6 +92,8 @@ export default function StudioHome() {
       window.removeEventListener("drop", drop);
     };
   }, []);
+
+  const shown = (books ?? []).filter((b) => !lang || (b.language || "en") === lang);
 
   const byDay = wordsByDay(logs);
   const week = lastDays(7).reduce((s, d) => s + Math.max(byDay.get(d) ?? 0, 0), 0);
@@ -126,6 +136,18 @@ export default function StudioHome() {
             <Button variant="outline" onClick={() => setDialog("import")}>
               <FileUp /> Import a manuscript
             </Button>
+            {(books ?? []).length > 0 && (
+              <Button
+                variant={selecting ? "secondary" : "outline"}
+                aria-pressed={selecting}
+                onClick={() => {
+                  setSelecting((v) => !v);
+                  setPicked(new Set());
+                }}
+              >
+                <CheckSquare /> {selecting ? "Done selecting" : "Select"}
+              </Button>
+            )}
             {(books ?? []).filter((b) => !b.box_set).length >= 2 && (
               <Button variant="outline" onClick={() => setDialog("boxset")}>
                 <Library /> Box set
@@ -192,14 +214,62 @@ export default function StudioHome() {
               ))}
             </div>
           )}
-          <ul className={cn("grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-5", langs.length > 1 ? "mt-6" : "mt-10")}>
-            {(books ?? []).filter((b) => !lang || (b.language || "en") === lang).map((b) => {
+          {selecting && (
+            <div className="sticky top-14 z-20 mt-6 flex flex-wrap items-center gap-3 border app:top-0 border-border bg-card px-4 py-3 shadow-sm" role="toolbar" aria-label="Selected books">
+              <span className="text-sm font-medium">{picked.size === 0 ? "Tick the books you want to delete" : picked.size === 1 ? "1 book selected" : `${picked.size} books selected`}</span>
+              <Button size="sm" variant="ghost" onClick={() => setPicked(picked.size === shown.length ? new Set() : new Set(shown.map((b) => b.id)))}>
+                {picked.size === shown.length && shown.length > 0 ? "Clear" : "Select all"}
+              </Button>
+              <div className="ml-auto flex gap-2">
+                <Button size="sm" variant="destructive" disabled={picked.size === 0} onClick={() => setToTrash((books ?? []).filter((b) => picked.has(b.id)))}>
+                  <Trash2 /> Delete {picked.size > 1 ? `${picked.size} books` : "book"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => (setSelecting(false), setPicked(new Set()))}>
+                  <X /> Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+          <ul className={cn("grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-5", selecting ? "mt-6" : langs.length > 1 ? "mt-6" : "mt-10")}>
+            {shown.map((b) => {
               const goal = bookGoal(b);
               const pct = goal.targetWords ? Math.min(100, Math.round(((b.word_count || 0) / goal.targetWords) * 100)) : 0;
+              const on = picked.has(b.id);
+              const toggle = () =>
+                setPicked((p) => {
+                  const n = new Set(p);
+                  if (n.has(b.id)) n.delete(b.id);
+                  else n.add(b.id);
+                  return n;
+                });
               return (
-                <li key={b.id}>
-                  <Link href={`/desk/books/${b.id}`} className="group block rounded focus-visible:outline-offset-4">
-                    <div className="overflow-hidden rounded-sm bg-paper-2 transition-transform duration-200 group-hover:-translate-y-1">
+                <li key={b.id} className="group/book relative">
+                  {selecting ? (
+                    <label className="absolute top-2 left-2 z-10 grid size-9 cursor-pointer place-items-center bg-card/95 shadow-sm">
+                      <Checkbox checked={on} onCheckedChange={toggle} aria-label={`Select ${b.title}`} className="size-5" />
+                    </label>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setToTrash([b])}
+                      aria-label={`Delete ${b.title}`}
+                      title="Delete this book"
+                      className="absolute top-2 right-2 z-10 grid size-9 place-items-center bg-card/95 text-ink-2 opacity-0 shadow-sm transition-opacity group-hover/book:opacity-100 hover:text-destructive focus-visible:opacity-100 app:opacity-100"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  )}
+                  <Link
+                    href={`/desk/books/${b.id}`}
+                    onClick={(e) => {
+                      if (!selecting) return;
+                      e.preventDefault();
+                      toggle();
+                    }}
+                    aria-pressed={selecting ? on : undefined}
+                    className="group block rounded focus-visible:outline-offset-4"
+                  >
+                    <div className={cn("overflow-hidden rounded-sm bg-paper-2 transition-transform duration-200 group-hover:-translate-y-1", selecting && on && "ring-4 ring-primary ring-offset-2 ring-offset-background")}>
                       <BookCover book={b} sizes="(min-width: 1024px) 240px, 45vw" />
                     </div>
                     <div className="mt-3 flex items-start justify-between gap-2">
@@ -223,6 +293,8 @@ export default function StudioHome() {
           </>
         )}
 
+        {trash.length > 0 && <TrashSection books={trash} onChange={load} />}
+
         {shared.length > 0 && (
           <section className="mt-14" aria-labelledby="shared-h">
             <div className="flex items-baseline justify-between gap-4 border-b border-border pb-2">
@@ -237,6 +309,32 @@ export default function StudioHome() {
           </section>
         )}
       </main>
+      <ConfirmTwice
+        open={toTrash.length > 0}
+        onClose={() => setToTrash([])}
+        title={toTrash.length === 1 ? `Delete “${toTrash[0].title}”?` : `Delete ${toTrash.length} books?`}
+        continueLabel={toTrash.length === 1 ? "Yes, delete this book" : `Yes, delete ${toTrash.length} books`}
+        confirmLabel={toTrash.length === 1 ? "Delete book" : `Delete ${toTrash.length} books`}
+        onConfirm={async () => {
+          await trashBooks(toTrash.map((b) => b.id));
+          setSelecting(false);
+          setPicked(new Set());
+          load();
+        }}
+      >
+        <p>You are about to delete:</p>
+        <ul className="max-h-48 list-disc overflow-y-auto pl-5 font-medium text-ink">
+          {toTrash.map((b) => (
+            <li key={b.id}>
+              {b.title}
+              {b.published && <span className="font-normal text-soft"> (live on your website)</span>}
+            </li>
+          ))}
+        </ul>
+        <p>
+          {toTrash.length === 1 ? "It goes" : "They go"} to Trash, at the bottom of this page, and {toTrash.some((b) => b.published) ? "come off your website straight away. " : ""}You can bring {toTrash.length === 1 ? "it" : "them"} back for {TRASH_DAYS} days. After that {toTrash.length === 1 ? "it is" : "they are"} deleted for good, with every chapter and note.
+        </p>
+      </ConfirmTwice>
       <NewBookDialog open={dialog === "new"} onClose={() => setDialog(null)} />
       <ImportDialog open={dialog === "import"} dropped={dropped} onClose={() => (setDialog(null), setDropped(null))} />
       <BoxSetDialog open={dialog === "boxset"} books={(books ?? []).filter((b) => !b.box_set)} onClose={() => setDialog(null)} />
@@ -249,6 +347,92 @@ export default function StudioHome() {
         }}
       />
     </>
+  );
+}
+
+/** Deleted books, kept for 30 days so a slip can be undone. */
+function TrashSection({ books, onChange }: { books: Book[]; onChange: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [forever, setForever] = useState<Book[]>([]);
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [now] = useState(() => Date.now());
+  const daysLeft = (b: Book) => Math.max(0, TRASH_DAYS - Math.floor((now - new Date((b.trashed || "").replace(" ", "T")).getTime()) / 86400000));
+
+  async function restore(ids: string[]) {
+    setBusy(ids.join());
+    setError("");
+    try {
+      await restoreBooks(ids);
+      onChange();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  return (
+    <section className="mt-14" aria-labelledby="trash-h">
+      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-border pb-2">
+        <h2 id="trash-h" className="text-xl tracking-tight">
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="inline-flex items-center gap-2 hover:text-primary">
+            <Trash2 className="size-5" /> Trash <span className="text-base text-soft">({books.length})</span>
+          </button>
+        </h2>
+        <p className="text-sm text-soft">Deleted books wait here for {TRASH_DAYS} days, then they are gone for good.</p>
+      </div>
+      {open && (
+        <>
+          {error && <p className="mt-4 rounded bg-danger-soft p-3 text-sm text-destructive">{error}</p>}
+          <ul className="mt-4 divide-y divide-border border border-border bg-card">
+            {books.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <div className="w-10 shrink-0 overflow-hidden bg-paper-2 opacity-70">
+                  <BookCover book={b} sizes="40px" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{b.title}</p>
+                  <p className="text-sm text-soft">{daysLeft(b) === 0 ? "Deleted for good tonight" : daysLeft(b) === 1 ? "1 day left to restore" : `${daysLeft(b)} days left to restore`}</p>
+                </div>
+                <Button size="sm" variant="outline" disabled={!!busy} onClick={() => restore([b.id])}>
+                  <RotateCcw /> Restore
+                </Button>
+                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" disabled={!!busy} onClick={() => setForever([b])}>
+                  Delete for good
+                </Button>
+              </li>
+            ))}
+          </ul>
+          {books.length > 1 && (
+            <div className="mt-3 flex flex-wrap justify-end gap-2">
+              <Button size="sm" variant="outline" disabled={!!busy} onClick={() => restore(books.map((b) => b.id))}>
+                <RotateCcw /> Restore all
+              </Button>
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" disabled={!!busy} onClick={() => setForever(books)}>
+                Empty Trash
+              </Button>
+            </div>
+          )}
+          <p className="mt-3 text-sm text-soft">A restored book comes back to Your books. If it was on your website, publish it again from its Publish tab.</p>
+        </>
+      )}
+      <ConfirmTwice
+        open={forever.length > 0}
+        onClose={() => setForever([])}
+        title={forever.length === 1 ? `Delete “${forever[0].title}” for good?` : `Delete ${forever.length} books for good?`}
+        continueLabel="Yes, delete for good"
+        confirmLabel="Delete for good"
+        onConfirm={async () => {
+          await deleteBooksForever(forever.map((b) => b.id));
+          onChange();
+        }}
+      >
+        <p>
+          This can&apos;t be undone. {forever.length === 1 ? "The book" : "These books"}, every chapter, note, cover and file in {forever.length === 1 ? "it" : "them"} will be erased. Download a copy from the Export tab first if you might want it later.
+        </p>
+      </ConfirmTwice>
+    </section>
   );
 }
 
@@ -298,7 +482,7 @@ function WebsiteCard({ live, onAddBook }: { live: number; onAddBook: () => void 
               <a href={url} target="_blank" rel="noreferrer" className="font-medium text-primary underline-offset-4 hover:underline">
                 {url.replace(/^https?:\/\//, "")}
               </a>{" "}
-              · {live === 1 ? "1 book" : `${live} books`} on it.{" "}
+              {site?.paused && <Badge className="mx-1">Turned off</Badge>}· {live === 1 ? "1 book" : `${live} books`} on it.{" "}
               {live ? "Add the books you published before, so readers find them all in one place." : "Add a book you already published, or publish one from its Publish tab, and it shows here with a button to buy it."}
             </p>
           ) : (

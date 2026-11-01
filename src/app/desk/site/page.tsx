@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookPlus, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { BookPlus, ExternalLink, Plus, Power, Trash2 } from "lucide-react";
+import { ConfirmTwice } from "@/components/studio/confirm-twice";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,7 @@ import { errorMessage, pb } from "@/lib/pb";
 import type { Book, SiteSettings } from "@/lib/types";
 import { hasPro, siteLabel, siteUrl } from "@/lib/sites";
 import { forgetMySite } from "@/components/studio/use-my-site";
-import { SiteDesignPanel } from "@/components/studio/site-design-panel";
+import { SiteDesignPanel, TemplatePicker } from "@/components/studio/site-design-panel";
 import { ProPanel, useProStatus } from "@/components/studio/pro-panel";
 import { listAuthors } from "@/lib/studio";
 import { CheckCircle2, Circle } from "lucide-react";
@@ -23,6 +25,7 @@ const EMPTY = { publisher_name: "Jollof Pages", tagline: "", intro: "", about: "
 
 export default function SiteSettingsPage() {
   const [rec, setRec] = useState<SiteSettings | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [books, setBooks] = useState<Book[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -39,6 +42,7 @@ export default function SiteSettingsPage() {
   useEffect(() => {
     getSiteSettings().then((s) => {
       setRec(s);
+      setLoaded(true);
       if (s) setForm({ publisher_name: s.publisher_name, tagline: s.tagline, intro: s.intro, about: s.about, email: s.email, hero_book: s.hero_book, socials: s.socials ?? [] });
     });
     listBooks().then(setBooks);
@@ -72,6 +76,13 @@ export default function SiteSettingsPage() {
             Open the site <ExternalLink className="size-3.5" />
           </Link>
         </div>
+        {loaded && !rec && <NoSite onMade={(s) => (setRec(s), setForm({ ...EMPTY, publisher_name: s.publisher_name }))} />}
+        {rec?.paused && (
+          <p className="mt-6 flex items-center gap-2 border border-border bg-card p-4 text-sm" role="status">
+            <Power className="size-4 shrink-0 text-destructive" /> Your website is turned off. Visitors see a short note that it is resting. Turn it back on at the bottom of this page.
+          </p>
+        )}
+        {rec?.home && <HomeNote />}
         {rec && !rec.home && <ReadyList site={rec} books={books} authors={authors} about={form.about} />}
         {rec && !rec.home && (
           <Panel title="Bring in your books" description="Books you published before Jollof Pages. Enter an ISBN, an ASIN or an Amazon link and the book appears on your site with its cover, description and a button to buy it.">
@@ -84,6 +95,8 @@ export default function SiteSettingsPage() {
         {rec && <AddressPanel site={rec} onChange={(s) => setRec(s)} />}
         {rec && <ProPanel status={pro.status} reload={pro.reload} home={rec.home} />}
         {rec && !rec.home && <SiteDesignPanel site={rec} books={books.filter((b) => b.published)} onSaved={setRec} />}
+        {rec && (
+        <>
         <form onSubmit={save}>
           <Panel title="Identity" description="Shown in the header, the footer and search results.">
             <Field id="s-name" label={rec?.home ? "Publisher name" : "Site name"} hint={rec?.home ? undefined : "Your author or pen name, as readers know you."}>
@@ -157,6 +170,9 @@ export default function SiteSettingsPage() {
             </Button>
           )}
         </Panel>
+        {!rec.home && <OffOrDelete site={rec} pro={pro.status} onChange={setRec} onDeleted={() => (setRec(null), setBooks([]), listBooks().then(setBooks))} />}
+        </>
+        )}
       </main>
     </>
   );
@@ -307,6 +323,165 @@ function ReadyList({ site, books, authors, about }: { site: SiteSettings; books:
           </li>
         ))}
       </ul>
+    </Panel>
+  );
+}
+
+/** The account runs jollofpages.com itself, so writer-site settings do not apply here. */
+function HomeNote() {
+  return (
+    <Panel title="Templates and plans" description="What writers see on this page, and why this account doesn't.">
+      <p className="text-sm text-ink-2">
+        This account runs jollofpages.com itself. Its home page is the Jollof Pages sales page, so it has no template, colours or plan to pick, and it can&apos;t be turned off or deleted from here. Every writer&apos;s Website page has these extras: a template, colours and fonts with a live preview, a checklist to get the site ready, Author Site Pro, ebook payouts, and buttons to turn the site off or delete it.
+      </p>
+      <div className="grid gap-2">
+        <p className="text-sm font-medium">The templates writers choose from</p>
+        <TemplatePicker value="classic" readOnly />
+      </div>
+    </Panel>
+  );
+}
+
+/** For an author who deleted their website: pick an address and start again. */
+function NoSite({ onMade }: { onMade: (s: SiteSettings) => void }) {
+  const [sub, setSub] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  async function make(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg("");
+    try {
+      const res = await fetch("/api/sites/manage", { method: "POST", headers: { "Content-Type": "application/json", Authorization: pb().authStore.token }, body: JSON.stringify({ action: "create", subdomain: sub, name }) });
+      const out = (await res.json()) as { site?: SiteSettings; error?: string };
+      if (!res.ok || !out.site) throw new Error(out.error || "Could not make the website.");
+      forgetMySite();
+      onMade(out.site);
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Panel title="You don't have a website right now" description="Your books are safe in the Desk. Make a new website whenever you like; it's free.">
+      <form onSubmit={make} className="grid gap-4">
+        <Field id="n-name" label="Site name" hint="Your author or pen name, as readers know you.">
+          <Input id="n-name" value={name} onChange={(e) => setName(e.target.value)} required />
+        </Field>
+        <Field id="n-sub" label="Address">
+          <div className="flex h-9 items-center rounded-md border border-input bg-card pr-3 text-sm">
+            <input id="n-sub" value={sub} onChange={(e) => setSub(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} className="h-full min-w-0 flex-1 bg-transparent px-3 outline-none" placeholder="yourname" required />
+            <span className="text-soft">.jollofpages.com</span>
+          </div>
+        </Field>
+        <div className="flex items-center gap-3">
+          <Button type="submit" disabled={busy || !sub || !name.trim()}>
+            {busy ? "Making it…" : "Make my website"}
+          </Button>
+          <span className="text-sm text-destructive" role="status">
+            {msg}
+          </span>
+        </div>
+      </form>
+    </Panel>
+  );
+}
+
+/** Turn the site off for a while, or delete it. Both say exactly what happens first. */
+function OffOrDelete({ site, pro, onChange, onDeleted }: { site: SiteSettings; pro: ReturnType<typeof useProStatus>["status"]; onChange: (s: SiteSettings) => void; onDeleted: () => void }) {
+  const [askOff, setAskOff] = useState(false);
+  const [askDelete, setAskDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const billing = Boolean(pro?.pro && pro.status !== "canceling" && pro.canManage);
+
+  async function setPaused(paused: boolean) {
+    setBusy(true);
+    setMsg("");
+    try {
+      const saved = await pb().collection("site_settings").update<SiteSettings>(site.id, { paused });
+      onChange(saved);
+      forgetMySite();
+      setMsg(paused ? "Your website is off. Visitors see a short note that it is resting." : "Your website is back on.");
+      setAskOff(false);
+    } catch (e) {
+      setMsg(`Could not change it: ${errorMessage(e)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel title="Turn off or delete" description="Take your website down for a while, or remove it altogether. Your books stay in the Desk either way.">
+      <div className="grid gap-2">
+        <p className="text-sm font-medium">{site.paused ? "Your website is off" : "Turn your website off"}</p>
+        <p className="text-sm text-soft">
+          {site.paused ? "Visitors to " + siteLabel(site) + " see a short note that the site is resting. Everything is kept, ready for when you turn it back on." : "Visitors see a short note that the site is resting. Your address, books, design and reader list are all kept. Turn it back on any time."}
+        </p>
+        <div>
+          {site.paused ? (
+            <Button type="button" disabled={busy} onClick={() => setPaused(false)}>
+              <Power /> Turn my website back on
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" disabled={busy} onClick={() => setAskOff(true)}>
+              <Power /> Turn my website off
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="grid gap-2 border-t border-border pt-4">
+        <p className="text-sm font-medium text-destructive">Delete your website</p>
+        <p className="text-sm text-soft">Removes the website for good. Your books and reader list stay in the Desk.</p>
+        {billing && <p className="text-sm">Author Site Pro is still active. Cancel it first under Manage plan, card and invoices, so you aren&apos;t charged for a site you deleted.</p>}
+        <div>
+          <Button type="button" variant="destructive" disabled={busy || billing} onClick={() => setAskDelete(true)}>
+            <Trash2 /> Delete my website
+          </Button>
+        </div>
+      </div>
+      <p className="text-sm text-soft" role="status">
+        {msg}
+      </p>
+
+      <Dialog open={askOff} onOpenChange={(o) => !o && setAskOff(false)}>
+        <DialogContent>
+          <DialogTitle className="text-lg">Turn your website off?</DialogTitle>
+          <DialogDescription>{siteLabel(site)} will show visitors a short note that the site is resting. Nothing is deleted, and you can turn it back on from this page whenever you like.</DialogDescription>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setAskOff(false)}>
+              Keep it on
+            </Button>
+            <Button type="button" disabled={busy} onClick={() => setPaused(true)}>
+              {busy ? "Turning off…" : "Turn it off"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmTwice
+        open={askDelete}
+        onClose={() => setAskDelete(false)}
+        title="Delete your website?"
+        continueLabel="Yes, delete my website"
+        confirmLabel="Delete my website"
+        onConfirm={async () => {
+          const res = await fetch("/api/sites/manage", { method: "POST", headers: { "Content-Type": "application/json", Authorization: pb().authStore.token }, body: JSON.stringify({ action: "delete" }) });
+          const out = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) throw new Error(out.error || "Could not delete the website.");
+          forgetMySite();
+          onDeleted();
+        }}
+      >
+        <p>This takes {siteLabel(site)} off the internet and erases:</p>
+        <ul className="list-disc pl-5">
+          <li>your address{site.custom_domain ? `, and the link to ${site.custom_domain}` : ""}, so someone else could take it</li>
+          <li>your template, colours, headline, introduction, About letter and links</li>
+        </ul>
+        <p>Your books stay in the Desk, but any that were live come off the web. Your reader list stays on the Readers page. You can make a new website later, starting from scratch.</p>
+      </ConfirmTwice>
     </Panel>
   );
 }

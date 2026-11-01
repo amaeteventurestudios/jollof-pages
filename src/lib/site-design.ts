@@ -21,6 +21,8 @@ export interface SiteDesign {
   /** a FONT_PAIRS id */
   fonts?: string;
   pattern?: PatternKind | "none";
+  /** a TEMPLATES id: how the home page is laid out */
+  template?: TemplateId;
   /** a short name for the chosen look, shown in the Desk */
   label?: string;
 }
@@ -176,6 +178,21 @@ export const PATTERNS: { id: PatternKind | "none"; label: string }[] = [
   { id: "rice", label: "Rice" },
   { id: "none", label: "Plain" },
 ];
+
+// ---------- templates: how the home page is laid out ----------
+
+export type TemplateId = "classic" | "spotlight" | "shelf" | "letter";
+
+export const TEMPLATES: { id: TemplateId; label: string; blurb: string }[] = [
+  { id: "classic", label: "Classic", blurb: "Your name large, your lead book beside it, then every book, your letter and the reader list." },
+  { id: "spotlight", label: "Spotlight", blurb: "One book up front with its description and a buy button. Best when you have a new release." },
+  { id: "shelf", label: "Bookshelf", blurb: "A short header, then your books straight away in big covers. Best when you have many books." },
+  { id: "letter", label: "Letter", blurb: "Your letter to readers comes first, with your books listed after it. Quiet and personal." },
+];
+
+export function templateOf(d: SiteDesign | null | undefined): TemplateId {
+  return TEMPLATES.some((t) => t.id === d?.template) ? (d!.template as TemplateId) : "classic";
+}
 
 export function fontPair(d: SiteDesign | null | undefined): FontPair {
   return FONT_PAIRS.find((f) => f.id === d?.fonts) ?? FONT_PAIRS[0];

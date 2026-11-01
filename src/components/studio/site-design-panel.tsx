@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/studio/book/details-tab";
 import { errorMessage, fileUrl, pb } from "@/lib/pb";
 import { cn } from "@/lib/utils";
-import { coverColours, FONT_PAIRS, looksFromColours, PATTERNS, PRESETS, type Look, type SiteDesign } from "@/lib/site-design";
+import { coverColours, FONT_PAIRS, looksFromColours, PATTERNS, PRESETS, TEMPLATES, templateOf, type Look, type SiteDesign, type TemplateId } from "@/lib/site-design";
 import type { Book, SiteSettings } from "@/lib/types";
 
 const DEVICES = [
@@ -80,8 +80,12 @@ export function SiteDesignPanel({ site, books, onSaved }: { site: SiteSettings; 
   }
 
   return (
-    <Panel title="Design" description="Colours made from your covers, a font pair and a pattern. Every colour pairing is checked so text stays easy to read.">
+    <Panel title="Template and design" description="Pick how your home page is laid out, then colours made from your covers, a font pair and a pattern. Every colour pairing is checked so text stays easy to read.">
       <link rel="stylesheet" href={ALL_FONTS_HREF} />
+      <div className="grid gap-2">
+        <p className="text-sm font-medium">Template</p>
+        <TemplatePicker value={templateOf(design)} onPick={(t) => setDesign((d) => ({ ...d, template: t }))} />
+      </div>
       {fromCovers.map(({ book, looks }) => (
         <div key={book.id} className="grid gap-2">
           <p className="text-sm font-medium">From the cover of {book.title}</p>
@@ -156,6 +160,97 @@ export function SiteDesignPanel({ site, books, onSaved }: { site: SiteSettings; 
         </span>
       </div>
     </Panel>
+  );
+}
+
+/** The four home page layouts, each drawn as a small wireframe. */
+export function TemplatePicker({ value, onPick, readOnly = false }: { value: TemplateId; onPick?: (t: TemplateId) => void; readOnly?: boolean }) {
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {TEMPLATES.map((t) => {
+        const on = !readOnly && value === t.id;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            aria-pressed={readOnly ? undefined : on}
+            disabled={readOnly}
+            onClick={() => onPick?.(t.id)}
+            className={cn("overflow-hidden rounded-md border bg-card text-left disabled:cursor-default", on ? "border-primary ring-2 ring-primary/30" : "border-border", !readOnly && !on && "hover:border-ink-2")}
+          >
+            <Wireframe id={t.id} />
+            <span className="block px-3 pt-2 text-sm font-medium">
+              {on && <Check className="mr-1 inline size-3.5 text-primary" />}
+              {t.label}
+            </span>
+            <span className="block px-3 pb-3 text-[13px] leading-snug text-soft">{t.blurb}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Wireframe({ id }: { id: TemplateId }) {
+  const hero = "bg-primary";
+  const line = "h-1.5 bg-primary-foreground/80";
+  const book = "aspect-[2/3] bg-ink/70";
+  return (
+    <span aria-hidden className="block h-28 overflow-hidden bg-paper-2">
+      {id === "classic" && (
+        <>
+          <span className={cn("flex h-16 items-center gap-2 px-3", hero)}>
+            <span className="grid flex-1 gap-1">
+              <span className={cn(line, "w-4/5")} />
+              <span className={cn(line, "w-1/2 opacity-60")} />
+            </span>
+            <span className={cn(book, "w-7 bg-[#f2b632]")} />
+          </span>
+          <span className="grid grid-cols-4 gap-1.5 p-2">{[0, 1, 2, 3].map((i) => <span key={i} className={book} />)}</span>
+        </>
+      )}
+      {id === "spotlight" && (
+        <>
+          <span className={cn("flex h-20 items-center gap-3 px-3", hero)}>
+            <span className={cn(book, "w-10 bg-[#f2b632]")} />
+            <span className="grid flex-1 gap-1">
+              <span className={cn(line, "w-4/5")} />
+              <span className={cn(line, "w-full opacity-60")} />
+              <span className={cn(line, "w-2/3 opacity-60")} />
+              <span className="mt-1 h-2 w-8 bg-[#f2b632]" />
+            </span>
+          </span>
+          <span className="grid grid-cols-5 gap-1.5 p-2">{[0, 1, 2, 3, 4].map((i) => <span key={i} className={book} />)}</span>
+        </>
+      )}
+      {id === "shelf" && (
+        <>
+          <span className={cn("flex h-8 items-center px-3", hero)}>
+            <span className={cn(line, "w-1/2")} />
+          </span>
+          <span className="grid grid-cols-3 gap-2 p-2">{[0, 1, 2].map((i) => <span key={i} className={book} />)}</span>
+        </>
+      )}
+      {id === "letter" && (
+        <>
+          <span className={cn("flex h-8 items-center px-3", hero)}>
+            <span className={cn(line, "w-1/2")} />
+          </span>
+          <span className="grid gap-1 p-3">
+            {[90, 100, 95, 70].map((w, i) => (
+              <span key={i} className="h-1.5 bg-ink/40" style={{ width: `${w}%` }} />
+            ))}
+          </span>
+          <span className="flex gap-2 px-3">
+            <span className={cn(book, "w-5")} />
+            <span className="grid flex-1 content-start gap-1 pt-1">
+              <span className="h-1.5 w-2/3 bg-ink/60" />
+              <span className="h-1.5 w-1/2 bg-ink/30" />
+            </span>
+          </span>
+        </>
+      )}
+    </span>
   );
 }
 
