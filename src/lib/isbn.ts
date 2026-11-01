@@ -11,6 +11,18 @@ export interface IsbnBook {
   pages: number;
   publisher: string;
   cover: string; // data: URL, or ""
+  /** each format on Amazon (Kindle, paperback…) with its link and price, when Amazon's API is set up */
+  formats?: { label: string; url: string; price: string }[];
+}
+
+/** An ISBN-13 starting 978 as the ISBN-10 Amazon uses for its ASIN, or "" when there is none. */
+export function isbn10(isbn: string): string {
+  if (/^\d{9}[\dX]$/.test(isbn)) return isbn;
+  if (!/^978\d{10}$/.test(isbn)) return "";
+  const core = isbn.slice(3, 12);
+  const sum = [...core].reduce((t, c, i) => t + Number(c) * (10 - i), 0);
+  const check = (11 - (sum % 11)) % 11;
+  return core + (check === 10 ? "X" : String(check));
 }
 
 /** ISBN-10 or ISBN-13 with a valid check digit, dashes and spaces removed. */

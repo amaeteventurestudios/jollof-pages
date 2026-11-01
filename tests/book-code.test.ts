@@ -45,3 +45,13 @@ describe("Amazon links", () => {
     expect(amazonHost(long)).toBe("www.amazon.com");
   });
 });
+
+import { isbn10 } from "@/lib/isbn";
+describe("isbn10", () => {
+  it("turns a 978 ISBN-13 into the ISBN-10 Amazon uses as the ASIN", () => {
+    expect(isbn10("9780306406157")).toBe("0306406152");
+    expect(isbn10("9780804429573")).toBe("080442957X");
+    expect(isbn10("9791234567896")).toBe("");
+    expect(isbn10("0306406152")).toBe("0306406152");
+  });
+});

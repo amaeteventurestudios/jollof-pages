@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { bearer } from "@/lib/server/load-book";
 import { caller } from "@/lib/server/credits";
-import { amazonHost, parseBookCode, titleFromAmazonLink, type IsbnBook } from "@/lib/isbn";
+import { amazonHost, isbn10, parseBookCode, titleFromAmazonLink, type IsbnBook } from "@/lib/isbn";
+import { amazonBook, paapiConfigured, splitTitle } from "@/lib/server/amazon";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,14 +69,53 @@ export async function GET(req: Request) {
       { error: "That isn't an ISBN or an ASIN. Use the 10 or 13 digits from the copyright page, the ASIN from your book's Amazon page (under Product details), or paste the Amazon link." },
       { status: 400 },
     );
-  // the title Amazon puts in a pasted link, and the writer's Amazon store, for the buy button
-  if ("asin" in code) return NextResponse.json({ asin: code.asin, needsTitle: true, guess: titleFromAmazonLink(raw), host: amazonHost(raw) });
+  const host = amazonHost(raw);
+  if ("asin" in code) {
+    // with Amazon's own API, a Kindle ASIN gives everything: title, author, cover and each format
+    const az = paapiConfigured() ? await amazonBook(code.asin, host || undefined) : null;
+    if (az)
+      return NextResponse.json({
+        isbn: "",
+        asin: az.asin,
+        title: az.title,
+        subtitle: az.subtitle,
+        authors: az.authors,
+        description: "",
+        publishDate: az.publishDate,
+        pages: az.pages,
+        publisher: az.publisher,
+        cover: await coverData(az.cover),
+        formats: az.formats,
+        matched: true,
+        host,
+      } satisfies IsbnBook & { matched: boolean; host: string });
+    // otherwise only the title Amazon puts in a pasted link, and the writer's Amazon store, for the buy button
+    return NextResponse.json({ asin: code.asin, needsTitle: true, guess: titleFromAmazonLink(raw), host });
+  }
   const isbn = code.isbn;
+  // a print book's ASIN is its ISBN-10: Amazon's API adds its formats and prices
+  const az10 = isbn10(isbn);
+  const azPromise = paapiConfigured() && az10 ? amazonBook(az10, host || undefined) : Promise.resolve(null);
 
   type Data = { title?: string; subtitle?: string; authors?: { name: string }[]; publish_date?: string; number_of_pages?: number; publishers?: { name: string }[]; cover?: { large?: string; medium?: string } };
   const all = await json<Record<string, Data>>(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+  const az = await azPromise;
+  const data = all?.[`ISBN:${isbn}`];
+  if (!data?.title && az)
+    return NextResponse.json({
+      isbn,
+      ...(az10 ? { asin: az10 } : {}),
+      title: az.title,
+      subtitle: az.subtitle,
+      authors: az.authors,
+      description: "",
+      publishDate: az.publishDate,
+      pages: az.pages,
+      publisher: az.publisher,
+      cover: await coverData(az.cover),
+      formats: az.formats,
+    } satisfies IsbnBook);
   if (!all) return NextResponse.json({ error: "Could not reach Open Library just now. Try again in a minute." }, { status: 502 });
-  const data = all[`ISBN:${isbn}`];
   if (!data?.title) return NextResponse.json({ error: "Open Library has no record of that ISBN yet. New books can take a few weeks to appear; you can still add it by hand with New book." }, { status: 404 });
 
   // the blurb lives on the work, not the edition
@@ -85,6 +125,7 @@ export async function GET(req: Request) {
 
   const book: IsbnBook = {
     isbn,
+    ...(az ? { asin: az10 } : {}),
     title: data.title,
     subtitle: data.subtitle ?? "",
     authors: (data.authors ?? []).map((a) => a.name),
@@ -92,7 +133,8 @@ export async function GET(req: Request) {
     publishDate: isoDate(data.publish_date ?? ""),
     pages: data.number_of_pages ?? 0,
     publisher: data.publishers?.[0]?.name ?? "",
-    cover: await coverData(data.cover?.large || data.cover?.medium || ""),
+    cover: (await coverData(data.cover?.large || data.cover?.medium || "")) || (az ? await coverData(az.cover) : ""),
+    ...(az?.formats.length ? { formats: az.formats } : {}),
   };
   return NextResponse.json(book);
 }
@@ -112,9 +154,9 @@ async function googleBooks(title: string, author: string): Promise<Omit<IsbnBook
   const v = (await json<{ items?: Volume[] }>(url))?.items?.[0]?.volumeInfo;
   if (!v?.title) return null;
   const img = v.imageLinks?.large || v.imageLinks?.medium || v.imageLinks?.small || v.imageLinks?.thumbnail || "";
+  const split = v.subtitle ? { title: v.title, subtitle: v.subtitle } : splitTitle(v.title);
   return {
-    title: v.title,
-    subtitle: v.subtitle ?? "",
+    ...split,
     authors: v.authors ?? [],
     // Google sends the blurb as simple HTML
     description: (v.description ?? "")
