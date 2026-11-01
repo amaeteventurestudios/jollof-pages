@@ -21,7 +21,10 @@ export default function MoneyPage() {
 }
 
 function MoneyView({ payments, o }: { payments: Payment[]; o: Overview }) {
-  const [kind, setKind] = useState<"all" | MoneyKind>("all");
+  const [kind, setKind] = useState<"all" | MoneyKind>(() => {
+    const k = new URLSearchParams(window.location.search).get("kind");
+    return k && k in KIND ? (k as MoneyKind) : "all";
+  });
   const shown = payments.filter((p) => kind === "all" || p.kind === kind);
   const m = o.money;
   return (

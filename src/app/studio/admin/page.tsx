@@ -37,9 +37,14 @@ export default function AdminOverview() {
         ) : (
           <Tile label="Testers" value={num(o.writers.testers)} sub="Joined with an invite link" />
         )}
-        <Tile label={`Words written, ${rangeLabel}`} value={ins ? short(ins.totals.wordsWritten) : "…"} sub={ins ? `${num(ins.totals.activeWriters7)} writers active this week` : undefined} href={seesInsights ? "/studio/admin/insights" : undefined} />
+        <Tile
+          label={`Words written, ${rangeLabel}`}
+          value={ins ? short(ins.totals.wordsWritten) : "…"}
+          sub={ins ? `${num(ins.totals.activeWriters7)} writers active this week` : undefined}
+          href={seesInsights ? "/studio/admin/insights" : undefined}
+        />
         <Tile label="Live websites" value={home.sites ? num(home.sites.live) : "…"} sub={home.sites ? `${num(home.sites.visitors30)} visitors in 30 days` : undefined} href="/studio/admin/websites" />
-        <Tile label="Open tickets" value={num(o.tickets.open)} sub={`${o.ideas.new} new ideas`} href="/studio/admin/support" />
+        <Tile label="Open tickets" value={num(o.tickets.open)} sub={`${o.ideas.new} new ideas`} href="/studio/admin/tickets" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -55,6 +60,34 @@ export default function AdminOverview() {
         </div>
 
         <div className="grid content-start gap-4">
+          {m && (
+            <Panel
+              title="Money"
+              sub="Before Stripe's fees"
+              action={
+                <Link href="/studio/admin/money" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                  Every payment <ArrowRight className="size-4" />
+                </Link>
+              }
+            >
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                {(
+                  [
+                    ["Studio sales", money(m.studioCents), `${num(m.studioCount)} sold`, "studio"],
+                    ["AI credits", money(m.creditCents), `${num(m.creditCount)} purchases`, "credits"],
+                    ["Ebook fees", money(m.ebookFeeCents), `on ${money(m.ebookCents)} of sales`, "ebook"],
+                    ["This month", money(m.thisMonthCents), "all kinds", ""],
+                  ] as const
+                ).map(([k, v, sub, kind]) => (
+                  <Link key={k} href={kind ? `/studio/admin/money?kind=${kind}` : "/studio/admin/money"} className="-m-1 p-1 hover:bg-muted/50">
+                    <dt className="text-[12.5px] text-soft">{k}</dt>
+                    <dd className="text-lg font-semibold text-ink tabular-nums">{v}</dd>
+                    <dd className="text-[12px] text-soft">{sub}</dd>
+                  </Link>
+                ))}
+              </dl>
+            </Panel>
+          )}
           <Panel title="Needs you" sub="Anything waiting on you, most urgent first">
             {home.needs.length ? (
               <ul className="grid gap-1">

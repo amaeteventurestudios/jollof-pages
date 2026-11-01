@@ -684,9 +684,9 @@ export interface NeedItem {
 export function needsYou(o: Overview, list: Writer[], sites: Website[] | null): NeedItem[] {
   const spam = list.filter((w) => w.spam.length && !w.suspended).length;
   const items: NeedItem[] = [
-    { kind: "ticket", label: "Support tickets waiting for an answer", count: o.tickets.open, href: "/studio/admin/support" },
+    { kind: "ticket", label: "Support tickets waiting for an answer", count: o.tickets.open, href: "/studio/admin/tickets" },
     { kind: "spam", label: "Sign-ups that look like spam", count: spam, href: "/studio/admin/writers?show=spam" },
-    { kind: "idea", label: "New feature ideas to review", count: o.ideas.new, href: "/studio/admin/support" },
+    { kind: "idea", label: "New feature ideas to review", count: o.ideas.new, href: "/studio/admin/ideas" },
   ];
   if (sites) {
     items.push({
