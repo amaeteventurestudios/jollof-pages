@@ -357,6 +357,20 @@ export function CoverTab({ ws }: { ws: Workspace }) {
           </p>
           {wrap && !g.spineTextAllowed && <p className="text-soft">Spine text appears from 79 pages.</p>}
         </div>
+        {wrap && (
+          <p className="mb-3 text-sm text-ink-2">
+            Want every tool of a design studio?{" "}
+            <a
+              className="font-medium text-primary underline-offset-2 hover:underline"
+              target="_blank"
+              rel="noopener"
+              href={`https://studio.jollofpages.com/designs?${new URLSearchParams({ create: "cover", binding, trim: edition.trim, pages: String(pages), paper: edition.paper, title: book.title, author: book.expand?.author?.name ?? "" })}`}
+            >
+              Design this full cover in Jollof Studio
+            </a>
+            , already sized for this {editionName.toLowerCase()} at {pages} pages.
+          </p>
+        )}
         <div ref={boxRef} className="flex justify-center rounded-md bg-paper p-1">
           <CoverStage
             key={`${mode}-${fontsReady}`}
