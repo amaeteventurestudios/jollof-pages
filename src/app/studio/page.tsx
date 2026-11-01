@@ -601,7 +601,7 @@ function TesterNote() {
   return (
     <aside className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border border-primary/40 bg-primary-soft p-4 text-sm">
       <p className="min-w-60 flex-1 text-ink">
-        <strong>You are a Jollof Pages beta tester.</strong> Every feature is open to you. When something breaks, confuses you or delights you, tell us. It shapes what we build next.
+        <strong>You are a Jollof Pages beta tester.</strong> Every feature is open to you, and Jollof Studio, our design tool, is free with its own account. When something breaks, confuses you or delights you, tell us. It shapes what we build next.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button asChild size="sm">
@@ -611,6 +611,11 @@ function TesterNote() {
         </Button>
         <Button asChild size="sm" variant="outline">
           <Link href="/studio/ideas">Suggest a feature</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <a href="https://studio.jollofpages.com" target="_blank" rel="noopener">
+            Design in Jollof Studio
+          </a>
         </Button>
         <Button
           size="sm"
