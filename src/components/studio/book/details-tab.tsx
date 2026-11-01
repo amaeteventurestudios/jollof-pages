@@ -11,6 +11,7 @@ import { BOOK_STATUSES, type Author, type Book, type BookStatus } from "@/lib/ty
 import type { Workspace } from "./workspace";
 import { AiSuggest } from "../ai-suggest";
 import { toWebp } from "@/lib/webp";
+import { TranslatePanel } from "./translate-panel";
 
 export function Field({ id, label, hint, action, children }: { id: string; label: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -211,6 +212,7 @@ export function DetailsTab({ ws }: { ws: Workspace }) {
         </div>
       </form>
       <AuthorPanel ws={ws} />
+      <TranslatePanel ws={ws} />
     </div>
   );
 }

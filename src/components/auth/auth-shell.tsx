@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandDomain, BrandName, BrandStyle } from "@/components/brand";
 import { Fraunces } from "next/font/google";
 import "./auth.css";
 
@@ -38,7 +39,10 @@ export function AuthShell({
             <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
           </svg>
         </div>
-        <p className="auth-app-name auth-rise d1">Jollof Pages</p>
+        <p className="auth-app-name auth-rise d1">
+          <BrandName />
+        </p>
+        <BrandStyle />
 
         <Link href="/" className="auth-brand auth-rise inline-flex items-center gap-2.5 self-start text-lg font-semibold tracking-tight">
           <span className="grid size-9 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
@@ -47,7 +51,7 @@ export function AuthShell({
               <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
             </svg>
           </span>
-          Jollof Pages
+          <BrandName />
         </Link>
 
         <div className="auth-copy mt-8 max-w-2xl lg:mt-auto">
@@ -122,7 +126,8 @@ function BookStage() {
         <img src="/site/shots/kindle.webp" alt="" className="auth-device hidden 2xl:block" width={675} height={908} />
 
         <span className="auth-chip" style={{ left: "2%", top: "-0.75rem", animationDelay: "-1.5s" }}>
-          <span className="auth-dot" /> tola.jollofpages.com is live
+          <span className="auth-dot" /> tola.
+          <BrandDomain /> is live
         </span>
         <span className="auth-chip" style={{ left: "19rem", top: "1.75rem", animationDelay: "-4s" }}>
           <svg viewBox="0 0 24 24" className="size-4 text-[#ad3a17]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

@@ -41,6 +41,48 @@ export function creditsFor(quality: Quality, count = 1): number {
   return Math.ceil(QUALITY[quality].modelUsd / CREDIT_SPEND_USD - 1e-9) * count;
 }
 
+/**
+ * Image models a writer can run on their own OpenRouter key instead of buying credits. OpenRouter
+ * bills the writer directly; Jollof Pages charges nothing. Any other OpenRouter image model can be
+ * typed in by name.
+ */
+export const OPENROUTER_IMAGE_MODELS: { id: string; label: string; hint: string }[] = [
+  { id: "google/gemini-2.5-flash-image", label: "Nano Banana (Google)", hint: "Quick and cheap, a few cents a picture." },
+  { id: "google/gemini-3-pro-image-preview", label: "Nano Banana Pro (Google)", hint: "Sharper detail and lettering, up to 4K." },
+  { id: "openai/gpt-5-image", label: "GPT Image (ChatGPT)", hint: "OpenAI's image model, as in ChatGPT." },
+  { id: "openai/gpt-5-image-mini", label: "GPT Image mini (ChatGPT)", hint: "A cheaper OpenAI image model." },
+];
+export const DEFAULT_OPENROUTER_IMAGE_MODEL = OPENROUTER_IMAGE_MODELS[0].id;
+
+/** OpenRouter model names look like "vendor/model" or "vendor/model:variant". */
+export const isOpenRouterModel = (id: string) => /^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:-]*$/i.test(id) && id.length <= 120;
+
+/** Pixel size from a PNG, JPEG or WebP header, or null. */
+export function imageSize(b: Uint8Array): { width: number; height: number } | null {
+  const u32 = (i: number) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
+  if (b.length > 24 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { width: u32(16), height: u32(20) };
+  if (b.length > 30 && b[0] === 0x52 && b[1] === 0x49 && b[8] === 0x57 && b[9] === 0x45) {
+    const kind = String.fromCharCode(b[12], b[13], b[14], b[15]);
+    if (kind === "VP8X") return { width: 1 + (b[24] | (b[25] << 8) | (b[26] << 16)), height: 1 + (b[27] | (b[28] << 8) | (b[29] << 16)) };
+    if (kind === "VP8 ") return { width: (b[26] | (b[27] << 8)) & 0x3fff, height: (b[28] | (b[29] << 8)) & 0x3fff };
+    if (kind === "VP8L") {
+      const n = b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24);
+      return { width: 1 + (n & 0x3fff), height: 1 + ((n >> 14) & 0x3fff) };
+    }
+  }
+  if (b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) return null;
+      const marker = b[i + 1];
+      const len = (b[i + 2] << 8) | b[i + 3];
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) return { height: (b[i + 5] << 8) | b[i + 6], width: (b[i + 7] << 8) | b[i + 8] };
+      i += 2 + len;
+    }
+  }
+  return null;
+}
+
 /** How far a pack goes, for the top-up buttons. */
 export function packReach(pack: CreditPack): { drafts: number; prints: number } {
   return { drafts: Math.floor(pack.credits / creditsFor("draft")), prints: Math.floor(pack.credits / creditsFor("print")) };

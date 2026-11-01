@@ -32,7 +32,7 @@ const data: AdminData = {
 describe("admin sums", () => {
   it("adds up writers, money and support", () => {
     const o = overview(data, 11900, now);
-    expect(o.writers).toEqual({ total: 4, paid: 2, comp: 1, pending: 1, collaborator: 0, new7: 2, new30: 3 });
+    expect(o.writers).toEqual({ total: 4, paid: 2, comp: 1, pending: 1, collaborator: 0, testers: 0, new7: 2, new30: 3 });
     // b paid before amounts were recorded, so counts at the list price
     expect(o.money.studioCents).toBe(23800);
     expect(o.money.studioCount).toBe(2);

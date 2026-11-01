@@ -3,7 +3,7 @@
  * Author accounts: every studio buyer gets a private studio and a public site at
  * <subdomain>.jollofpages.com. The publisher's own site (jollofpages.com) is the site marked `home`.
  *
- * - users.access: "pending" until the $119 payment clears, then "paid"; "comp" for free accounts
+ * - users.access: "pending" until the studio payment clears, then "paid"; "comp" for free accounts
  *   (the owner, and everyone who existed before this migration). Only the server sets it.
  * - Only paid or comp accounts can create anything.
  * - site_settings.subdomain / home / custom_domain are set by the server, never by the browser.

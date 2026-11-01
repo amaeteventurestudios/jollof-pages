@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandName } from "@/components/brand";
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -15,7 +16,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const next = params.get("next");
-  const target = next && /^\/(studio|invite)(\/|$)/.test(next) ? next : "/studio";
+  const target = next && /^\/(studio|invite|join)(\/|$)/.test(next) ? next : "/studio";
 
   return (
     <div className="auth-card p-6 sm:p-9">
@@ -66,7 +67,7 @@ function LoginForm() {
         </button>
       </form>
       <p className="auth-rise d5 mt-7 text-center text-sm text-muted-foreground">
-        New to Jollof Pages?{" "}
+        New to <BrandName />?{" "}
         <Link href="/signup" className="font-semibold text-primary underline-offset-4 hover:underline">
           Create your studio
         </Link>

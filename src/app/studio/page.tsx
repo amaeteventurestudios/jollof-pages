@@ -1,10 +1,12 @@
 "use client";
 
+import { BrandName } from "@/components/brand";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowRight, ArrowUp, BookPlus, FileUp, GraduationCap, Library, LifeBuoy, Plus } from "lucide-react";
 import { StudioNav } from "@/components/studio/studio-nav";
+import { Welcome } from "@/components/studio/welcome";
 import { IsbnDialog } from "@/components/studio/isbn-dialog";
 import { BookCover } from "@/components/book-cover";
 import { Button } from "@/components/ui/button";
@@ -112,6 +114,8 @@ export default function StudioHome() {
           ))}
         </dl>
 
+        <Welcome />
+        <TesterNote />
         <LearnCard />
 
         {error && <p className="mt-6 rounded bg-danger-soft p-3 text-sm text-destructive">Could not load your books: {error}</p>}
@@ -242,7 +246,7 @@ function LearnCard() {
         </span>
         <div className="min-w-0">
           <h2 id="learn-h" className="text-lg font-medium">
-            Learn how to use Jollof Pages
+            Learn how to use <BrandName />
           </h2>
           <p className="mt-0.5 text-soft">
             {done.size
@@ -589,5 +593,46 @@ function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void })
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Beta testers came in through an invite link: point them at the two places their feedback goes. */
+function TesterNote() {
+  // the studio only renders in the browser, after the sign-in check, so both are readable here
+  const [hidden, setHidden] = useState(() => !pb().authStore.record?.tester_invite || localStorage.getItem("jp-tester-note") === "hide");
+  if (hidden) return null;
+  return (
+    <aside className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border border-primary/40 bg-primary-soft p-4 text-sm">
+      <p className="min-w-60 flex-1 text-ink">
+        <strong>
+          You are a <BrandName /> beta tester.
+        </strong> Every feature is open to you, and Jollof Studio, our design tool, is free with its own account. When something breaks, confuses you or delights you, tell us. It shapes what we build next.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="sm">
+          <Link href="/studio/help#contact">
+            <LifeBuoy /> Report a problem
+          </Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/studio/ideas">Suggest a feature</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <a href="https://studio.jollofpages.com" target="_blank" rel="noopener">
+            Design in Jollof Studio
+          </a>
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            localStorage.setItem("jp-tester-note", "hide");
+            setHidden(true);
+          }}
+        >
+          Hide
+        </Button>
+      </div>
+    </aside>
   );
 }

@@ -7,7 +7,7 @@ import { GoogleButton, needsSite } from "@/components/auth/google-button";
 import { pb } from "@/lib/pb";
 import { subdomainProblem, suggestSubdomain } from "@/lib/sites";
 
-export function SignupForm({ root, paid, price }: { root: string; paid: boolean; price: string }) {
+export function SignupForm({ root, paid, price, invite }: { root: string; paid: boolean; price: string; invite?: string }) {
   const router = useRouter();
   const [name, setName] = useState("");
   // the address follows the name until the author types their own
@@ -20,6 +20,8 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
   const [busy, setBusy] = useState(false);
   // signed in with Google: only the pen name and the website are left to choose
   const [google, setGoogle] = useState<string | null>(null);
+  // opened a tester link while already signed in: one button turns on tester access
+  const [existing, setExisting] = useState<string | null>(null);
   const local = sub ? subdomainProblem(sub) : "";
   const subNote = local || (remote?.name === sub ? remote.problem || "available" : "");
 
@@ -37,11 +39,34 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
   // back from the sign-in page with a fresh Google account
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("google") && pb().authStore.isValid) void afterGoogle();
+    else if (invite && pb().authStore.isValid) void Promise.resolve(String(pb().authStore.record?.email ?? "")).then(setExisting);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function claim() {
+    const body = await finish(
+      await fetch("/api/accounts/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: pb().authStore.token },
+        body: JSON.stringify({ invite }),
+      }),
+    );
+    await pb().collection("users").authRefresh().catch(() => undefined);
+    return body;
+  }
+
   async function afterGoogle() {
-    if (!(await needsSite())) return router.replace("/studio");
+    if (!(await needsSite())) {
+      if (invite) {
+        try {
+          await claim();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+          return;
+        }
+      }
+      return router.replace("/studio");
+    }
     const me = pb().authStore.record;
     setGoogle(String(me?.email ?? ""));
     setName((n) => n || String(me?.name ?? ""));
@@ -53,17 +78,66 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
     return body;
   }
 
+  if (existing)
+    return (
+      <>
+        <AuthHeading
+          title="Turn on tester access"
+          sub={
+            <>
+              You are signed in as <strong className="text-foreground">{existing}</strong>. Use this invite on that account?
+            </>
+          }
+        />
+        {error && (
+          <p role="alert" className="mb-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <div className="grid gap-3">
+          <button
+            type="button"
+            className="auth-go"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError("");
+              try {
+                await claim();
+                router.replace("/studio");
+              } catch (err) {
+                setError(err instanceof Error ? err.message : String(err));
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "Opening your studio…" : "Open my studio"}
+          </button>
+          <button
+            type="button"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            onClick={() => {
+              pb().authStore.clear();
+              setExisting(null);
+            }}
+          >
+            Use a different email
+          </button>
+        </div>
+      </>
+    );
+
   return (
     <>
       <AuthHeading
-        title={google ? "Almost there" : "Create your studio"}
+        title={google ? "Almost there" : invite ? "Create your tester account" : "Create your studio"}
         sub={
           google ? (
             <>
               Signed in with Google as <strong className="text-foreground">{google}</strong>. Pick your pen name and your website.
             </>
           ) : (
-            "Start writing in minutes. Your author site comes with it."
+            invite ? "Your email is your username. Pick a password and you are in." : "Start writing in minutes. Your author site comes with it."
           )
         }
       />
@@ -81,7 +155,7 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
                 await fetch("/api/accounts/google", {
                   method: "POST",
                   headers: { "Content-Type": "application/json", Authorization: pb().authStore.token },
-                  body: JSON.stringify({ name, subdomain: sub }),
+                  body: JSON.stringify({ name, subdomain: sub, invite }),
                 }),
               );
             } else {
@@ -89,7 +163,7 @@ export function SignupForm({ root, paid, price }: { root: string; paid: boolean;
                 await fetch("/api/accounts", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ name, email, password, subdomain: sub }),
+                  body: JSON.stringify({ name, email, password, subdomain: sub, invite }),
                 }),
               );
               await pb().collection("users").authWithPassword(email, password);

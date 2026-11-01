@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const me = await caller(bearer(req));
   if (!me) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   if (!adminConfigured()) return NextResponse.json({ error: "Not set up." }, { status: 503 });
-  if (!isSupport(me.email)) return NextResponse.json({ error: "Only the support team can do that." }, { status: 403 });
+  if (!(await isSupport(me.email))) return NextResponse.json({ error: "Only the support team can do that." }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as { id?: string; status?: string; response?: string; remove?: boolean };
   const pb = await adminPb();
   const id = String(b.id ?? "");

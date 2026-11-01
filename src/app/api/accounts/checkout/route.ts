@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { brandOf } from "@/lib/server/brand";
 import { bearer } from "@/lib/server/load-book";
 import { caller } from "@/lib/server/credits";
 import { publicOrigin } from "@/lib/server/origin";
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
       email: me.email,
       successUrl: `${origin}/studio?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/studio?studio=cancelled`,
+      brand: await brandOf(req),
     });
     return NextResponse.json({ url: session.url });
   } catch (e) {

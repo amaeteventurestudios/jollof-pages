@@ -19,8 +19,22 @@ export function today(now = new Date()): string {
 }
 
 export function count(owner: string, kind: StatKind, key = "", by = 1, date = today()): void {
-  if (!owner || !adminConfigured()) return;
-  const k = JSON.stringify([owner, date, kind, key.slice(0, 300)]);
+  if (!owner) return;
+  bump("site_stats", owner, kind, key, by, date);
+}
+
+/**
+ * What writers do in the studio, for the admin's Insights: exports, translations and the like.
+ * Counts only; what was exported or translated is never kept.
+ */
+export type UsageKind = "export" | "translate";
+export function countUsage(owner: string, kind: UsageKind, key = "", by = 1, date = today()): void {
+  bump("usage_stats", owner, kind, key, by, date);
+}
+
+function bump(collection: "site_stats" | "usage_stats", owner: string, kind: string, key: string, by: number, date: string) {
+  if (!adminConfigured()) return;
+  const k = JSON.stringify([collection, owner, date, kind, key.slice(0, 300)]);
   pending.set(k, (pending.get(k) ?? 0) + by);
   timer ??= setTimeout(() => void flush(), 10000);
 }
@@ -45,19 +59,19 @@ export async function flush(): Promise<void> {
   const pb = await adminPb().catch(() => null);
   if (!pb) return;
   for (const [k, n] of batch) {
-    const [owner, date, kind, key] = JSON.parse(k) as string[];
+    const [collection, owner, date, kind, key] = JSON.parse(k) as string[];
     const filter = pb.filter("owner = {:o} && date = {:d} && kind = {:k} && key = {:key}", { o: owner, d: date, k: kind, key });
     try {
-      const row = await pb.collection("site_stats").getFirstListItem<{ id: string; count: number }>(filter);
-      await pb.collection("site_stats").update(row.id, { "count+": n });
+      const row = await pb.collection(collection).getFirstListItem<{ id: string; count: number }>(filter);
+      await pb.collection(collection).update(row.id, { "count+": n });
     } catch {
       await pb
-        .collection("site_stats")
+        .collection(collection)
         .create({ owner, date, kind, key, count: n })
         .catch(async () => {
           // created by a parallel flush in the meantime
-          const row = await pb.collection("site_stats").getFirstListItem<{ id: string }>(filter).catch(() => null);
-          if (row) await pb.collection("site_stats").update(row.id, { "count+": n }).catch(() => undefined);
+          const row = await pb.collection(collection).getFirstListItem<{ id: string }>(filter).catch(() => null);
+          if (row) await pb.collection(collection).update(row.id, { "count+": n }).catch(() => undefined);
         });
     }
   }

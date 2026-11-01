@@ -4,6 +4,7 @@ import { bearer } from "@/lib/server/load-book";
 import { adminConfigured, balance, caller, isFree } from "@/lib/server/credits";
 import { falConfigured } from "@/lib/server/fal";
 import { stripeConfigured } from "@/lib/server/stripe";
+import { setupFor } from "@/lib/server/assistant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,8 +23,11 @@ export async function GET(req: Request) {
       setupError = e instanceof Error ? e.message : String(e);
     }
   }
+  // a writer with an OpenRouter key can make pictures on it instead of buying credits
+  const openrouter = ready ? Boolean((await setupFor(me).catch(() => null))?.keys.openrouter) : false;
   return NextResponse.json({
     credits,
+    openrouter,
     free: isFree(me.email),
     testImages: !falConfigured(),
     testPayments: !stripeConfigured(),

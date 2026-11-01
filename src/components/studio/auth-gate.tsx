@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandName } from "@/components/brand";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { pb } from "@/lib/pb";
@@ -66,7 +67,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <span aria-hidden className="grid size-20 place-items-center bg-[#fff7ef] text-primary shadow-[0_18px_40px_-16px_rgb(20_5_0/0.7)]">
             <BookOpen className="size-10" strokeWidth={1.6} />
           </span>
-          <span className="text-[15px] font-semibold tracking-[0.08em] uppercase">Jollof Pages</span>
+          <span className="text-[15px] font-semibold tracking-[0.08em] uppercase">
+            <BrandName />
+          </span>
           <span className="sr-only">Opening your studio…</span>
         </span>
       </div>
