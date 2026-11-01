@@ -16,6 +16,8 @@ export interface AdminUser {
   /** the tester invite link they signed up through, if any */
   tester_invite?: string;
   suspended?: boolean;
+  /** the brand (white label) they signed up on, "" for Jollof Pages */
+  brand?: string;
   created: string;
 }
 export interface AdminBook {

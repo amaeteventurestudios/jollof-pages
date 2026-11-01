@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, FileUp, FlaskConical, Globe, LifeBuoy, PenLine, 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { pb } from "@/lib/pb";
+import { useBrand } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 const KEY = "jp-welcome-v1";
@@ -58,9 +59,10 @@ const CARDS: Card[] = [
 export function Welcome() {
   const record = pb().authStore.record;
   const tester = Boolean(record?.tester_invite);
+  const brand = useBrand();
   const cards = tester
     ? [TESTER, ...CARDS]
-    : [{ ...TESTER, icon: FileUp, title: "Welcome to Jollof Pages", text: "A quick tour of the three things you'll do here. It takes half a minute." }, ...CARDS];
+    : [{ ...TESTER, icon: FileUp, title: `Welcome to ${brand?.name || "Jollof Pages"}`, text: "A quick tour of the three things you'll do here. It takes half a minute." }, ...CARDS];
   // the studio renders client-only, after the sign-in check, so localStorage is readable here
   const [open, setOpen] = useState(() => record?.access !== "collaborator" && !localStorage.getItem(KEY));
   const [i, setI] = useState(0);
@@ -88,7 +90,7 @@ export function Welcome() {
               ))}
             </p>
           )}
-          {tester && i === 0 && (
+          {tester && i === 0 && !brand && (
             <p className="flex items-center gap-2 text-[13px] text-soft">
               <Globe className="size-4" /> Jollof Studio, our design tool, is free too, with its own account at studio.jollofpages.com.
             </p>

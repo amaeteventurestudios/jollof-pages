@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandName } from "@/components/brand";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -40,7 +41,9 @@ export function StudioNav() {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 app:hidden">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
           <Link href="/studio" className="flex shrink-0 items-baseline gap-2 font-semibold tracking-tight whitespace-nowrap text-ink">
-            <span className="text-[17px]">Jollof Pages</span>
+            <span className="text-[17px]">
+              <BrandName />
+            </span>
             <span className="text-[13px] font-normal text-soft">Studio</span>
           </Link>
           <nav className="ml-2 hidden min-w-0 items-center gap-0.5 xl:flex" aria-label="Studio">

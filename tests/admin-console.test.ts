@@ -119,3 +119,19 @@ describe("roles", () => {
     expect(canSee("admin", "team")).toBe(false);
   });
 });
+
+describe("brands", async () => {
+  const { brandFor, brandShades } = await import("@/lib/brands");
+  const brands = [{ id: "b1", collectionId: "c", name: "Ada Writes", domain: "adawrites.com" }];
+  it("finds the brand for its domain, www and writer subdomains only", () => {
+    expect(brandFor("adawrites.com", brands)?.id).toBe("b1");
+    expect(brandFor("www.adawrites.com:443", brands)?.id).toBe("b1");
+    expect(brandFor("tola.adawrites.com", brands)?.id).toBe("b1");
+    expect(brandFor("notadawrites.com", brands)).toBeNull();
+    expect(brandFor("jollofpages.com", brands)).toBeNull();
+  });
+  it("darkens the brand colour for hover", () => {
+    expect(brandShades("#1d4f91")).toEqual({ base: "#1d4f91", hover: "#173f74" });
+    expect(brandShades("blue")).toBeNull();
+  });
+});

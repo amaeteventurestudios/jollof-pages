@@ -84,7 +84,12 @@ export function studioPriceCents(): number {
   return 12900;
 }
 
-export function createStudioCheckout(p: { userId: string; email: string; successUrl: string; cancelUrl: string }) {
+/** The studio price on a brand (white label), or the Jollof Pages price. */
+export function brandPriceCents(brand?: { price_cents?: number } | null): number {
+  return brand?.price_cents || studioPriceCents();
+}
+
+export function createStudioCheckout(p: { userId: string; email: string; successUrl: string; cancelUrl: string; brand?: { name: string; price_cents?: number } | null }) {
   return stripe<CheckoutSession>("checkout/sessions", {
     method: "POST",
     form: {
@@ -95,8 +100,8 @@ export function createStudioCheckout(p: { userId: string; email: string; success
       ...(p.email ? { customer_email: p.email } : {}),
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][unit_amount]": String(studioPriceCents()),
-      "line_items[0][price_data][product_data][name]": "Jollof Pages studio",
+      "line_items[0][price_data][unit_amount]": String(brandPriceCents(p.brand)),
+      "line_items[0][price_data][product_data][name]": `${p.brand?.name || "Jollof Pages"} studio`,
       "line_items[0][price_data][product_data][description]": "One-time payment. Your writing studio and your own author website, for life.",
       "metadata[user]": p.userId,
       "metadata[kind]": "studio",

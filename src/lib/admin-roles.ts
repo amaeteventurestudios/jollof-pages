@@ -18,7 +18,7 @@ export const roleLabel = (r: Role) => ROLES.find((x) => x.id === r)?.label ?? r;
 export type Section = "overview" | "insights" | "writers" | "testers" | "websites" | "books" | "money" | "support" | "team" | "brands" | "audit";
 
 const SEES: Record<Role, Section[]> = {
-  owner: ["overview", "insights", "writers", "testers", "websites", "books", "money", "support", "team", "audit"],
+  owner: ["overview", "insights", "writers", "testers", "websites", "books", "money", "support", "team", "brands", "audit"],
   admin: ["overview", "insights", "writers", "testers", "websites", "books", "money", "support"],
   support: ["overview", "writers", "websites", "support"],
   finance: ["overview", "insights", "money"],

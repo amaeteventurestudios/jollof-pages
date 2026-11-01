@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { brandOf } from "@/lib/server/brand";
 import { adminPb } from "@/lib/server/credits";
 import { allowSignup, signupMode, subdomainAvailability } from "@/lib/server/accounts";
 import { publicOrigin } from "@/lib/server/origin";
@@ -44,7 +45,8 @@ export async function POST(req: Request) {
     const pb = await adminPb();
     let user;
     try {
-      user = await pb.collection("users").create({ email, password, passwordConfirm: password, name, emailVisibility: false, access: mode === "free" ? "comp" : "pending" });
+      const brand = await brandOf(req);
+      user = await pb.collection("users").create({ email, password, passwordConfirm: password, name, emailVisibility: false, access: mode === "free" ? "comp" : "pending", ...(brand ? { brand: brand.id } : {}) });
     } catch {
       return NextResponse.json({ error: "There is already an account with that email. Sign in instead.", field: "email" }, { status: 400 });
     }
@@ -64,6 +66,7 @@ export async function POST(req: Request) {
       email,
       successUrl: `${origin}/studio?studio=paid&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/studio?studio=cancelled`,
+      brand: await brandOf(req),
     });
     return NextResponse.json({ ok: true, checkoutUrl: session.url });
   } catch (e) {

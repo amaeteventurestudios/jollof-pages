@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, BarChart3, BookCopy, FlaskConical, Globe, LayoutDashboard, LifeBuoy, Menu, ScrollText, ShieldCheck, Users, UsersRound, Wallet, X } from "lucide-react";
+import { ArrowLeft, BarChart3, BookCopy, FlaskConical, Globe, LayoutDashboard, LifeBuoy, Menu, Palette, ScrollText, ShieldCheck, Users, UsersRound, Wallet, X } from "lucide-react";
 import { AdminContext, call, Loading, Problem, type AdminHome } from "@/components/admin/kit";
 import { toRange, type RangeDays } from "@/lib/admin";
 import { roleLabel, type Section } from "@/lib/admin-roles";
@@ -19,6 +19,7 @@ const NAV: { id: Section; href: string; label: string; icon: typeof Users; group
   { id: "testers", href: "/studio/admin/testers", label: "Testers", icon: FlaskConical, group: "Grow" },
   { id: "support", href: "/studio/admin/support", label: "Support", icon: LifeBuoy, group: "Grow" },
   { id: "team", href: "/studio/admin/team", label: "Team and roles", icon: UsersRound, group: "Team" },
+  { id: "brands", href: "/studio/admin/brands", label: "Brands", icon: Palette, group: "Team" },
   { id: "audit", href: "/studio/admin/audit", label: "Audit log", icon: ScrollText, group: "Team" },
 ];
 

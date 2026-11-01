@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandName } from "@/components/brand";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -177,7 +178,9 @@ function AppBar({ title, onAccount }: { title: string; onAccount: () => void }) 
       <div className="relative flex h-14 items-center gap-3 pr-2 pl-[max(1rem,env(safe-area-inset-left))]">
         <span className={cn("flex items-center gap-2.5 transition-all duration-200", scrolled && "pointer-events-none -translate-y-2 opacity-0")}>
           <AppMark />
-          <span className="text-[17px] font-semibold tracking-tight">Jollof Pages</span>
+          <span className="text-[17px] font-semibold tracking-tight">
+            <BrandName />
+          </span>
         </span>
         <span aria-hidden={!scrolled} className={cn("absolute inset-x-16 truncate text-center text-[17px] font-semibold tracking-tight transition-all duration-200", !scrolled && "translate-y-2 opacity-0")}>
           {title}
