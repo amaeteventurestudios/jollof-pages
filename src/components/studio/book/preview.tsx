@@ -68,6 +68,13 @@ const FONTS: { id: string; label: string; css: string }[] = [
   { id: "SourceSerif", label: "Source Serif", css: "'Source Serif 4', Georgia, serif" },
 ];
 
+/** The page colours reading apps offer. Sepia and Night override the book's own text colours. */
+const MODES: { id: string; label: string; bg: string; text: string }[] = [
+  { id: "day", label: "White", bg: "#ffffff", text: "" },
+  { id: "sepia", label: "Sepia", bg: "#f4ecd8", text: "#5b4636" },
+  { id: "night", label: "Night", bg: "#121212", text: "#d8d4cc" },
+];
+
 const GAP = 48;
 
 function readPref<T>(key: string, fallback: T): T {
@@ -94,6 +101,7 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   // the studio's book pages only render in the browser, so saved preferences can seed state directly
   const [deviceId, setDeviceId] = useState(() => readPref("jp-preview-device", "print"));
   const [fontId, setFontId] = useState(() => readPref("jp-preview-font", "book"));
+  const [modeId, setModeId] = useState(() => readPref("jp-preview-mode", "day"));
   const [textScale, setTextScale] = useState(() => readPref("jp-preview-text", 1));
   const [zoom, setZoom] = useState<number | "fit">(() => readPref<number | "fit">("jp-preview-zoom", "fit"));
   const [page, setPage] = useState(0);
@@ -242,7 +250,8 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
         })
       : null;
   const runningHead = chrome?.head ?? "";
-  const screenBg = print ? "#ffffff" : device.eink ? "#f2f1ec" : "#ffffff";
+  const mode = print ? MODES[0] : (MODES.find((m) => m.id === modeId) ?? MODES[0]);
+  const screenBg = print ? "#ffffff" : mode.id === "day" && device.eink ? "#f2f1ec" : mode.bg;
 
   return (
     <div className="flex h-full flex-col">
@@ -253,7 +262,8 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
 .jp-flow img { max-height: ${Math.floor(innerH * 0.9)}px; object-fit: contain; }
 .jp-flow figure, .jp-flow .chapter-head, .jp-flow img { break-inside: avoid; }
 .jp-flow .chapter-head { margin-top: ${print ? "4em" : "2em"}; }
-${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` : ""}`}</style>
+${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` : ""}
+${mode.text ? `.jp-preview.jp-mode, .jp-mode .jp-flow, .jp-mode .jp-flow * { color: ${mode.text} !important; } .jp-mode .jp-flow hr { border-color: ${mode.text}55 !important; } .jp-mode .has-bg, .jp-mode .opener-bg { background: none !important; }` : ""}`}</style>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <select
@@ -298,6 +308,20 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
             {FONTS.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
+              </option>
+            ))}
+          </select>
+        )}
+        {!print && (
+          <select
+            aria-label="Page colour"
+            value={mode.id}
+            onChange={(e) => setPref("jp-preview-mode", setModeId)(e.target.value)}
+            className="h-8 min-w-0 shrink-0 rounded-md border border-input bg-card px-2 text-sm"
+          >
+            {MODES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
               </option>
             ))}
           </select>
@@ -352,7 +376,7 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
                 }
               >
                 <div
-                  className="jp-preview relative overflow-hidden text-[#1a1a1a]"
+                  className={cn("jp-preview relative overflow-hidden text-[#1a1a1a]", mode.text && "jp-mode")}
                   style={{ width: screen.w, height: screen.h, background: screenBg, borderRadius: print ? 0 : device.screenRadius, fontSize: screen.text }}
                 >
                   {!print && device.notch && <span aria-hidden className="absolute top-3 left-1/2 h-7 w-28 -translate-x-1/2 rounded-full bg-black" />}
@@ -414,7 +438,9 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
         <p className="text-[12px] text-soft">
           {print
             ? `${binding === "hardcover" ? "Hardcover" : "Paperback"} at ${trim.label}, ${theme.name} theme. Change the trim size on the Format tab.`
-            : `${theme.name} theme. Readers can change the font and size on their own device.`}
+            : mode.id === "night"
+              ? "Night: most reading apps turn your text light and ignore its colours. Check that nothing you need disappears, such as dark pictures with a clear background."
+              : `${theme.name} theme. Readers can change the font, size and page colour on their own device.`}
         </p>
       </div>
     </div>

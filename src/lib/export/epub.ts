@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { backgroundStyle, chapterHeadHtml, ornamentHtml } from "../render-element";
 import { authorName, bookImages, elementBackground, forEdition, orderedElements, tocText, type BookElement, type ExportInput } from "../book-model";
 import { docToHtml, escapeHtml } from "../doc/html";
-import { collectOrnaments, subheads } from "../doc/types";
+import { collectOrnaments, subheads, type DocNode } from "../doc/types";
 import { paletteOf, themeCss } from "../theme-css";
 import { sceneBreakGlyph, textStyle, themeFor } from "../themes";
 import { bookFormat } from "../types";
@@ -301,6 +301,7 @@ ${ncxPoints(tocEntries)}
     ${book.publication_date ? `<dc:date>${escapeHtml(book.publication_date.slice(0, 10))}</dc:date>` : ""}
     ${subjects}
     <meta property="dcterms:modified">${modified}</meta>
+    ${accessibilityMeta(elements.map((e) => e.chapter.content), imgNo > 0)}
     ${assets.cover ? '<meta name="cover" content="cover-image"/>' : ""}
   </metadata>
   <manifest>
@@ -320,6 +321,34 @@ ${ncxPoints(tocEntries)}
   );
 
   return zip.generateAsync({ type: "uint8array", mimeType: "application/epub+zip", compression: "DEFLATE" });
+}
+
+/**
+ * Accessibility metadata (EPUB Accessibility 1.1 / schema.org). Apple Books, Kobo and Google Play
+ * show it on the store page, and the EU's accessibility rules expect it on ebooks sold there. It
+ * only claims what is true: "alternativeText" only when every picture has a description.
+ */
+export function accessibilityMeta(docs: (DocNode | null)[], hasImages: boolean): string {
+  const alts: string[] = [];
+  const walk = (n: DocNode | null | undefined) => {
+    if (!n) return;
+    if (n.type === "image") alts.push(String(n.attrs?.alt ?? "").trim());
+    n.content?.forEach(walk);
+  };
+  docs.forEach(walk);
+  const pictures = alts.length > 0;
+  const described = pictures && alts.every(Boolean);
+  const visual = pictures || hasImages;
+  const features = ["structuralNavigation", "tableOfContents", "readingOrder", ...(described ? ["alternativeText"] : [])];
+  const summary = `Text you can resize and restyle, with a linked table of contents and headings in reading order.${pictures ? (described ? " Every picture has a text description." : " Some pictures have no text description.") : ""}`;
+  return [
+    `<meta property="schema:accessMode">textual</meta>`,
+    ...(visual ? [`<meta property="schema:accessMode">visual</meta>`] : []),
+    `<meta property="schema:accessModeSufficient">${visual && !described && pictures ? "textual,visual" : "textual"}</meta>`,
+    ...features.map((f) => `<meta property="schema:accessibilityFeature">${f}</meta>`),
+    `<meta property="schema:accessibilityHazard">none</meta>`,
+    `<meta property="schema:accessibilitySummary">${escapeHtml(summary)}</meta>`,
+  ].join("\n    ");
 }
 
 /** The NCX nav points (older Kindles read these), with sub-chapters nested under their chapter. */

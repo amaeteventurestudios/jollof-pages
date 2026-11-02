@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, ListTree, PanelLeft, Settings2, Timer } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { APP_QUERY } from "@/lib/app-mode";
 import { ManuscriptEditor } from "@/components/studio/manuscript-editor";
 import { useLiveChapter } from "@/components/studio/use-live-chapter";
@@ -49,7 +50,9 @@ export function WriteTab({ ws }: { ws: Workspace }) {
     return { id: r?.id ?? "", name: String(r?.name || String(r?.email ?? "").split("@")[0] || "Someone") };
   });
   const [activeComment, setActiveComment] = useState<string | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(() => chapters.find((c) => c.kind === "chapter")?.id ?? chapters[0]?.id ?? null);
+  // ?chapter= opens a given chapter (the Export tab's checks link straight to the one to fix)
+  const wanted = useSearchParams().get("chapter");
+  const [activeId, setActiveId] = useState<string | null>(() => chapters.find((c) => c.id === wanted)?.id ?? chapters.find((c) => c.kind === "chapter")?.id ?? chapters[0]?.id ?? null);
   const [showPreview, setShowPreview] = useState(true);
   // phones and tablets open on the page itself; the chapter list is a sheet over it
   const [showSidebar, setShowSidebar] = useState(() => !window.matchMedia(APP_QUERY).matches);
