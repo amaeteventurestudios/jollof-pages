@@ -28,7 +28,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const client = pb();
     if (!client.authStore.isValid) {
-      router.replace(`/login?next=${encodeURIComponent(path)}`);
+      router.replace(`/login?next=${encodeURIComponent(path + window.location.search)}`);
       return;
     }
     (async () => {
@@ -49,7 +49,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         if (auth.record.access === "collaborator" && !COLLABORATOR_PAGES.test(path)) router.replace("/studio");
       } catch {
         client.authStore.clear();
-        router.replace(`/login?next=${encodeURIComponent(path)}`);
+        router.replace(`/login?next=${encodeURIComponent(path + window.location.search)}`);
       }
     })();
     // only on first mount

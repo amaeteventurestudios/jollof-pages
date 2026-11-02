@@ -19,6 +19,7 @@ import { usePageCount } from "./format-tab";
 import type { Workspace } from "./workspace";
 import { toWebp } from "@/lib/webp";
 import { RefitCover, type RefitResult } from "./refit-cover";
+import { STUDIO_URL } from "@/lib/cover-import";
 
 function dataUrlToBlob(url: string): Blob {
   const [head, b64] = url.split(",");
@@ -364,7 +365,7 @@ export function CoverTab({ ws }: { ws: Workspace }) {
               className="font-medium text-primary underline-offset-2 hover:underline"
               target="_blank"
               rel="noopener"
-              href={`https://studio.jollofpages.com/designs?${new URLSearchParams({ create: "cover", binding, trim: edition.trim, pages: String(pages), paper: edition.paper, title: book.title, author: book.expand?.author?.name ?? "" })}`}
+              href={`${STUDIO_URL}/designs?${new URLSearchParams({ create: "cover", book: book.id, binding, trim: edition.trim, pages: String(pages), paper: edition.paper, title: book.title, author: book.expand?.author?.name ?? "" })}`}
             >
               Design this full cover in Jollof Studio
             </a>
