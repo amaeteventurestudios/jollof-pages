@@ -5,6 +5,8 @@ import { BookOpen, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Maximiz
 import { FullBookPreview } from "./full-book-preview";
 import { elementHtml } from "@/lib/render-element";
 import { orderedElements } from "@/lib/book-model";
+import { headTitles, pageChrome, runningHeads } from "@/lib/running-heads";
+import { PageHead } from "./page-head";
 import { themeCss } from "@/lib/theme-css";
 import { themeFor, THEME_FONTS_HREFS } from "@/lib/themes";
 import { getTrim, hardcoverTrim, pageGeometry } from "@/lib/kdp";
@@ -66,6 +68,13 @@ const FONTS: { id: string; label: string; css: string }[] = [
   { id: "SourceSerif", label: "Source Serif", css: "'Source Serif 4', Georgia, serif" },
 ];
 
+/** The page colours reading apps offer. Sepia and Night override the book's own text colours. */
+const MODES: { id: string; label: string; bg: string; text: string }[] = [
+  { id: "day", label: "White", bg: "#ffffff", text: "" },
+  { id: "sepia", label: "Sepia", bg: "#f4ecd8", text: "#5b4636" },
+  { id: "night", label: "Night", bg: "#121212", text: "#d8d4cc" },
+];
+
 const GAP = 48;
 
 function readPref<T>(key: string, fallback: T): T {
@@ -92,6 +101,7 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   // the Desk's book pages only render in the browser, so saved preferences can seed state directly
   const [deviceId, setDeviceId] = useState(() => readPref("jp-preview-device", "print"));
   const [fontId, setFontId] = useState(() => readPref("jp-preview-font", "book"));
+  const [modeId, setModeId] = useState(() => readPref("jp-preview-mode", "day"));
   const [textScale, setTextScale] = useState(() => readPref("jp-preview-text", 1));
   const [zoom, setZoom] = useState<number | "fit">(() => readPref<number | "fit">("jp-preview-zoom", "fit"));
   const [page, setPage] = useState(0);
@@ -107,6 +117,10 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
     elements.findIndex((e) => e.chapter.id === chapterId),
   );
   const el = elements[index];
+  // plain strings, so the page-turning callbacks below never depend on the element list
+  const heads = headTitles(elements);
+  const headTitle = `${heads[index]?.title ?? ""}`;
+  const headPart = `${heads[index]?.part ?? ""}`;
   const html = el ? elementHtml(el, { book, author: book.expand?.author ?? null, alsoBy: [] }, elements, theme) : "";
   const css = themeCss(theme, { scope: ".jp-preview", dropCaps: format.dropCaps, lineHeight: format.lineHeight });
   // "print" is the paperback; "hardcover" its own trim and wider gutter
@@ -194,7 +208,7 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
     // zoomed past the panel: the wheel moves around the page instead
     const s = stageRef.current;
     if (s && (s.scrollHeight > s.clientHeight + 2 || s.scrollWidth > s.clientWidth + 2)) return;
-    const now = Date.now();
+    const now = e.timeStamp;
     const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
     if (Math.abs(d) < 12 || now - wheelAt.current < 350) return;
     wheelAt.current = now;
@@ -220,8 +234,24 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
   const changeZoom = (delta: number) => setPref<number | "fit">("jp-preview-zoom", setZoom)(Math.min(3, Math.max(0.25, Math.round((z + delta) * 20) / 20)));
 
   const pageNo = print ? `${page + 1} / ${pages}` : `Page ${page + 1} of ${pages}`;
-  const runningHead = print && format.runningHeads && page > 0 && el && el.section !== "front" && !el.options.hideHeader ? (recto ? el.title : book.title) : "";
-  const screenBg = print ? "#ffffff" : device.eink ? "#f2f1ec" : "#ffffff";
+  const chrome =
+    print && el
+      ? pageChrome(runningHeads(bookFormat(book)), {
+          recto,
+          opener: page === 0,
+          front: el.section === "front",
+          hideHead: !!el.options.hideHeader,
+          hideFolio: !!el.options.hidePageNumber || (el.section === "front" && !el.inToc),
+          folio: String(page + 1),
+          book: book.title,
+          author: book.expand?.author?.name ?? "",
+          title: headTitle,
+          part: headPart,
+        })
+      : null;
+  const runningHead = chrome?.head ?? "";
+  const mode = print ? MODES[0] : (MODES.find((m) => m.id === modeId) ?? MODES[0]);
+  const screenBg = print ? "#ffffff" : mode.id === "day" && device.eink ? "#f2f1ec" : mode.bg;
 
   return (
     <div className="flex h-full flex-col">
@@ -232,7 +262,8 @@ export function Preview({ book, chapters, chapterId, onSelect }: { book: Book; c
 .jp-flow img { max-height: ${Math.floor(innerH * 0.9)}px; object-fit: contain; }
 .jp-flow figure, .jp-flow .chapter-head, .jp-flow img { break-inside: avoid; }
 .jp-flow .chapter-head { margin-top: ${print ? "4em" : "2em"}; }
-${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` : ""}`}</style>
+${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` : ""}
+${mode.text ? `.jp-preview.jp-mode, .jp-mode .jp-flow, .jp-mode .jp-flow * { color: ${mode.text} !important; } .jp-mode .jp-flow hr { border-color: ${mode.text}55 !important; } .jp-mode .has-bg, .jp-mode .opener-bg { background: none !important; }` : ""}`}</style>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <select
@@ -277,6 +308,20 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
             {FONTS.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
+              </option>
+            ))}
+          </select>
+        )}
+        {!print && (
+          <select
+            aria-label="Page colour"
+            value={mode.id}
+            onChange={(e) => setPref("jp-preview-mode", setModeId)(e.target.value)}
+            className="h-8 min-w-0 shrink-0 rounded-md border border-input bg-card px-2 text-sm"
+          >
+            {MODES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
               </option>
             ))}
           </select>
@@ -331,18 +376,11 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
                 }
               >
                 <div
-                  className="jp-preview relative overflow-hidden text-[#1a1a1a]"
+                  className={cn("jp-preview relative overflow-hidden text-[#1a1a1a]", mode.text && "jp-mode")}
                   style={{ width: screen.w, height: screen.h, background: screenBg, borderRadius: print ? 0 : device.screenRadius, fontSize: screen.text }}
                 >
                   {!print && device.notch && <span aria-hidden className="absolute top-3 left-1/2 h-7 w-28 -translate-x-1/2 rounded-full bg-black" />}
-                  {runningHead && (
-                    <div
-                      className="absolute truncate text-[0.72em] tracking-[0.08em] uppercase opacity-70"
-                      style={{ left: screen.pad[3], right: screen.pad[1], top: screen.pad[0] * 0.45, textAlign: recto ? "right" : "left" }}
-                    >
-                      {runningHead}
-                    </div>
-                  )}
+                  {(runningHead || (chrome?.folioTop && chrome.folio)) && <PageHead chrome={chrome ?? undefined} head={runningHead} style={{ left: screen.pad[3], width: innerW, top: screen.pad[0] * 0.42 }} />}
                   <div className="absolute overflow-hidden" style={{ top: screen.pad[0], left: screen.pad[3], width: innerW, height: innerH }}>
                     <div
                       ref={flowRef}
@@ -352,10 +390,10 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
                     />
                   </div>
                   <div
-                    className="absolute right-0 left-0 text-[0.72em] opacity-60"
-                    style={{ bottom: screen.pad[2] * 0.35, textAlign: "center", fontFamily: print ? undefined : "system-ui, sans-serif" }}
+                    className="absolute text-[0.72em] opacity-60"
+                    style={print ? { left: screen.pad[3], width: innerW, bottom: screen.pad[2] * 0.35, textAlign: chrome?.folioAlign ?? "center" } : { left: 0, right: 0, bottom: screen.pad[2] * 0.35, textAlign: "center", fontFamily: "system-ui, sans-serif" }}
                   >
-                    {print ? (page === 0 || el?.options.hidePageNumber ? "" : page + 1) : pageNo}
+                    {print ? (chrome && !chrome.folioTop ? chrome.folio : "") : pageNo}
                   </div>
                 </div>
               </div>
@@ -400,7 +438,9 @@ ${font.css ? `.jp-flow, .jp-flow p, .jp-flow li { font-family: ${font.css}; }` :
         <p className="text-[13px] font-medium text-ink/80">
           {print
             ? `${binding === "hardcover" ? "Hardcover" : "Paperback"} at ${trim.label}, ${theme.name} theme. Change the trim size on the Format tab.`
-            : `${theme.name} theme. Readers can change the font and size on their own device.`}
+            : mode.id === "night"
+              ? "Night: most reading apps turn your text light and ignore its colours. Check that nothing you need disappears, such as dark pictures with a clear background."
+              : `${theme.name} theme. Readers can change the font, size and page colour on their own device.`}
         </p>
       </div>
     </div>
@@ -429,3 +469,4 @@ function IconButton({ label, onClick, children, active }: { label: string; onCli
     </button>
   );
 }
+

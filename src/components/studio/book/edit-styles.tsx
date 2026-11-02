@@ -161,6 +161,18 @@ export function EditStyles({ ws }: { ws: Workspace }) {
         <Row title="Space between paragraphs" help={theme.indent ? "Indented books usually have none. A little helps short paragraphs breathe." : "The gap between spaced paragraphs."}>
           <Stepper label="paragraph spacing" value={ts.paraSpacing} placeholder={theme.indent ? "0" : "0.8"} min={0} max={2} step={0.1} unit="em" onChange={(v) => setCustom({ paraSpacing: v })} />
         </Row>
+        <Row title="Widows and orphans" help="A widow is a paragraph's last line left alone at the top of a page; an orphan is its first line alone at the bottom. Strict moves lines to avoid both, at the cost of a slightly uneven page bottom.">
+          <Seg
+            label="Widows and orphans"
+            value={ts.widows}
+            onChange={(v) => setCustom({ widows: v === "normal" ? undefined : (v as "strict" | "off") })}
+            options={[
+              ["strict", "Strict"],
+              ["normal", "Normal"],
+              ["off", "Off"],
+            ]}
+          />
+        </Row>
         {theme.indent && (
           <Row title="Indent size" help="How far the first line of each paragraph steps in. One em is the width of the letter M.">
             <Stepper label="indent" value={ts.indentSize} placeholder="1.5" min={0} max={4} step={0.25} unit="em" onChange={(v) => setCustom({ indentSize: v })} />
@@ -179,6 +191,17 @@ export function EditStyles({ ws }: { ws: Workspace }) {
               ["tight", "Tight"],
               ["normal", "Normal"],
               ["airy", "Airy"],
+            ]}
+          />
+        </Row>
+        <Row title="Opening words" help="Sets the first words of each chapter in small capitals in print, a classic book touch.">
+          <Seg
+            label="Opening words"
+            value={theme.leadIn ? "smallcaps" : "plain"}
+            onChange={(v) => setCustom({ leadIn: v === "smallcaps" })}
+            options={[
+              ["smallcaps", "Small caps"],
+              ["plain", "Plain"],
             ]}
           />
         </Row>

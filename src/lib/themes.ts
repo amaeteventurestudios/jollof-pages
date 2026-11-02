@@ -99,6 +99,8 @@ export interface InteriorTheme {
   subtitleStyle?: "italic" | "smallcaps" | "plain";
   /** endnotes at the end of each chapter, or together on the book's Notes page */
   endnotes?: "chapter" | "book";
+  /** how hard the print layout works to avoid a lone first or last line of a paragraph */
+  widows?: "strict" | "normal" | "off";
 }
 
 export interface TextStyle {
@@ -109,6 +111,7 @@ export interface TextStyle {
   headingSpace: number;
   subtitleStyle: "italic" | "smallcaps" | "plain";
   endnotes: "chapter" | "book";
+  widows: "strict" | "normal" | "off";
 }
 
 const clampNum = (v: unknown, min: number, max: number): number | null => (typeof v === "number" && Number.isFinite(v) ? Math.round(Math.min(max, Math.max(min, v)) * 100) / 100 : null);
@@ -123,6 +126,7 @@ export function textStyle(t: InteriorTheme): TextStyle {
     headingSpace: clampNum(t.headingSpace, 0.5, 2) ?? 1,
     subtitleStyle: t.subtitleStyle === "smallcaps" || t.subtitleStyle === "plain" ? t.subtitleStyle : "italic",
     endnotes: t.endnotes === "book" ? "book" : "chapter",
+    widows: t.widows === "strict" || t.widows === "off" ? t.widows : "normal",
   };
 }
 
@@ -345,6 +349,7 @@ export type ThemeCustom = Partial<
     | "headingSpace"
     | "subtitleStyle"
     | "endnotes"
+    | "widows"
   >
 >;
 

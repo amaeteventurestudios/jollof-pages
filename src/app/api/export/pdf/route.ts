@@ -7,9 +7,9 @@ import { slugify } from "@/lib/slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
-/** POST { bookId, format?: "pdf" | "typ", binding?: "paperback" | "hardcover" } with the PocketBase token as Bearer auth. */
+/** POST { bookId, format?: "pdf" | "pdfx" | "typ", binding?: "paperback" | "hardcover" } with the PocketBase token as Bearer auth. */
 export async function POST(req: Request) {
   const token = bearer(req);
   if (!token) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       const res = await fetch(url, { headers: { Authorization: token } });
       if (!res.ok) return null;
       return { bytes: new Uint8Array(await res.arrayBuffer()), type: res.headers.get("content-type") || "image/jpeg" };
-    }, binding);
+    }, binding, { pdfx: format === "pdfx" });
     await client
       .collection("books")
       .update(bookId, binding === "hardcover" ? { hardcover_page_count: result.pages } : { page_count: result.pages })
@@ -45,8 +45,15 @@ export async function POST(req: Request) {
       return new NextResponse(result.source, {
         headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Disposition": `attachment; filename="${name}.typ"`, "X-Page-Count": String(result.pages) },
       });
+    const pdfx: Record<string, string> = result.pdfx
+      ? {
+          "X-Pdfx-Ok": result.pdfx.report.ok ? "1" : "0",
+          "X-Pdfx-Problems": encodeURIComponent(JSON.stringify(result.pdfx.report.problems)),
+          "X-Pdfx-Flattened": result.pdfx.flattened.join(","),
+        }
+      : {};
     return new NextResponse(result.pdf as BodyInit, {
-      headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${name}-interior.pdf"`, "X-Page-Count": String(result.pages) },
+      headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${name}-interior${result.pdfx ? "-pdfx" : ""}.pdf"`, "X-Page-Count": String(result.pages), ...pdfx },
     });
   } catch (e) {
     const err = e as { stderr?: string; message?: string };

@@ -232,6 +232,15 @@ export const BookImage = Image.extend({
     return {
       ...this.parent?.(),
       layout: { default: "center", parseHTML: (el) => el.getAttribute("data-layout") || "center", renderHTML: (a) => ({ "data-layout": a.layout }) },
+      /** percent of the text width; empty means the layout's own size */
+      width: {
+        default: null,
+        parseHTML: (el) => {
+          const w = Number(el.getAttribute("data-width"));
+          return Number.isFinite(w) && w > 0 ? w : null;
+        },
+        renderHTML: (a) => (a.width ? { "data-width": a.width, style: `width: ${a.width}%` } : {}),
+      },
     };
   },
 });
@@ -328,7 +337,7 @@ export const IndexTerm = Mark.create({
 });
 
 /** `live`: the chapter is edited through Yjs, which brings its own undo history. */
-export function manuscriptExtensions(placeholder = "Start writing…", o: { live?: boolean } = {}): Extensions {
+export function manuscriptExtensions(placeholder = "Start writing…", o: { live?: boolean; image?: typeof BookImage } = {}): Extensions {
   return [
     StarterKit.configure({
       ...(o.live ? { undoRedo: false } : {}),
@@ -341,7 +350,7 @@ export function manuscriptExtensions(placeholder = "Start writing…", o: { live
     Placeholder.configure({ placeholder }),
     CharacterCount,
     TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
-    BookImage.configure({ inline: false, allowBase64: false }),
+    (o.image ?? BookImage).configure({ inline: false, allowBase64: false }),
     SceneBreak,
     Typography,
     ParagraphFormat,

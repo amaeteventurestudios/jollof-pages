@@ -2,7 +2,7 @@
 
 import { trackUsage } from "@/lib/usage";
 import { useEffect, useState } from "react";
-import { BookOpen, BookMarked, Download, FileCode2, FileText, FileType2, Loader2, ShieldCheck, Archive } from "lucide-react";
+import { BookOpen, BookMarked, Download, FileCode2, FileText, FileType2, Loader2, Printer, ShieldCheck, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { download, exportInput, fetchCover, fetchImages } from "@/lib/studio";
 import { pb } from "@/lib/pb";
@@ -10,6 +10,7 @@ import { slugify } from "@/lib/slug";
 import { coverGeometry, HARDCOVER, inches, type Binding } from "@/lib/kdp";
 import { bookFormat, printEdition } from "@/lib/types";
 import type { Workspace } from "./workspace";
+import { ReadyCheck } from "./ready-check";
 
 type Check = { ok: boolean; errors: number; warnings: number; messages: { severity: string; message: string; where: string }[] } | { error: string };
 
@@ -32,6 +33,8 @@ export function ExportTab({ ws }: { ws: Workspace }) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfBinding, setPdfBinding] = useState<Binding>("paperback");
   const [check, setCheck] = useState<Check | null>(null);
+  const [printer, setPrinter] = useState<{ url: string; ok: boolean; problems: string[]; flattened: number } | null>(null);
+  useEffect(() => () => void (printer && URL.revokeObjectURL(printer.url)), [printer]);
   const f = bookFormat(book);
   useEffect(() => () => void (pdfUrl && URL.revokeObjectURL(pdfUrl)), [pdfUrl]);
 
@@ -126,6 +129,30 @@ export function ExportTab({ ws }: { ws: Workspace }) {
       setMessage(`Print interior built: ${pages} pages. Your paperback cover needs a ${inches(cover.spine, 4)} spine, ${inches(cover.width)} x ${inches(cover.height)} in total.`);
     });
 
+  const printerPdf = () =>
+    guard("pdfx", async () => {
+      const res = await fetch("/api/export/pdf", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${pb().authStore.token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId: book.id, format: "pdfx", binding: "paperback" }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(`${j.error ?? "The printer PDF could not be built."}${j.detail ? `\n${j.detail}` : ""}`);
+      }
+      const pages = Number(res.headers.get("X-Page-Count") || 0);
+      if (pages) ws.setBook((b) => (b ? { ...b, page_count: pages } : b));
+      let problems: string[] = [];
+      try {
+        problems = JSON.parse(decodeURIComponent(res.headers.get("X-Pdfx-Problems") || "%5B%5D"));
+      } catch {
+        problems = ["The check result didn't come through."];
+      }
+      const flattened = (res.headers.get("X-Pdfx-Flattened") || "").split(",").filter(Boolean).length;
+      setPrinter({ url: URL.createObjectURL(await res.blob()), ok: res.headers.get("X-Pdfx-Ok") === "1", problems, flattened });
+      setMessage("");
+    });
+
   const backup = () =>
     guard("backup", async () => {
       const input = await exportInput(book.id);
@@ -137,6 +164,7 @@ export function ExportTab({ ws }: { ws: Workspace }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
+      <ReadyCheck ws={ws} epubErrors={check && !("error" in check) ? check.errors : null} refreshKey={(book.page_count || 0) * 10000 + (book.hardcover_page_count || 0)} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card icon={FileText} title="Paperback interior (PDF)" text={`Press-ready ${label(f.trim)} PDF with mirrored margins, KDP gutter for the page count, running heads and a paged contents. Built with Typst.`}>
           <Button onClick={() => pdf("pdf")} disabled={!!busy}>
@@ -170,7 +198,43 @@ export function ExportTab({ ws }: { ws: Workspace }) {
             </Button>
           )}
         </Card>
-        <Card icon={BookOpen} title="Ebook (EPUB 3)" text="Reflowable EPUB with linked contents, popup footnotes and your cover. Works on Kindle (via KDP), Apple Books, Kobo and Google Play.">
+        <Card
+          icon={Printer}
+          title="Printer PDF (PDF/X-1a)"
+          text={`The paperback interior as PDF/X-1a:2003, the format IngramSpark and offset printers prefer: ${f.paper.startsWith("color") ? "CMYK colour" : "black and grey only"}, nothing see-through, fonts embedded, trim boxes set. KDP doesn't need it.`}
+        >
+          <Button variant="outline" onClick={printerPdf} disabled={!!busy}>
+            {busy === "pdfx" ? <Loader2 className="animate-spin" /> : <Download />} Build printer PDF
+          </Button>
+          {printer && (
+            <Button variant="outline" asChild>
+              <a href={printer.url} download={`${name}-interior-pdfx.pdf`}>
+                <Download /> Save PDF
+              </a>
+            </Button>
+          )}
+          {printer && (
+            <div role="status" className={`w-full rounded-md p-3 text-sm ${printer.ok ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" : "bg-destructive/10 text-destructive"}`}>
+              {printer.ok ? (
+                <p>
+                  <ShieldCheck className="mr-1 inline size-4 align-[-3px]" aria-hidden />
+                  Passed our PDF/X-1a check.
+                  {printer.flattened ? ` ${printer.flattened} ${printer.flattened === 1 ? "page" : "pages"} with see-through art or colour photos ${printer.flattened === 1 ? "was" : "were"} turned into a single high-resolution picture, as PDF/X-1a requires.` : ""}
+                </p>
+              ) : (
+                <>
+                  <p className="font-medium">Our PDF/X-1a check found problems:</p>
+                  <ul className="mt-1 list-disc pl-5">
+                    {printer.problems.map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+        </Card>
+        <Card icon={BookOpen} title="Ebook (EPUB 3)" text="Reflowable EPUB with linked contents, popup footnotes, your cover and accessibility details for store pages. One file for Kindle (via KDP), Apple Books, Kobo and Google Play.">
           <Button onClick={epub} disabled={!!busy}>
             {spin("epub")} Download EPUB
           </Button>
